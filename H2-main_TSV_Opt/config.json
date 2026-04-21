@@ -1,0 +1,117 @@
+{
+    "dimensions": {
+        "d_ufill": 5.0e-5,
+        "r_bump": 3.0e-5,
+        "s_dpth": 0.0001,
+        "pg_dpth": 5.0e-6,
+        "r_tsv": 2.0e-5,
+        "h_tsv": 0.0001
+    },
+    "materials": {
+        "pwrsrc": {
+            "λ": 149.0,
+            "C": 720.0,
+            "ρ": 2330.0,
+            "id": 7,
+            "α": 8.88e-5
+        },
+        "FR4": {
+            "λ": 0.4,
+            "C": 1000.0,
+            "ρ": 1850.0,
+            "id": 4,
+            "α": 2.16e-7
+        },
+        "silicon": {
+            "λ": 149.0,
+            "C": 720.0,
+            "ρ": 2330.0,
+            "id": 2,
+            "α": 8.88e-5
+        },
+        "solder": {
+            "λ": 50.0,
+            "C": 197.0,
+            "ρ": 8500.0,
+            "id": 3,
+            "α": 2.99e-5
+        },
+        "Resin": {
+            "λ": 1.5,
+            "C": 1050.0,
+            "ρ": 2590.0,
+            "id": 6,
+            "α": 5.52e-7
+        },
+        "cupper": {
+            "λ": 386.0,
+            "C": 383.0,
+            "ρ": 8960.0,
+            "id": 1,
+            "α": 0.000112
+        },
+        "A1060": {
+            "λ": 222.0,
+            "C": 921.0,
+            "ρ": 2700.0,
+            "id": 5,
+            "α": 8.93e-5
+        }
+    },
+    "layers": [
+        {
+            "divisions": 5,
+            "name": "Substrate",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        },
+        {
+            "divisions": 5,
+            "name": "Underfill1",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        },
+        {
+            "divisions": 10,
+            "name": "Silicon1",
+            "grading": 2.0,
+            "thickness": 0.0001
+        },
+        {
+            "divisions": 5,
+            "name": "Underfill2",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        },
+        {
+            "divisions": 10,
+            "name": "Silicon2",
+            "grading": 2.0,
+            "thickness": 0.0001
+        },
+        {
+            "divisions": 5,
+            "name": "Underfill3",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        },
+        {
+            "divisions": 10,
+            "name": "Silicon3",
+            "grading": 2.0,
+            "thickness": 0.0001
+        },
+        {
+            "divisions": 5,
+            "name": "Underfill4",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        },
+        {
+            "divisions": 5,
+            "name": "Heatsink",
+            "grading": 1.0,
+            "thickness": 5.0e-5
+        }
+    ]
+}
