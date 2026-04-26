@@ -1,0 +1,15 @@
+{
+  "name": "snapshot-generator",
+  "phase": "tasks-generated",
+  "status": "in-progress",
+  "language": "ja",
+  "approvals": {
+    "requirements": true,
+    "design": true,
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "updated_at": "2025-03-05T10:30:00Z"
+}
