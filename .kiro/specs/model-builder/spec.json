@@ -1,0 +1,11 @@
+{
+  "name": "model-builder",
+  "phase": "tasks-generated",
+  "status": "in-progress",
+  "language": "ja",
+  "approvals": {
+    "requirements": true,
+    "design": true,
+    "tasks": true
+  }
+}
