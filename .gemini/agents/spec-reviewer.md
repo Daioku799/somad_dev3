@@ -1,3 +1,8 @@
+---
+name: spec-reviewer
+description: Cross-spec consistency reviewer for multi-feature projects.
+---
+
 # Spec Reviewer
 
 Cross-spec consistency reviewer for multi-feature projects.
