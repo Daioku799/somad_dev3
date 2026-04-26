@@ -122,8 +122,10 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     config = modelA.ModelBuilder.ConfigLoader.generate_test_config()
     ID, λ, ρ, cp, coordsys = modelA.ModelBuilder.build_model(config, NX)
     
+    # Accurate size from the built model
     SZ = size(ID)
     MX, MY, MZ = SZ
+    
     dx = config.lx / NX
     dy = config.ly / NY
     Δh = (dx, dy, 1.0)
@@ -134,7 +136,7 @@ function q3d(NX::Int, NY::Int, NZ::Int,
 
     println(SZ, "  Itr.ε= ", itr_tol)
 
-    # 2. Work Buffers
+    # 2. Work Buffers initialized with exact size
     wk = WorkBuffers(MX, MY, MZ)
     wk.λ .= λ
     wk.ρ .= ρ
