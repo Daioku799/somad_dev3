@@ -2,6 +2,7 @@ using Printf
 using LinearAlgebra
 using FLoops
 using ThreadsX
+using JLD2 # Added
 
 include("common.jl")
 include("modelA.jl")
@@ -19,7 +20,7 @@ using .NonUniform
 using .NonUniform: PBiCGSTAB!, CG!, calRHS!
 using .RHSCore
 using .BoundaryConditions
-using .modelA # Added
+using .modelA 
 
 """
 Mode3用の境界条件（NonUniform格子のIC問題）  
@@ -113,16 +114,18 @@ end
 
 function q3d(NX::Int, NY::Int, NZ::Int,
          solver::String="sor", smoother::String="";
-         epsilon::Float64=1.0e-6, par::String="thread", is_steady::Bool=false)
+         epsilon::Float64=1.0e-6, par::String="thread", is_steady::Bool=false,
+         snapshot_path::String="")
     global itr_tol = epsilon
     println("Julia version: $(VERSION)")
 
     # 1. Model Building using new architecture
     println("Building model...")
-    config = modelA.ModelBuilder.ConfigLoader.generate_test_config()
+    # Use load_config if config.json exists, else generate_test_config
+    config = isfile("config.json") ? modelA.ModelBuilder.ConfigLoader.load_config("config.json", "tsv_config.json") : 
+                                    modelA.ModelBuilder.ConfigLoader.generate_test_config()
     ID, λ, ρ, cp, coordsys = modelA.ModelBuilder.build_model(config, NX)
     
-    # Accurate size from the built model
     SZ = size(ID)
     MX, MY, MZ = SZ
     
@@ -136,14 +139,12 @@ function q3d(NX::Int, NY::Int, NZ::Int,
 
     println(SZ, "  Itr.ε= ", itr_tol)
 
-    # 2. Work Buffers initialized with exact size
     wk = WorkBuffers(MX, MY, MZ)
     wk.λ .= λ
     wk.ρ .= ρ
     wk.cp .= cp
 
     mode::Int64 = 3
-    # Initial property plot
     plot_slice_xz_nu(1, mode, wk.λ, 0.3e-3, SZ, ox, Δh, Z, "alpha3.png", "α")
 
     # 3. Boundary conditions
@@ -192,6 +193,24 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     end
     println(tm, "[sec]")
     println(" ")
+
+    # 6. Save snapshot
+    if !isempty(snapshot_path)
+        println("Saving snapshot to: $snapshot_path")
+        JLD2.save(snapshot_path, Dict(
+            "theta" => wk.θ,
+            "id_map" => ID,
+            "lambda" => wk.λ,
+            "z_centers" => ZC,
+            "z_faces" => Z,
+            "nx" => NX, "ny" => NY, "nz" => NZ,
+            "config_summary" => Dict(
+                "tsv_count" => length(config.tsv.coords),
+                "tsv_radius" => config.tsv.radius,
+                "tsv_coords" => config.tsv.coords
+            )
+        ))
+    end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

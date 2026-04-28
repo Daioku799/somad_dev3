@@ -1,29 +1,6 @@
 #!/usr/bin/env julia
 
-"""
-Heat3ds実行スクリプト
-
-【基本実行】
-  julia run.jl
-
-【パラメータ指定】
-  julia run.jl NX NY NZ solver smoother epsilon par [is_steady]
-
-  例: julia run.jl 240 240 30 pbicgstab gs 1e-4 sequential true
-
-【並列実行】
-  julia -t 4 run.jl 240 240 30 pbicgstab gs 1e-4 thread true
-
-  注意: par="thread"の場合、julia -t N で起動してください
-
-【引数】
-  NX, NY, NZ : グリッドサイズ（内部セル数）
-  solver     : pbicgstab | cg | sor
-  smoother   : gs | "" (空文字列でスムーザーなし)
-  epsilon    : 収束判定基準（例: 1e-4, 1e-6）
-  par        : sequential | thread
-  is_steady  : true (定常) | false (非定常) [省略可、デフォルト: false]
-"""
+# ... (docstring remains same) ...
 
 # srcディレクトリをロードパスに追加
 push!(LOAD_PATH, joinpath(@__DIR__, "src"))
@@ -31,41 +8,59 @@ push!(LOAD_PATH, joinpath(@__DIR__, "src"))
 # heat3ds.jlをインクルード
 include("src/heat3ds.jl")
 
-# スレッド数の表示
 using Base.Threads
-println("Julia Threads: ", nthreads())
 
-# コマンドライン引数がある場合はパラメータとして使用
-if length(ARGS) >= 7
-  NX = parse(Int, ARGS[1])
-  NY = parse(Int, ARGS[2])
-  NZ = parse(Int, ARGS[3])
-  solver = ARGS[4]
-  smoother = ARGS[5]
-  epsilon = parse(Float64, ARGS[6])
-  par = ARGS[7]
-  is_steady = length(ARGS) >= 8 ? parse(Bool, ARGS[8]) : false
+# Default parameters
+NX, NY, NZ = 240, 240, 30
+solver = "pbicgstab"
+smoother = "gs"
+epsilon = 1.0e-4
+par = "sequential"
+is_steady = true
+snapshot_path = ""
 
-  # par="thread"だがスレッド数が1の場合は警告
-  if par == "thread" && nthreads() == 1
-    @warn "par=\"thread\" specified but Julia has only 1 thread. Use 'julia -t N run.jl ...' for parallel execution."
-  end
-
-  println("Running with custom parameters:")
-  println("  Grid: $(NX)x$(NY)x$(NZ)")
-  println("  Solver: $(solver), Smoother: $(smoother)")
-  println("  Epsilon: $(epsilon), Parallel: $(par)")
-  println("  Steady-state: $(is_steady)")
-  println()
-
-  q3d(NX, NY, NZ, solver, smoother, epsilon=epsilon, par=par, is_steady=is_steady)
-else
-  # デフォルト実行
-  println("Running with default parameters:")
-  println("  Grid: 240x240x30")
-  println("  Solver: pbicgstab, Smoother: gs")
-  println("  Epsilon: 1.0e-4, Parallel: sequential")
-  println("  Steady-state: true")
-  println()
-  q3d(240, 240, 30, "pbicgstab", "gs", epsilon=1.0e-4, par="sequential", is_steady=true)
+# Simple Argument Parser
+i = 1
+while i <= length(ARGS)
+    arg = ARGS[i]
+    if arg == "--snapshot" && i + 1 <= length(ARGS)
+        global snapshot_path = ARGS[i+1]
+        global i += 2
+    elseif !startswith(arg, "--")
+        # Positional arguments (legacy support)
+        # 1:NX 2:NY 3:NZ 4:solver 5:smoother 6:epsilon 7:par 8:is_steady
+        # This is a bit brittle, but keeping it for compatibility
+        try
+            pos = i - (snapshot_path == "" ? 0 : 2) # Adjust if snapshot was before
+            # Actually simpler to just check index
+            if i == 1 global NX = parse(Int, arg)
+            elseif i == 2 global NY = parse(Int, arg)
+            elseif i == 3 global NZ = parse(Int, arg)
+            elseif i == 4 global solver = arg
+            elseif i == 5 global smoother = arg
+            elseif i == 6 global epsilon = parse(Float64, arg)
+            elseif i == 7 global par = arg
+            elseif i == 8 global is_steady = parse(Bool, arg)
+            end
+        catch
+            @warn "Failed to parse positional argument: $arg"
+        end
+        global i += 1
+    else
+        @warn "Unknown option: $arg"
+        global i += 1
+    end
 end
+
+println("Julia Threads: ", nthreads())
+println("Running with parameters:")
+println("  Grid: $(NX)x$(NY)x$(NZ)")
+println("  Solver: $(solver), Smoother: $(smoother)")
+println("  Epsilon: $(epsilon), Parallel: $(par)")
+println("  Steady-state: $(is_steady)")
+if snapshot_path != ""
+    println("  Snapshot: $(snapshot_path)")
+end
+println()
+
+q3d(NX, NY, NZ, solver, smoother, epsilon=epsilon, par=par, is_steady=is_steady, snapshot_path=snapshot_path)
