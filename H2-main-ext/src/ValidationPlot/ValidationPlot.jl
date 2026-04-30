@@ -13,6 +13,6 @@ using .Main
 # Re-export
 export plot_model_validation, LEGACY_COLOR_PALETTE, MATERIAL_LABELS
 export get_indices, get_xy_slice, get_yz_slice, get_xz_slice
-export load_snapshot
+export load_snapshot, plot_snapshot_validation
 
 end # module

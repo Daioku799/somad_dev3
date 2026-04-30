@@ -1,8 +1,10 @@
 module Snapshot
 
 using JLD2
+using Plots
+using ..Palettes
 
-export load_snapshot
+export load_snapshot, plot_snapshot_validation
 
 """
     load_snapshot(filepath::String)
@@ -46,6 +48,46 @@ function load_snapshot(filepath::String)
     finally
         close(data)
     end
+end
+
+"""
+    plot_snapshot_validation(filepath::String; output_dir="plots", temp_lims=(300.0, 400.0), z_level=0.00015)
+
+Plot id_map and temperature side-by-side for a given snapshot.
+"""
+function plot_snapshot_validation(filepath::String; output_dir="plots", temp_lims=(300.0, 400.0), z_level=0.00015)
+    data = load_snapshot(filepath)
+    
+    # Find z index
+    k = argmin(abs.(data.z_centers .- z_level))
+    
+    id_slice = data.id_map[:, :, k]
+    temp_slice = data.theta[:, :, k]
+    
+    p1 = heatmap(id_slice', 
+                 c=LEGACY_COLOR_PALETTE, 
+                 clims=(0.5, 7.5), 
+                 aspect_ratio=:equal, 
+                 title="ID Map (z=$(round(data.z_centers[k], digits=5)))")
+    
+    p2 = heatmap(temp_slice', 
+                 c=:thermal, 
+                 clims=temp_lims, 
+                 aspect_ratio=:equal, 
+                 title="Temperature")
+    
+    p = plot(p1, p2, layout=(1, 2), size=(1200, 500))
+    
+    if !ispath(output_dir)
+        mkpath(output_dir)
+    end
+    
+    basename_str = basename(filepath)
+    name_noext = splitext(basename_str)[1]
+    output_path = joinpath(output_dir, "$(name_noext)_validation.png")
+    
+    savefig(p, output_path)
+    return output_path
 end
 
 end # module
