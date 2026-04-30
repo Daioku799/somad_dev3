@@ -2,9 +2,6 @@ module Main
 
 using Plots
 using ..Slicer
-# Access GeometryLogic for GDS data
-include("../GeometryLogic/GeometryLogic.jl")
-using .GeometryLogic
 
 export plot_model_validation
 
@@ -52,17 +49,6 @@ function plot_model_validation(ID, λ, coordsys, config, zm; output_dir="plots")
                  xlabel="X [mm]", ylabel="Y [mm]",
                  aspect_ratio=:equal, color=:tab10)
                  
-    # Overlay GDS
-    gds_path = "../H2-main_TSV_Opt/org_chip1.gds"
-    if isfile(gds_path)
-        layer = load_gds_layer(gds_path, 1)
-        plot_data = get_plot_data(layer)
-        for poly_mat in plot_data
-            px = poly_mat[:, 1] .* 1e3 # mm
-            py = poly_mat[:, 2] .* 1e3 # mm
-            plot!(p2, px, py, color=:white, lw=1.5, label="")
-        end
-    end
     savefig(p2, joinpath(output_dir, "validation_xy_chip1.png"))
 
     println("Validation plots saved to $output_dir/")
