@@ -121,9 +121,15 @@ function q3d(NX::Int, NY::Int, NZ::Int,
 
     # 1. Model Building using new architecture
     println("Building model...")
-    # Use load_config if config.json exists, else generate_test_config
-    config = isfile("config.json") ? modelA.ModelBuilder.ConfigLoader.load_config("config.json", "tsv_config.json") : 
-                                    modelA.ModelBuilder.ConfigLoader.generate_test_config()
+    # Strictly require config.json and tsv_config.json
+    if !isfile("config.json")
+        error("config.json not found in current directory: $(pwd())")
+    end
+    if !isfile("tsv_config.json")
+        error("tsv_config.json not found in current directory: $(pwd())")
+    end
+    
+    config = modelA.ModelBuilder.ConfigLoader.load_config("config.json", "tsv_config.json")
     ID, λ, ρ, cp, coordsys = modelA.ModelBuilder.build_model(config, NX)
     
     SZ = size(ID)

@@ -64,8 +64,10 @@ function run_simulation_case(case::SimulationCase, solver_dir::String, work_base
     # 3. Execute Solver
     # We use NX=240, NY=240, NZ=30 as standard
     snapshot_file = abspath(joinpath(case_dir, "snapshot.jld2"))
+    abs_solver_dir = abspath(solver_dir)
+    abs_run_jl = abspath(joinpath(abs_solver_dir, "run.jl"))
     
-    cmd = `julia --project=$(solver_dir) $(joinpath(solver_dir, "run.jl")) 240 240 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
+    cmd = `julia --project=$(abs_solver_dir) $(abs_run_jl) 240 240 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
     
     println("Starting Case $(case.id)...")
     
@@ -75,10 +77,9 @@ function run_simulation_case(case::SimulationCase, solver_dir::String, work_base
     error_msg = ""
     
     try
-        # Run with timeout (e.g., 600 seconds)
-        # Note: Base.run doesn't have a direct timeout, we might need a wrapper or use a Task
+        # Run within the case directory so it finds config.json
         open(log_file, "w") do out
-            run(pipeline(cmd, stdout=out, stderr=out))
+            run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out))
         end
         success = true
     catch e
