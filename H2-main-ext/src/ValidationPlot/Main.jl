@@ -1,8 +1,7 @@
 module Main
 
 using Plots
-include("Slicer.jl")
-using .Slicer
+using ..Slicer
 # Access GeometryLogic for GDS data
 include("../GeometryLogic/GeometryLogic.jl")
 using .GeometryLogic

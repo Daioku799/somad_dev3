@@ -1,6 +1,6 @@
 module Slicer
 
-export get_indices, get_xy_slice, get_yz_slice
+export get_indices, get_xy_slice, get_yz_slice, get_xz_slice
 
 """
     get_indices(x::Float64, y::Float64, z::Float64, ox, dh, z_centers)
@@ -30,6 +30,13 @@ end
 """
 function get_yz_slice(data, i)
     return data[i, :, :]
+end
+
+"""
+    get_xz_slice(data::Array{T, 3}, j::Int) where T
+"""
+function get_xz_slice(data, j)
+    return data[:, j, :]
 end
 
 end # module
