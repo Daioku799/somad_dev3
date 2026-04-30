@@ -1,29 +1,43 @@
 # Research Log: validation-plot
 
 ## Summary
-`Plots.jl` を用いて、格子データ（IDマップ）と生データ（GDS頂点）を正確に重ね合わせる手法を調査した。XYプロットにおいては `heatmap` と `plot! (path)` の組み合わせが有効であり、YZプロットにおいては非一様格子の Z 座標ベクトルを用いた正確なアスペクト比の維持が重要であることを確認した。
+スナップショットファイル（JLD2）からのデータ抽出と、材料分布および温度分布のサイドバイサイドプロット機能の追加に向けた調査。
 
 ## Research Log Topics
 
-### Topic 1: GDSデータの重ね書き手法
+### 1. レガシー配色の特定
+- **Source**: `H2-main_TSV_Opt/src/plotter.jl`
 - **Findings**:
-  - `GdsMapping.get_plot_data` が返す `Vector{Matrix{Float64}}` は、一つの要素が一つの閉じられたポリゴンに対応する。
-  - これを `plot!(mat[:,1], mat[:,2], seriestype=:path, linecolor=:white)` とすることで、ヒートマップの上に境界線を白抜きで描画できる。
-  - スケーリングを合わせるため、`heatmap` の軸にも物理座標（mm）を適用する必要がある。
+  - `plot_heatsource_tsv_overlay_nu` 関数内で `custom_palette = [:yellow, :gray, :purple, :orange, :blue, :green, :red]` が定義されている。
+  - 材料IDのマッピング: 1:TSV(Yellow/Orange), 2:Si(Gray), 3:Solder, 4:FR4, 5:Aluminum, 6:Resin, 7:PG(Red)。
+  - `heatmap` の `clims=(0.5, 7.5)` を使用してIDを色に固定。
 
-### Topic 2: 断面抽出の精度
+### 2. JLD2スナップショット構造
+- **Source**: `data/raw/snapshot_13.jld2`
 - **Findings**:
-  - ユーザーが JSON で指定する物理座標（例: Z=0.198mm）に対し、`Grid.find_k` 相当のロジックを用いて、最も近い格子点を選択する。
-  - 非一様格子の場合、セル中心（Z-centers）に基づいてインデックスを特定するのが物理的に正しい。
+  - キー: `["nz", "theta", "nx", "id_map", "lambda", "ny", "z_faces", "config_summary", "z_centers"]`
+  - `id_map`: `Array{UInt8, 3}`, (242, 242, 33)
+  - `theta`: `Array{Float64, 3}` (温度場)
+  - `z_centers`: `Vector{Float64}` (非一様格子のZ座標)
 
-## Architecture Decisions
+### 3. サイドバイサイドプロットの実装方法
+- **Source**: `Plots.jl` ドキュメント
+- **Findings**:
+  - `plot(p1, p2, layout=(1, 2))` で簡単に横並び表示が可能。
+  - カラーバーの共有やリンクも可能だが、ID（離散）と温度（連続）では個別にカラーバーを持つのが適切。
 
-### Decision 1: `config.json` へのプロット設定の統合
-- **Rationale**: 断面位置をコードにハードコードせず、設定ファイルで一元管理することで、解析条件に応じた自動検証を容易にする。
+## Architecture Pattern Evaluation
+- **Pattern**: Existing Module Extension
+- **Decision**: `ValidationPlot` モジュールに `Snapshot.jl` を追加し、`plot_snapshot_validation` を実装する。
+- **Rationale**: 断面抽出（Slicer）ロジックを共有でき、検証機能として一貫性を保てるため。
 
-### Decision 2: 素材 ID ごとの静的パレット定義
-- **Rationale**: どのプロットを見ても「黄色はTSV」と直感的に理解できるように、モジュール定数としてカラーマップを固定する。
+## Design Decisions
+- **Generalization**: プロット用パレット定義を `Palettes.jl` として独立させ、モデル構築時とスナップショット時の両方で利用可能にする。
+- **Simplification**: GDSオーバーレイ機能は要件から除外されたため、スナップショットプロットからは削除する。
+- **Build vs Adopt**: スナップショットの読み込みには標準的な `JLD2.jl` を使用。
 
-## Risks & Mitigations
-- **Risk**: 大規模な GDS ポリゴン（数千個）を重ね書きする際の描画速度低下。
-- **Mitigation**: プロット対象のレイヤーを限定し、必要に応じて BBox 範囲内のポリゴンのみをレンダリングする。
+## Risks and Mitigations
+- **Risk**: スナップショットによってIDの定義が異なる可能性。
+- **Mitigation**: 共通の `MaterialID` 定数を定義し、スナップショット生成時とプロット時で一貫性を保証する。
+- **Risk**: 温度スケールの統一。
+- **Mitigation**: プロット関数に `temp_lims`（デフォルト値あり）を渡し、明示的にスケールを固定できるようにする。
