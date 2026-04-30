@@ -1,7 +1,7 @@
 # Implementation Tasks: validation-plot
 
 - [ ] 1. Foundation: 共通パレットとスライサーの基盤整備
-- [ ] 1.1 材料ID用共通カラーパレットの定義
+- [x] 1.1 材料ID用共通カラーパレットの定義
   - レガシーコード（H2-main_TSV_Opt）と互換性のある配色定数を定義する
   - `MATERIAL_LABELS` および `LEGACY_COLOR_PALETTE` を含む `Palettes.jl` を作成する
   - モデル構築時とスナップショット時の両方で利用可能な共通パレット定数がエクスポートされていること
