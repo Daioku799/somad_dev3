@@ -12,6 +12,6 @@ using .Main
 
 # Re-export key components
 export Material, Layer, DensityMapConfig, ManufacturingConfig, GASettings, TSVConfig, ModelConfig
-export generate_test_config, calculate_zm, load_config, calculate_solder_radius
+export generate_test_config, generate_default_materials, generate_default_layers, calculate_zm, load_config, calculate_solder_radius
 
 end # module

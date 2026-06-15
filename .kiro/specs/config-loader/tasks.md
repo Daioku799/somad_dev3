@@ -5,7 +5,7 @@
   - 依存ライブラリ（JSON, SimpleGDS, PolygonOps, Plots）のバージョンを固定した `Project.toml` を作成する。
   - `julia --project` で環境が正常に初期化され、必要なパッケージがロード可能であることを確認する。
   - _Requirements: 2.1_
-- [ ] 1.2 Define configuration types and structures
+- [x] 1.2 Define configuration types and structures
   - `Material`, `Layer`, `DensityMapConfig`, `ManufacturingConfig`, `GASettings`, `TSVConfig`, `ModelConfig` の不変構造体（struct）を `Types.jl` に定義する。
   - 各構造体が型安全であり、下流モジュールで正しく参照できることを確認する。
   - _Requirements: 2.2_
