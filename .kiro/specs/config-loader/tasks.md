@@ -9,7 +9,7 @@
   - `Material`, `Layer`, `DensityMapConfig`, `ManufacturingConfig`, `GASettings`, `TSVConfig`, `ModelConfig` の不変構造体（struct）を `Types.jl` に定義する。
   - 各構造体が型安全であり、下流モジュールで正しく参照できることを確認する。
   - _Requirements: 2.2_
-- [ ] 1.3 Define default physical constants and dimensions
+- [x] 1.3 Define default physical constants and dimensions
   - `H2-main-original/src/modelA.jl` の値をベースにした物理定数およびデフォルト寸法を `Defaults.jl` に定義する。
   - 定義された値がオリジナルの物理定数とビットレベルで一致することを確認する。
   - _Requirements: 1.3_
