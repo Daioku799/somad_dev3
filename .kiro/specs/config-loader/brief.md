@@ -1,20 +1,18 @@
-# Brief: config-loader
+# Brief: config-loader Update
 
 ## Problem
-モデルの寸法、層構造、物性値、TSV配置設定が複数のJSONに分散しており、ハードコードされた定数との整合性が取れなくなるリスクがある。
+Current physical parameters (TSV diameter, Silicon lambda) do not reflect the target experimental conditions.
 
 ## Current State
-`config.json` と `tsv_config.json` が存在するが、読み込みロジックが `modelA.jl` 内に混在している。
+r_tsv = 20um, Silicon lambda = 149 W/mK.
 
 ## Desired Outcome
-JSONファイルを型安全に読み込み、プログラム全体で利用可能な定数オブジェクトを提供し、層厚の累積計算（zm0〜zm12）を自動化する。
+- r_tsv set to 2.5um (5um diameter).
+- Silicon lambda set to 100 W/mK.
 
 ## Approach
-`JSON.jl` を使用し、設定値を保持する構造体を定義する。
+- Update config.json with new physical values.
 
 ## Scope
-- **In**: `config.json`, `tsv_config.json` のパース、層境界Z座標の計算。
-- **Out**: GDSIIデータの読み込み（gds-mappingが担当）。
-
-## Upstream / Downstream
-- **Downstream**: component-generator, model-builder
+- **In**: Parameter updates in JSON.
+- **Out**: Structural changes to the config schema.

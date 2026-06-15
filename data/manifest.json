@@ -1901,6 +1901,180 @@
             },
             "snapshot_file": "",
             "error_msg": ""
+        },
+        {
+            "id": 26,
+            "status": "failed",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.75
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": "ProcessFailedException(Base.Process[Process(setenv(`julia --project=/home/somadwsl/somad_dev3/H2-main-ext /home/somadwsl/somad_dev3/H2-main-ext/run.jl 240 240 30 pbicgstab gs 1e-4 sequential true --snapshot /home/somadwsl/somad_dev3/data/work/case_26/snapshot.jld2`; dir=\"/home/somadwsl/somad_dev3/data/work/case_26\"), ProcessExited(1))])"
+        },
+        {
+            "id": 27,
+            "status": "failed",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.25
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": "ProcessFailedException(Base.Process[Process(setenv(`julia --project=/home/somadwsl/somad_dev3/H2-main-ext /home/somadwsl/somad_dev3/H2-main-ext/run.jl 240 240 30 pbicgstab gs 1e-4 sequential true --snapshot /home/somadwsl/somad_dev3/data/work/case_27/snapshot.jld2`; dir=\"/home/somadwsl/somad_dev3/data/work/case_27\"), ProcessExited(1))])"
+        },
+        {
+            "id": 28,
+            "status": "pending",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": ""
+        },
+        {
+            "id": 29,
+            "status": "pending",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": ""
+        },
+        {
+            "id": 30,
+            "status": "pending",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": ""
+        },
+        {
+            "id": 31,
+            "status": "pending",
+            "params": {
+                "gy": 4,
+                "density": [
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.75,
+                    0.75,
+                    0.75,
+                    0.25,
+                    0.25,
+                    0.75
+                ],
+                "radius": 5.0e-6,
+                "gx": 4
+            },
+            "snapshot_file": "",
+            "error_msg": ""
         }
     ]
 }

@@ -130,7 +130,7 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     end
     
     config = modelA.ModelBuilder.ConfigLoader.load_config("config.json", "tsv_config.json")
-    ID, λ, ρ, cp, coordsys = modelA.ModelBuilder.build_model(config, NX)
+    ID, λ, ρ, cp, coordsys, tsv_coords = modelA.ModelBuilder.build_model(config, NX)
     
     SZ = size(ID)
     MX, MY, MZ = SZ
@@ -211,9 +211,13 @@ function q3d(NX::Int, NY::Int, NZ::Int,
             "z_faces" => Z,
             "nx" => NX, "ny" => NY, "nz" => NZ,
             "config_summary" => Dict(
-                "tsv_count" => length(config.tsv.coords),
+                "tsv_mode" => config.tsv.mode,
+                "tsv_count" => length(tsv_coords),
                 "tsv_radius" => config.tsv.radius,
-                "tsv_coords" => config.tsv.coords
+                "tsv_coords" => tsv_coords,
+                "density" => config.tsv.density,
+                "gx" => config.tsv.gx,
+                "gy" => config.tsv.gy
             )
         ))
     end

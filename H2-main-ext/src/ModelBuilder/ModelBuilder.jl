@@ -2,11 +2,13 @@ module ModelBuilder
 
 include("Grid.jl")
 include("../ConfigLoader/ConfigLoader.jl")
+include("TSVCoordinateGenerator.jl")
 include("../GeometryLogic/GeometryLogic.jl")
 include("../ComponentGenerator/ComponentGenerator.jl")
 
 using .Grid
 using .ConfigLoader
+using .TSVCoordinateGenerator
 using .GeometryLogic
 using .ComponentGenerator
 
@@ -38,8 +40,11 @@ function build_model(config::ModelConfig, nxy::Int)
     # 3. Fill ID Map (Strict Original Order)
     # Order: PG > TSV > Silicon > Solder > Resin
     
+    # Generate TSV coordinates (Density Map or Manual)
+    tsv_coords = generate_tsv_coordinates(config)
+
     # Generate Components
-    objects = generate_components(config, zm)
+    objects = generate_components(config, zm, tsv_coords)
     
     # --- FILL LOGIC ---
     
@@ -68,7 +73,7 @@ function build_model(config::ModelConfig, nxy::Int)
     cp = zeros(Float64, size(ID))
     set_properties!(λ, ρ, cp, ID, config.materials)
     
-    return ID, λ, ρ, cp, coordsys
+    return ID, λ, ρ, cp, coordsys, tsv_coords
 end
 
 # --- Internal Helper Fillers with BBox Optimization and Boundary Guard ---

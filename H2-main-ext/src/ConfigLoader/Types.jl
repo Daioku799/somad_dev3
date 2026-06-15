@@ -18,10 +18,17 @@ struct Layer
 end
 
 struct TSVConfig
-    mode::Symbol # :manual or :random
+    mode::Symbol # :manual, :random, or :density
     coords::Vector{Tuple{Float64, Float64}}
     radius::Float64
     height::Float64
+    # Density map fields
+    gx::Int
+    gy::Int
+    density::Vector{Float64}
+    n_total_max::Int
+    p_min::Float64
+    m_edge::Float64
 end
 
 struct ModelConfig

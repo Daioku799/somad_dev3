@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../slide"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}

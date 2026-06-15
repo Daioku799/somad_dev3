@@ -5,18 +5,22 @@ using ..Types: GeometryObject, ShapeType, CYLINDER, SPHERE, BOX
 include("../ConfigLoader/ConfigLoader.jl")
 using .ConfigLoader
 
+# We need TSVCoordinateGenerator for default coordinate generation if in density mode
+include("../ModelBuilder/TSVCoordinateGenerator.jl")
+using .TSVCoordinateGenerator
+
 export generate_components
 
 """
-    generate_components(config::Any, zm::Vector{Float64})
+    generate_components(config::Any, zm::Vector{Float64}, tsv_coords::Vector{Tuple{Float64, Float64}}=generate_tsv_coordinates(config))
 
 Generate a list of GeometryObject (TSVs and Bumps) based on config and calculated markers.
 """
-function generate_components(config::Any, zm::Vector{Float64})
+function generate_components(config::Any, zm::Vector{Float64}, tsv_coords::Vector{Tuple{Float64, Float64}}=generate_tsv_coordinates(config))
     objects = GeometryObject[]
     
-    # Coordinates from config (already extracted in ConfigLoader.generate_test_config or load_config)
-    coords = config.tsv.coords
+    # Coordinates provided as argument or generated (Density Map or Manual)
+    coords = tsv_coords
     
     # Material IDs based on Defaults.jl
     # MAT_COPPER = 1, MAT_SOLDER = 3

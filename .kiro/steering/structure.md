@@ -7,11 +7,23 @@
 
 ## Directory Patterns
 
-### Core Source
-**Location**: `src/`  
+### Core Projects
+**Location**: `H2-main-ext/`, `H2-rom/`  
+**Purpose**: 独立したJuliaプロジェクトとしての機能実装。
+- `H2-main-ext/`: 拡張されたFVM熱解析エンジンとモデル構築ツール。
+- `H2-rom/`: スナップショット生成および次数低減モデル構築ツール。
+
+### Source Organization
+**Location**: `[Project]/src/`  
 **Purpose**: プログラムの主要ロジック。機能ごとにサブディレクトリを持つ。  
 **Example**: `src/ConfigLoader/`, `src/GdsMapping/`, `src/GeometryLogic/`, `src/ComponentGenerator/`, `src/ModelBuilder/`, `src/ValidationPlot/`
 
+### Data Management
+**Location**: `data/`  
+**Purpose**: 解析モデル、スナップショット、プロット結果の永続化。
+- `data/raw/`: シミュレーション結果のスナップショット (`.jld2`)。
+- `data/plots/`: 各ステップの視覚化出力。
+- `data/manifest.json`: データセットのメタデータ管理。
 
 ### Test Suite
 **Location**: `test/`  

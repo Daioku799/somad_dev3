@@ -4,12 +4,40 @@ using LatinHypercubeSampling
 using Distributions
 using Random
 
-export TSVParams, generate_samples, validate_params
+export TSVParams, DensityParams, generate_samples, generate_density_samples, validate_params
 
 struct TSVParams
     radius::Float64
     count::Int
     coords::Vector{Tuple{Float64, Float64}}
+end
+
+struct DensityParams
+    radius::Float64
+    gx::Int
+    gy::Int
+    density::Vector{Float64}
+end
+
+"""
+    generate_density_samples(n_cases::Int; gx=4, gy=4, radius=5e-6)
+
+Generate n_cases of DensityParams using Latin Hypercube Sampling.
+"""
+function generate_density_samples(n_cases::Int; gx=4, gy=4, radius=5e-6)
+    dims = gx * gy
+    
+    plan = randomLHC(n_cases, dims)
+    plan_norm = (plan .- 0.5) ./ n_cases
+    
+    samples = DensityParams[]
+    
+    for i in 1:n_cases
+        density = plan_norm[i, :] # Vector of [0, 1]
+        push!(samples, DensityParams(radius, gx, gy, density))
+    end
+    
+    return samples
 end
 
 """

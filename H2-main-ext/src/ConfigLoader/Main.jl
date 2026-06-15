@@ -63,7 +63,7 @@ function load_config(config_path::String, tsv_config_path::String)
     mode_str = get(t_json, "tsv_mode", "manual")
     mode = Symbol(mode_str)
     
-    radius = get(t_json, "tsv_radius", 2.0e-5)
+    radius = get(t_json, "tsv_radius", 5.0e-6) # Default to 5um (radius) -> 10um (diameter) as per requirements
     # Note: h_tsv is in config.json -> dimensions
     dims = get(c_json, "dimensions", Dict())
     h_tsv = get(dims, "h_tsv", 0.0001)
@@ -76,7 +76,15 @@ function load_config(config_path::String, tsv_config_path::String)
         end
     end
 
-    tsv = TSVConfig(mode, coords, radius, h_tsv)
+    # Density map fields
+    gx = get(t_json, "gx", 4)
+    gy = get(t_json, "gy", 4)
+    density = Float64.(get(t_json, "density", zeros(gx * gy)))
+    n_total_max = get(t_json, "n_total_max", 1000)
+    p_min = get(t_json, "p_min", 3.0e-5) # Default 30um
+    m_edge = get(t_json, "m_edge", max(radius, p_min / 2))
+
+    tsv = TSVConfig(mode, coords, radius, h_tsv, gx, gy, density, n_total_max, p_min, m_edge)
 
     # 4. Global Dimensions & Offsets (from dimensions object)
     pg_dpth = get(dims, "pg_dpth", 5.0e-6)

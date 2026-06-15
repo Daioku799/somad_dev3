@@ -16,8 +16,11 @@
 
 - **JSON.jl**: 設定ファイルのパースと統合管理。
 - **SimpleGDS.jl**: GDSIIファイルのバイナリパース（低レベル処理）。
-- **PolygonOps.jl**: GDSII由来의 ポリゴンに対する内外判定。
-- **LinearAlgebra.jl**: 幾何サンプリング、距離計算、外挿座標算出。
+- **PolygonOps.jl**: GDSII由来のポリゴンに対する内外判定。
+- **LinearAlgebra.jl**: 幾何サンプリング、距離計算、外挿座標算出、およびPOD基底抽出のためのSVD計算。
+- **JLD2.jl**: シミュレーションスナップショット（大規模データ）の効率的な保存と読み込み。
+- **JSON3.jl**: 高速なJSON処理と構造体へのマッピング。
+- **LatinHypercubeSampling.jl**: 多次元パラメータ空間における効率的なサンプリング。
 - **Plots.jl**: モデル検証および結果描画。
 
 ## Development Standards
@@ -55,6 +58,8 @@
 
 - **デフォルト値の排除**: 解析実行時はJSONでの明示的指定を必須とし、自動補完による暗黙的な解析を避ける（エラー停止を優先）。
 - **試験用初期値ユーティリティ**: 開発・テスト用にのみ `H2-main-original` 準拠のデータを生成する専用パスを用意。
+- **POD-RBF モデリング**: 幾何学的なパラメータ変動（TSV配置等）に対して、PODによる空間基底抽出とRBF補間を組み合わせた次世代熱予測フローを採用。
+- **データ駆動型検証**: 解析結果のスナップショット（JLD2）とメタデータ（manifest.json）を一対で管理し、ROM構築のトレーサビリティを確保。
 
 ---
 _Document standards and patterns, not every dependency_

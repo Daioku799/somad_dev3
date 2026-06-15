@@ -20,11 +20,22 @@ function run_simulation_case(case::SimulationCase, solver_dir::String, work_base
     mkpath(case_dir)
     
     # 1. Generate TSV Config
-    tsv_config = Dict(
-        "tsv_mode" => "manual",
-        "tsv_radius" => case.params["radius"],
-        "manual_coordinates" => case.params["coords"]
-    )
+    tsv_config = Dict{String, Any}()
+    if haskey(case.params, "density")
+        tsv_config["tsv_mode"] = "density"
+        tsv_config["gx"] = case.params["gx"]
+        tsv_config["gy"] = case.params["gy"]
+        tsv_config["density"] = case.params["density"]
+        tsv_config["tsv_radius"] = case.params["radius"]
+        # Use default values for other density fields if not provided
+        tsv_config["n_total_max"] = get(case.params, "n_total_max", 1000)
+        tsv_config["p_min"] = get(case.params, "p_min", 3.0e-5)
+        tsv_config["m_edge"] = get(case.params, "m_edge", 1.5e-5)
+    else
+        tsv_config["tsv_mode"] = "manual"
+        tsv_config["tsv_radius"] = case.params["radius"]
+        tsv_config["manual_coordinates"] = case.params["coords"]
+    end
     
     # 2. Generate Base Config (copying defaults but updating dimensions if needed)
     # For now, we assume a template config.json exists or use a default structure
