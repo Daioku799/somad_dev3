@@ -1,7 +1,7 @@
 # Implementation Tasks: config-loader
 
 - [ ] 1. Foundation: Project setup and data structures
-- [ ] 1.1 Setup Julia environment and Project.toml
+- [x] 1.1 Setup Julia environment and Project.toml
   - 依存ライブラリ（JSON, SimpleGDS, PolygonOps, Plots）のバージョンを固定した `Project.toml` を作成する。
   - `julia --project` で環境が正常に初期化され、必要なパッケージがロード可能であることを確認する。
   - _Requirements: 2.1_
