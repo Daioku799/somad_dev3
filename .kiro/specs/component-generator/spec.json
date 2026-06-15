@@ -1,11 +1,20 @@
 {
   "name": "component-generator",
-  "phase": "tasks-generated",
+  "phase": "implementation",
   "status": "in-progress",
   "language": "ja",
   "approvals": {
-    "requirements": true,
-    "design": true,
-    "tasks": true
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
   }
 }

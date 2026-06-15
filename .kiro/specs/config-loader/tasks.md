@@ -1,34 +1,58 @@
-# Tasks: config-loader
+# Implementation Tasks: config-loader
 
-## 1. 実行環境の構築 (New)
-_Boundary: Project Root_
-- [ ] 1.1 `H2-main-copy` ディレクトリにて Julia プロジェクトを初期化し、`Project.toml` を作成する。 [2.1]
-- [ ] 1.2 必要なパッケージ（`JSON`, `SimpleGDS`, `PolygonOps`, `Plots`）をインストールし、環境を固定する。 [2.1]
+- [ ] 1. Foundation: Project setup and data structures
+- [ ] 1.1 Setup Julia environment and Project.toml
+  - 依存ライブラリ（JSON, SimpleGDS, PolygonOps, Plots）のバージョンを固定した `Project.toml` を作成する。
+  - `julia --project` で環境が正常に初期化され、必要なパッケージがロード可能であることを確認する。
+  - _Requirements: 2.1_
+- [ ] 1.2 Define configuration types and structures
+  - `Material`, `Layer`, `DensityMapConfig`, `ManufacturingConfig`, `GASettings`, `TSVConfig`, `ModelConfig` の不変構造体（struct）を `Types.jl` に定義する。
+  - 各構造体が型安全であり、下流モジュールで正しく参照できることを確認する。
+  - _Requirements: 2.2_
+- [ ] 1.3 Define default physical constants and dimensions
+  - `H2-main-original/src/modelA.jl` の値をベースにした物理定数およびデフォルト寸法を `Defaults.jl` に定義する。
+  - 定義された値がオリジナルの物理定数とビットレベルで一致することを確認する。
+  - _Requirements: 1.3_
 
-## 2. 基礎データ構造と定数の定義 (P)
-_Boundary: ConfigLoader.Types, ConfigLoader.Defaults_
-- [ ] 2.1 `ConfigLoader/Types.jl` に解析用設定を保持する不変構造体（`Material`, `Layer`, `TSVConfig`, `ModelConfig`）を定義する。 [2.2]
-- [ ] 2.2 `ConfigLoader/Defaults.jl` に `H2-main-original` 由来の定数群を定義し、試験用設定を生成する `generate_test_config()` を実装する。 [1.3]
+- [ ] 2. Calculation Logic
+- [ ] 2.1 (P) Implement Z-marker calculation
+  - 層定義と `pg_dpth` から `zm0~zm12` を計算するロジックを `Calculators.jl` に実装する。
+  - 浮動小数点誤差を防ぐため、計算結果を 15 桁で丸める処理を含める。
+  - 計算された Z 座標がオリジナルのマーカー位置と正確に一致することを確認する。
+  - _Requirements: 3.1, 3.2_
+  - _Boundary: ConfigLoader_
+- [ ] 2.2 (P) Implement solder bump radius calculation
+  - 推奨されるはんだバンプ半径 `1.3 * d_ufill / 2.0` を計算する関数を実装する。
+  - アンダーフィル径に基づき、正しい半径が返されることを確認する。
+  - _Requirements: 4.3_
+  - _Boundary: ConfigLoader_
 
-## 3. JSON設定ファイルのパースと厳格な検証
-_Boundary: ConfigLoader.Main_
-_Depends: 2.1, 2.2_
-- [ ] 3.1 `config.json` および `tsv_config.json` を読み込み、必須項目の欠落をチェックして `ModelConfig` を生成する機能を実装する。 [1.1, 1.2]
-  - 自動補完を行わず、項目欠落時はエラーを出力すること。
-- [ ] 3.2 物理定数（熱伝導率 λ 等）が 0 以下の数値である場合にバリデーションエラーを通知する機能を実装する。 [1.2]
+- [ ] 3. JSON Loading and Validation
+- [ ] 3.1 Implement core JSON loader
+  - `config.json` および `tsv_config.json` をパースし、`ModelConfig` にマッピングする基本機能を `Main.jl` に実装する。
+  - 配置モード（manual, random, density）の抽出と、`random_seed` による再現性の確保を行う。
+  - スナップショット保存設定（フォルダ、命名規則）のロード機能を実装する。
+  - 有効な JSON ファイルから `ModelConfig` が正しく生成されることを確認する。
+  - _Requirements: 1.1, 4.1, 4.2, 6.1_
+- [ ] 3.2 Implement density map and optimization settings loader
+  - 密度マップ設定（Gx, Gy, N_min, N_max, rho_cell_max）、製造制約、GAパラメータのロード機能を実装する。
+  - `Gx`, `Gy` が未指定の場合、既定値 4x4 を適用する。
+  - `density` モード時に必要な拡張パラメータがすべてロードされることを確認する。
+  - _Requirements: 1.4, 5.1, 5.2, 5.4, 5.5_
+- [ ] 3.3 Implement strict validation and solver settings
+  - 必須パラメータの欠落時にエラーを投げるバリデーションを実装する。
+  - `mu` のサイズ検証、および配置禁止セルの密度が 0 であることの検証を行う。
+  - FVMソルバーの収束条件（epsilon, max_iter）および検証用シリコン熱伝導率のロードを実装する。
+  - 不正な設定ファイルが適切に拒絶され、ソルバー条件が正しく反映されることを確認する。
+  - _Requirements: 1.2, 5.3, 6.2, 6.3_
 
-## 4. 動的座標計算ロジックの実装
-_Boundary: ConfigLoader.Calculators_
-_Depends: 2.1_
-- [ ] 4.1 `layers` 配列の厚みから累積Z座標マーカー（`zm0`〜`zm12`）を動的に算出するロジックを実装する。 [3.1]
-  - オリジナルの厚み入力時に、`H2-main-original` の定数と完全に一致することを確認する。
-- [ ] 4.2 Silicon層の上面から `pg_dpth` オフセットされた PowerGrid 用のZ座標（`zm3, 6, 9`）を算出する機能を実装する。 [3.2]
-- [ ] 4.3 はんだバンプの推奨半径（`1.3 * d_ufill / 2.0`）を計算する機能を実装する。 [4.3]
-
-## 5. テストと厳格な検証
-_Boundary: ConfigLoader.Tests_
-_Depends: 3.1, 4.1_
-- [ ] 5.1 ユニットテスト：必須項目欠落時のエラーハンドリングを検証する。 [1.2]
-- [ ] 5.2 ユニットテスト：累積Z座標の計算結果が期待値と一致することを検証する。 [3.1]
-- [ ] 5.3 厳密比較テスト：算出された `zm` 配列が `modelA.jl` のハードコード定数とビット単位で一致することを検証する。 [1.3, 3.1]
-- [ ] 5.4 統合テスト：`generate_test_config()` が `H2-main-original` の仕様と一致することを検証する。 [1.3]
+- [ ] 4. Verification and Integration
+- [ ] 4.1 Implement original constants reproduction utility
+  - `H2-main-original` の設定を再現する `ModelConfig` を生成するユーティリティ関数を実装する。
+  - 生成された設定がテストや比較用のベースラインとして利用可能であることを確認する。
+  - _Requirements: 1.3_
+- [ ] 4.2 Integration and validation testing
+  - Z座標計算、半径計算、JSONバリデーションのユニットテストを `test/` に実装する。
+  - 全要件（1.1〜6.3）のカバー範囲を確認し、下流コンポーネントへのデータ受け渡しを検証する。
+  - すべてのテストがパスし、要件が満たされていることを確認する。
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2, 5.3_

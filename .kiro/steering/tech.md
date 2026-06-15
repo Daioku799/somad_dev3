@@ -14,10 +14,14 @@
 
 ## Key Libraries
 
-- **JSON.jl**: 設定ファイルのパースと統合管理。
+- **JSON.jl / JSON3.jl**: 設定ファイルのパースと統合管理。ROM側では `JSON3.jl` を優先。
+- **JLD2.jl**: スナップショットデータおよび次数低減モデルの永続化。
 - **SimpleGDS.jl**: GDSIIファイルのバイナリパース（低レベル処理）。
-- **PolygonOps.jl**: GDSII由来의 ポリゴンに対する内外判定。
+- **PolygonOps.jl**: GDSII由来のポリゴンに対する内外判定。
 - **LinearAlgebra.jl**: 幾何サンプリング、距離計算、外挿座標算出。
+- **Distributions.jl**: パラメータサンプリングにおける確率分布定義。
+- **LatinHypercubeSampling.jl**: 実験計画法に基づく効率的なスナップショット生成。
+- **StructTypes.jl**: 構造体とJSONの相互変換支援。
 - **Plots.jl**: モデル検証および結果描画。
 
 ## Development Standards

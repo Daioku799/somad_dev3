@@ -1,47 +1,114 @@
 # Technical Design: component-generator
 
-## 1. System Architecture & Component Design
+## 1. Overview
+本コンポーネントは、密度マップ（mu）を含む各種配置設定を物理的な幾何形状オブジェクトのリストに変換する。
+これにより、ROMパラメータ（抽象的な密度）からFVMソルバー（具体的な座標）への厳密な橋渡しを実現する。
 
-### 1.1 ComponentGenerator モジュール
-物理定数と配置ルールに基づき、検証済みのコンポーネントリストを生成する。
+### Goals
+- 密度ベクトル `mu` を物理的なTSV座標へと正確にデコードする。
+- 全シリコン層におけるTSVの垂直アライメントを保証する。
+- 最小ピッチおよび境界条件の物理的制約を事前検証する。
 
-- `generate_components(config) -> Vector{GeometryObject}`: メインAPI。
-- `calculate_safe_bump_radius(r_tsv, d_ufill) -> Float64`: 安全半径の算出。
+### Non-Goals
+- チップレイアウト（GDSポリゴン）の変更。
+- メッシュ生成アルゴリズムの直接制御。
 
-### 1.2 データ構造 (Types)
-- `GeometryObject`: 
-  - `type::Symbol` (:cylinder, :sphere, :box)
-  - `pos::NTuple{3, Float64}`: 中心座標 (x, y, z)
-  - `dims::Dict{Symbol, Float64}`: 半径、高さ、寸法など
-  - `mat_id::Int`: 材料ID
+## 2. Boundary Commitments
 
-## 2. Architecture Decisions & Integration
+### This Spec Owns
+- 密度マップからの座標展開ロジック。
+- TSVおよびはんだバンプのオブジェクト生成。
+- 座標セットの物理的妥当性検証。
 
-### 2.1 垂直同期配置アルゴリズム (Traceability: 1.1, 2.1)
-1. **座標生成**: モードに応じた共通 (x, y) リストを作成。
-2. **TSV生成**:
-   - Chip 1-3 の各 Z 範囲 ([zm2, zm4], [zm5, zm7], [zm8, zm10]) に対して `Cylinder` を作成。
-3. **バンプ生成**:
-   - UF 1-4 の各中心 Z 座標 (zm1.5, zm4.5, zm7.5, zm10.5 相当) に対して `Sphere` を作成。
-   - 安全半径 $R$ を全バンプに適用。
+### Out of Boundary
+- `config-loader` によるJSONパース（入力データの提供）。
+- `geometry-logic` による内外判定カーネル。
+- `model-builder` によるIDマップ充填処理。
 
-### 2.2 物理バリデーションロジック (Traceability: 4.1, 4.2)
-- **境界チェック**: 全オブジェクトの `x ± r`, `y ± r` がチップ領域内に収まっているか。
-- **干渉チェック**: 全ての TSV 中心ペア $(p_i, p_j)$ に対して $dist(p_i, p_j) \ge 2 \times r_{tsv}$ を検証。
+### Allowed Dependencies
+- `ConfigLoader.Types`: 設定データ構造。
+- `GeometryLogic.Types`: 幾何オブジェクト形式。
 
-## 3. Boundary Commitments
-- **Owned**: コンポーネント座標の算出、安全半径の適用、物理干渉の検証。
-- **Not Owned**: 点判定の数学ロジック（`geometry-logic`が担当）、GDS形状の管理。
+## 3. Architecture
+
+### Architecture Pattern & Boundary Map
+```mermaid
+graph TB
+    Config[ConfigLoader] --> Generator[ComponentGenerator]
+    Generator --> Objects[GeometryObjects List]
+    Objects --> Logic[GeometryLogic]
+    Objects --> Builder[ModelBuilder]
+```
+
+### Technology Stack
+| Layer | Choice / Version | Role in Feature |
+|-------|------------------|-----------------|
+| Logic | Julia 1.10 | 配置計算・幾何生成 |
+| Types | Structs | 幾何プリミティブの抽象化 |
 
 ## 4. File Structure Plan
-- `src/ComponentGenerator/ComponentGenerator.jl`: メインAPIとオブジェクト構築。
-- `src/ComponentGenerator/Layout.jl`: 座標リスト生成ロジック。
-- `src/ComponentGenerator/Validator.jl`: 物理制約チェック。
 
-## 5. Testing Strategy
+### Directory Structure
+- `src/ComponentGenerator/`
+  - `ComponentGenerator.jl`: メインエントリポイント。
+  - `Layout.jl`: 密度マップ、ランダム、マニュアルの各配置ロジック。
+  - `Validator.jl`: 最小ピッチ、境界、禁止領域の検証。
+  - `Types.jl`: 内部用データ構造。
+
+## 5. Requirements Traceability
+
+| Requirement | Summary | Components |
+|-------------|---------|------------|
+| 1.1 | 密度マップからの本数計算 | `Layout.jl` |
+| 1.2, 1.3 | $n_{max}$ および $n_{ij}$ 算出 | `Layout.jl` |
+| 1.4 | 最大本数マトリックス取得 API | `Layout.jl` |
+| 1.5 | Constraint Adjustment (制約調整) | `Layout.jl` |
+| 2.1 | セル内格子配置展開 | `Layout.jl` |
+| 2.2 | 垂直アライメント保証 | `ComponentGenerator.jl` |
+| 3.1, 3.2 | バンプ自動生成と半径算出 | `ComponentGenerator.jl` |
+| 4.1, 4.2 | 物理制約（境界・干渉）検証 | `Validator.jl` |
+| 5.1 | プリミティブ形式での出力 | `ComponentGenerator.jl` |
+| 5.2 | メタデータ追跡 | `Types.jl` |
+
+## 6. Components and Interfaces
+
+### ComponentGenerator
+**Intent**: 統合的なコンポーネント生成API。
+**Requirements**: 2.2, 3.1, 5.1
+
+- `generate_all_components(config::ModelConfig) -> Vector{GeometryObject}`
+  1. `Layout.expand_coordinates` を呼び出し、共通 (x, y) リストを取得。
+  2. `Validator.validate_physical_constraints` で干渉等をチェック。
+  3. 各層の Z 範囲に合わせて `Cylinder` (TSV) と `Sphere` (Bump) を構築。
+
+### Layout
+**Intent**: (x, y) 座標の展開および密度マップの物理的補正。
+**Requirements**: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1
+
+- `expand_coordinates(config::TSVConfig) -> Vector{Point2D}`
+  - `tsv_mode == "density"` の場合:
+    1. セル分割 ($G_x \times G_y$) と各セルの寸法を確定。
+    2. 各セルで $n_{max,ij}$ をピッチ制約から算出。
+    3. `mu` を適用して $n_{ij}$ 本を格子状に配置。
+- `get_cell_capacities(config::TSVConfig) -> Matrix{Int}`
+  - 各セル ($G_x \times G_y$) が物理的に収容可能な最大TSV本数 $n_{max,ij}$ を計算して返す。
+- `adjust_density_constraints(mu::Vector{Float64}, n_max_matrix::Matrix{Int}, N_limit::Int) -> Vector{Float64}`
+  - **Constraint Adjustment (制約調整)**:
+    - 各セルの予定本数 $n_{ij} = \text{round}(\mu_{ij} \times n_{max,ij})$ の総和が $N_{limit}$ を超える場合、$\mu$ 全体をスケーリングして総本数を制限内に収める。
+    - これは物理的な実行可能性を保証するための「制約調整」であり、学習データの正規化（Data Scaling）とは明確に区別される。
+
+### Validator
+**Intent**: 物理的整合性の検証。
+**Requirements**: 4.1, 4.2
+
+- `validate_physical_constraints(coords, config)`
+  - 最小ピッチ違反の検出。
+  - チップ境界逸脱の検出。
+
+## 7. Testing Strategy
 - **Unit Tests**:
-  - `random` 配置時のシード再現性。
-  - 安全半径公式の算出結果が理論値と一致するか。
-  - 干渉している座標セットを与えた際に正しくエラーが検出されるか。
+  - 密度 1.0 の場合に最大本数が正しく配置されるか。
+  - セル境界ギリギリの配置で隣接セルと干渉しないか。
+  - 密度マップ $\mu$ の変更が本数 $n_{ij}$ に正しく反映されるか。
 - **Integration Tests**:
-  - 生成されたオブジェクトリストを `geometry-logic` に渡して矛盾なく判定できるか。
+  - `config-loader` からの `mu` を受け取り、最終的なオブジェクトリストが生成されるまでの全工程。

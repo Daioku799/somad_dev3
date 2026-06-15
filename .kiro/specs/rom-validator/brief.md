@@ -1,39 +1,37 @@
 # Brief: rom-validator
 
 ## Problem
-構築されたROMが、最適化に使用できるほど十分な精度を持っているか不明である。
+構築されたROMが、学習データ以外（未知の密度マップ）に対してどの程度の予測精度を持つか不明である。
 
 ## Current State
-`rom-interpolator` により、予測モデルが構築されている（前提）。
+`rom-interpolator` によりROMモデルが構築され、検証用スナップショットが `data/raw/` に存在する。
 
 ## Desired Outcome
-学習に使用していない未知のパラメータ（テストデータ）に対し、ROM予測値とFVM解析値を比較し、誤差（L2ノルム、最大温度誤差、平均絶対誤差）を報告できる。
+検証用データを用いてROM予測結果とFVM解析結果を比較し、温度場全体の相対誤差、最高温度誤差（Tmax誤差）、ホットスポット位置のずれを定量的に評価する。
 
 ## Approach
-- 交差検証（Cross-validation）または独立したテストセットによる評価。
-- 誤差分布のヒストグラム作成。
-- 特定パラメータにおけるROM予測断面図とFVM断面図の視覚的比較。
+- **誤差指標**: 平均相対誤差、最大絶対誤差、Tmax誤差。
+- **合格判定**: 既定の閾値（Tmax平均誤差 2K以下等）に基づくROM採用判定。
 
 ## Scope
-- **In**: 誤差計算ロジック、検証用データ管理、レポート生成、比較プロット。
-- **Out**: ROMの再学習（rom-interpolatorが担当）。
+- **In**: 検証用データの読み込み、ROM予測の実行、FVM結果との比較計算、評価レポート生成。
+- **Out**: スナップショット生成そのもの、ROMの学習。
 
 ## Boundary Candidates
-- 精度評価部（Evaluator）
-- レポート生成部（Reporter）
-- 視覚的比較部（Visualizer）
+- 誤差計算エンジン
+- 評価レポート・可視化
+- 精度合格判定基準の管理
 
 ## Out of Boundary
-- 学習データの生成。
+- 最適化中の検証（最適化フェーズでも使用するが、本SpecはROMそのものの品質保証に特化する）。
 
 ## Upstream / Downstream
-- **Upstream**: `rom-interpolator`
-- **Downstream**: なし（ROM構築の完了判定）
+- **Upstream**: `rom-interpolator`, `snapshot-generator`
+- **Downstream**: `ga-optimizer` (合格済みROMのみ使用)
 
 ## Existing Spec Touchpoints
-- **Extends**: なし
-- **Adjacent**: `validation-plot` (プロットロジックの共有)
+- なし
 
 ## Constraints
-- 物理的に重要な指標（最大温度の精度）を優先した評価。
-- 再現性の確保。
+- `isapprox` を用いた物理量の比較。
+- 相対誤差と絶対誤差の両面評価。

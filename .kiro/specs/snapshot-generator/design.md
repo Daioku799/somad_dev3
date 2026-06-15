@@ -1,131 +1,178 @@
 # Technical Design: Snapshot Generator
 
-## 1. システム構成と技術スタック
+## Overview
+Snapshot Generatorは、ROM（次数低減モデル）構築のために必要な大量のシミュレーション結果（スナップショット）を自動生成し、蓄積する機能を提供します。
+本機能は、密度マップ（Density Map）形式で定義された高次元のパラメータ空間を効率的にサンプリングし、FVMソルバー（heat3ds.jl）を並列実行して、その結果とパラメータを紐付けて保存します。
 
-Snapshot Generatorは、ROM（次数低減モデル）の構築に必要なトレーニングデータ（スナップショット）を効率的に収集するためのオーケストレーション層です。
+### Goals
+- 密度マップ形式のパラメータ（ベクトル `mu`）のLHSサンプリング。
+- `component-generator` を介した、密度マップから実TSV座標への展開。
+- FVMソルバーの自動一括実行とエラーハンドリング。
+- スナップショットデータのJLD2形式での永続化と、`manifest.json` によるメタデータ管理。
 
-### 技術スタック
-- **言語**: Julia 1.10+
-- **サンプリング**: `LatinHypercubeSampling.jl`
-  - 設計変数の空間を効率的に網羅するために使用。
-- **データ保存**: `JLD2.jl`
-  - Juliaの型情報を保持したまま高速にI/Oを行うために採用。
-- **シリアル化**: `JSON3.jl`
-  - `manifest.json` および `config.json` の読み書きに使用。
-- **並列制御**: `Distributed` (Julia標準ライブラリ) または `Base.Threads`
-  - 複数ケースの同時実行を制御。
+### Non-Goals
+- ROM（次数低減モデル）自体の構築や特異値分解（SVD）。
+- 密度マップ以外のパラメータ（層厚など）の動的なサンプリング（現段階では定数扱い）。
 
----
+## Boundary Commitments
 
-## 2. オーケストレーション（実行制御）
+### This Spec Owns
+- パラメータサンプリングロジック（LHS）。
+- ソルバー実行の並列化およびワークフロー管理。
+- `data/manifest.json` の読み書きと整合性維持。
+- `data/raw/` へのスナップショット保存指示。
 
-シミュレーションの実行は、各ケースごとに独立した作業ディレクトリを作成して行います。
+### Out of Boundary
+- FVMソルバー本体（heat3ds.jl）の熱計算ロジック。
+- 実TSV座標の幾何学的算出（`component-generator` が担当）。
+- 学習済みモデルの評価（`rom-validator` が担当）。
 
-### 実行フロー
-1. **パラメータ生成**: `LatinHypercubeSampling.jl` を用いて、指定された範囲内で $N$ 個のパラメータセットを生成。
-2. **ディレクトリ作成**: `data/work/case_{id}/` を作成。
-3. **設定ファイル配置**: 生成したパラメータに基づき、`model-builder` が解釈可能な `config.json` を各ディレクトリに配置。
-4. **ソルバー実行**: 
-   - `H2-main-ext/run.jl` を外部プロセスとして実行。
-   - `JULIA_LOAD_PATH` を適切に設定し、ソースコードを共有。
-   - 実行時引数または環境変数で「スナップショット出力先」を指定。
-5. **ポストプロセス**: 実行完了後、生成された `log.txt` を確認し、収束状況を判定。
+### Allowed Dependencies
+- `ConfigLoader`: 設定の読み込み。
+- `ComponentGenerator`: 密度マップから座標への展開。
+- `JLD2.jl`, `JSON3.jl`: データ永続化。
+- `LatinHypercubeSampling.jl`: サンプリングアルゴリズム。
 
-### 並列実行戦略
-- ユーザー設定により、同時実行数 `max_workers` を指定可能にする。
-- 各ソルバー実行がマルチスレッド（`JULIA_NUM_THREADS`）を使用する場合、`max_workers * threads_per_case <= total_cores` となるよう制御。
+### Revalidation Triggers
+- `manifest.json` のスキーマ変更。
+- スナップショット JLD2 ファイル内の変数名やデータ構造の変更。
 
----
+## Architecture
 
-## 3. データモデル
+### Architecture Pattern & Boundary Map
+Snapshot Generatorは、他のモジュールを協調させる「オーケストレーション層」として機能します。
 
-### 3.1 `manifest.json` (メタデータ管理)
-全ケースの状態とパラメータを一覧管理します。
+```mermaid
+graph TB
+    SG[Snapshot Generator]
+    CL[Config Loader]
+    CG[Component Generator]
+    H3D[heat3ds-ext]
+    Manifest[(manifest.json)]
+    Storage[(data/raw/*.jld2)]
 
-```json
-{
-  "project": "H2-ROM-Snapshots",
-  "generated_at": "2023-10-27T10:00:00",
-  "parameter_space": {
-    "r_tsv": [10e-6, 50e-6],
-    "n_tsv": [1, 16],
-    "bounds_x": [0.0, 1.0],
-    "bounds_y": [0.0, 1.0]
-  },
-  "cases": [
-    {
-      "id": "case_0001",
-      "status": "success",
-      "params_normalized": [0.1, 0.5, ...],
-      "params_physical": {
-        "r_tsv": 15e-6,
-        "n_tsv": 4,
-        "positions": [[0.2, 0.2], [0.2, 0.8], [0.8, 0.2], [0.8, 0.8]]
-      },
-      "snapshot_path": "data/raw/snapshot_case_0001.jld2",
-      "runtime_sec": 45.2,
-      "iterations": 120
-    }
-  ]
-}
+    SG -->|Read Constraints| CL
+    SG -->|Generate mu| Sampler[Sampler]
+    SG -->|Expand mu to coords| CG
+    SG -->|Spawn Jobs| Runner[Runner]
+    Runner -->|Invoke| H3D
+    H3D -->|Save Result| Storage
+    Runner -->|Update| Manifest
 ```
 
-### 3.2 `.jld2` (スナップショットデータ)
-各ケースの計算結果をバイナリ形式で保存します。
+### Technology Stack
 
-- `theta`: `Array{Float64, 3}` (3次元温度場 $\theta$)
-- `params`: `NamedTuple` (物理パラメータ)
-- `grid_info`: `Dict` (格子解像度、座標系)
-- `convergence`: `Bool` (収束フラグ)
+| Layer | Choice / Version | Role in Feature | Notes |
+|-------|------------------|-----------------|-------|
+| Sampling | LatinHypercubeSampling.jl | LHSアルゴリズム | 効率的な空間網羅 |
+| Orchestration | Julia Distributed / Base.Threads | 並列実行管理 | CPUリソースの最適化 |
+| Persistence | JLD2.jl | スナップショット保存 | 3D温度場（Float64配列）を高速保存 |
+| Metadata | JSON3.jl | manifest管理 | 高速なJSON I/O |
 
----
+## File Structure Plan
 
-## 4. エラーハンドリングとロギング
+### Directory Structure
+```
+src/SnapshotGenerator/
+├── SnapshotGenerator.jl   # エントリポイント、モジュール定義
+├── Types.jl               # マニフェスト・実行状態の型定義
+├── Sampler.jl             # LHSによるmuベクトルの生成
+├── Runner.jl              # プロセス実行・並列制御
+└── Manifest.jl            # manifest.json の操作
+```
 
-シミュレーションは長時間に及ぶため、一部の失敗で全体を止めない堅牢な設計とします。
+### Modified Files
+- `H2-main-ext/src/heat3ds.jl` — `snapshot_path` を受け取り、JLD2保存を行うロジックの追加（`heat3ds-ext` 側での実装だが、本機能と連携）。
+- `H2-main-ext/run.jl` — `--snapshot` オプションへの対応。
 
-- **タイムアウト**: 各ケースに `timeout_sec` を設定。超過した場合はプロセスを kill し、`manifest.json` に `timeout` と記録。
-- **非収束**: ソルバーが最大反復回数に達しても収束しなかった場合、`status: non-converged` として記録。スナップショット自体は（参考値として）保存するか、フラグで制御可能にする。
-- **ログ収集**: 各ケースの `stdout`/`stderr` は `data/work/case_{id}/output.log` にリダイレクトし、デバッグを容易にする。
+## Requirements Traceability
 
----
+| Requirement | Summary | Components | Interfaces |
+|-------------|---------|------------|------------|
+| 1 | 密度マップサンプリング | `Sampler` | `generate_samples` |
+| 2 | シミュレーション実行 | `Runner` | `run_simulations` |
+| 3 | データ蓄積 | `Manifest`, `Runner` | `update_manifest!`, `save_snapshot` |
+| 4 | エラーハンドリング | `Runner` | `handle_solver_error` |
 
-## 5. `H2-main-ext` への統合計画
+## Components and Interfaces
 
-`heat3ds.jl` を修正し、シミュレーション完了後にデータを自動保存する機能を追加します。
+### Sampler
 
-### 修正内容
-1. `q3d` 関数の引数に `snapshot_path::String=""` を追加。
-2. 計算終了後、`snapshot_path` が空でなければ `JLD2.save` を実行。
+| Field | Detail |
+|-------|--------|
+| Intent | 密度マップの空間をLHSでサンプリングする |
+| Requirements | 1.1, 1.2, 1.3 |
 
+**Responsibilities & Constraints**
+- $G_x \times G_y$ 次元のユニットハイパーキューブをサンプリングする。
+- `ComponentGenerator.Layout.adjust_density_constraints` を使用して、サンプリングされた `mu` が物理的な総本数制約 $N_{limit}$ を超えないよう調整する。
+- **調整後の `mu`** を後続の処理（Runner）に渡す。
+
+**Contracts**: Batch [x]
 ```julia
-# heat3ds.jl の修正イメージ
-function q3d(..., snapshot_path="")
-    # ... シミュレーション実行 ...
-    if !isempty(snapshot_path)
-        using JLD2
-        save(snapshot_path, "theta", wk.θ, "params", config_params, ...)
-    end
+function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::Int)
+    # 1. LHSサンプリングの実行
+    # 2. adjust_density_constraints による補正
+    # returns Vector{Vector{Float64}} (adjusted mu vectors)
 end
 ```
 
-3. `run.jl` に `--snapshot PATH` オプションを追加し、コマンドラインから出力先を制御可能にする。
+### Runner
 
----
+| Field | Detail |
+|-------|--------|
+| Intent | ソルバーをオーケストレートし、結果を回収する |
+| Requirements | 2.1, 2.2, 2.3, 4.1, 4.2 |
 
-## 6. ディレクトリ構造
+**Responsibilities & Constraints**
+- 各ケースに対して一意な `data/work/case_XXXX/` を作成する。
+- 渡された **調整済み `mu`** を用いて `component-generator` を呼び出し、TSV 座標に展開する。
+- ソルバーを外部プロセスまたはスレッドとして起動し、タイムアウトを監視する。
+- シミュレーション結果を JLD2 に保存する際、**ユニークなスナップショットID** と **調整済み `mu`** をメタデータとして含める。
 
-```text
-.kiro/specs/snapshot-generator/
-├── requirements.md
-└── design.md (This file)
-
-src/SnapshotGenerator/
-├── Runner.jl       # プロセスオーケストレーション
-├── Sampler.jl      # LHSパラメータ生成
-└── Manifest.jl     # メタデータ管理
-
-data/
-├── raw/            # 最終的な .jld2 スナップショット
-└── work/           # 実行時の一時ディレクトリ
+**Contracts**: Batch [x]
+```julia
+function run_simulations(samples::Vector{Vector{Float64}}, max_workers::Int)
+    # Orchestrates the FVM solver runs
+end
 ```
+
+### Manifest
+
+| Field | Detail |
+|-------|--------|
+| Intent | `manifest.json` の整合性を維持する |
+| Requirements | 3.3, 4.3 |
+
+**Responsibilities & Constraints**
+- 実行済みの ID を管理し、中断後の再開を可能にする。
+- パラメータ `mu` と、保存された `.jld2` へのパスを紐付ける。
+
+**Contracts**: State [x]
+```julia
+function load_manifest(path::String) end
+function update_manifest!(manifest::Manifest, case_info::CaseInfo) end
+```
+
+## Data Models
+
+### Domain Model: Manifest
+- `SnapshotManifest`: 全体のメタデータ（生成日時、パラメータ範囲、制約）。
+- `SnapshotCase`: 各シミュレーション結果（ID、ステータス、調整済みmu、ファイルパス、実行時間）。
+
+### Storage Model: JLD2 Snapshot
+JLD2ファイルには以下の変数を格納する：
+- `temperature`: 3D温度場配列 (Float64)。
+- `metadata`: 以下の項目を含む辞書または構造体。
+  - `snapshot_id`: ユニークなスナップショット番号。
+  - `mu`: **調整済み**密度ベクトル。
+  - `timestamp`: 生成時刻。
+
+## Testing Strategy
+- **Unit Tests**:
+  - `Sampler`: 生成された `mu` が制約を遵守しているか、LHSの分布が妥当か。
+  - `Manifest`: JSONの読み書きと、追加時のデータ整合性。
+- **Integration Tests**:
+  - ダミーの `mu` を用いて、`component-generator` -> `heat3ds-ext` -> `JLD2保存` の一連のフローが正常に動作するか。
+- **E2E Tests**:
+  - 少数のサンプル数（例: 2個）で、全自動で実行が完了し、`manifest.json` が更新されることの確認。
