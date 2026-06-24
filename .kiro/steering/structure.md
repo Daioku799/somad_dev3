@@ -24,6 +24,11 @@
 - `work/`: 解析実行時のテンポラリディレクトリ。
 - `manifest.json`: 全ケースのパラメータと実行状態の統合管理。
 
+### Reference / Legacy Solvers
+**Purpose**: 比較・検証用、または過去の実装環境。
+- `H2-main-original/`: 拡張前のオリジナルの熱解析ソルバー。
+- `H2-main_TSV_Opt/`: 以前のTSV最適化実装環境。
+
 ## Directory Patterns (Module Internal Structure)
 
 各機能ディレクトリ（例: `src/ConfigLoader/`）は以下の構成を基本とする。
