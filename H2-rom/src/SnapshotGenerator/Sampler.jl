@@ -98,7 +98,7 @@ end
 Generate density map samples using Latin Hypercube Sampling (LHS).
 The density values are continuous in [0, 1].
 """
-function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::Int)
+function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::Int, include_representative::Bool=true)
     dims = grid_size[1] * grid_size[2]
     
     # Perform LHS sampling
@@ -109,6 +109,33 @@ function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::I
     
     # Convert Matrix to Vector{Vector{Float64}}
     samples = [plan_norm[i, :] for i in 1:n_samples]
+    
+    if include_representative
+        cx = (grid_size[1] + 1) / 2
+        cy = (grid_size[2] + 1) / 2
+        d_max = sqrt((cx - 1)^2 + (cy - 1)^2)
+        
+        # 1. Uniform
+        if n_samples >= 1
+            samples[1] = fill(1.0, dims)
+        end
+        # 2. Center-concentrated
+        if n_samples >= 2
+            if d_max > 0.0
+                samples[2] = vec([clamp(1.0 - sqrt((i - cx)^2 + (j - cy)^2) / d_max, 0.0, 1.0) for i in 1:grid_size[1], j in 1:grid_size[2]])
+            else
+                samples[2] = fill(1.0, dims)
+            end
+        end
+        # 3. Corners-concentrated
+        if n_samples >= 3
+            if d_max > 0.0
+                samples[3] = vec([clamp(sqrt((i - cx)^2 + (j - cy)^2) / d_max, 0.0, 1.0) for i in 1:grid_size[1], j in 1:grid_size[2]])
+            else
+                samples[3] = fill(1.0, dims)
+            end
+        end
+    end
     
     if n_limit > 0
         # Use default constants from H2-main-ext

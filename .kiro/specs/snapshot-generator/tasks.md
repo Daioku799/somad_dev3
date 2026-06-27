@@ -10,7 +10,7 @@
 - [x] Task 2.1: `Sampler.jl` に `LatinHypercubeSampling.jl` を用いた密度マップサンプリングを実装する。
   - _Boundary:_ `H2-rom/src/SnapshotGenerator/Sampler.jl`
 - [x] Task 2.2: `ComponentGenerator.Layout.adjust_density_constraints` を使用して、サンプリングされた `mu` が物理制約を遵守するように調整する。
-- [ ] Task 2.3: 代表パターン（均一密度、中央集中等）を初期サンプルとして生成する機能を追加する。
+- [x] Task 2.3: 代表パターン（均一密度、中央集中等）を初期サンプルとして生成する機能を追加する。
   - _Requirement:_ 1.2
 
 ## ソルバー実行・オーケストレーション
