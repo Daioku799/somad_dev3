@@ -25,27 +25,18 @@
 ## Specs (dependency order)
 
 ### Phase 2: Density Map Refactoring
-- [x] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none
+- [ ] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none
 - [x] heat3ds-ext -- 温度場（θ）を `.jld2` 形式で保存する機能を `heat3ds.jl` に追加。 Dependencies: none
-- [x] component-generator -- 密度マップから実TSV座標への展開ロジック、およびピッチ・チップ範囲検証の追加。 Dependencies: config-loader
-- [x] snapshot-generator -- 密度マップのサンプリングによるFVM一括実行への変更。 Dependencies: component-generator, heat3ds-ext
+- [ ] component-generator -- 密度マップから実TSV座標への展開ロジック、およびピッチ・チップ範囲検証の追加。 Dependencies: config-loader
+- [ ] snapshot-generator -- 密度マップのサンプリングによるFVM一括実行への変更。 Dependencies: component-generator, heat3ds-ext
 
 ### Phase 3: Offline ROM Construction
-- [x] pod-engine -- スナップショット行列からのSVDによる空間基底抽出。 Dependencies: snapshot-generator
-- [x] rom-interpolator -- 密度ベクトル `mu` からPOD係数へのRBF写像の構築。 Dependencies: pod-engine
-- [x] rom-validator -- 未知密度マップに対するROM予測精度の評価。 Dependencies: rom-interpolator
+- [ ] pod-engine -- スナップショット行列からのSVDによる空間基底抽出。 Dependencies: snapshot-generator
+- [ ] rom-interpolator -- 密度ベクトル `mu` からPOD係数へのRBF写像の構築。 Dependencies: pod-engine
+- [ ] rom-validator -- 未知密度マップに対するROM予測精度の評価。 Dependencies: rom-interpolator
 
 ### Phase 4: GA Optimization
-- [x] ga-optimizer -- 密度マップを個体とするGA実装、制約修正、ROM評価、および有望解のFVM再検証。 Dependencies: rom-validator
-
-## Phase 1: FVM Model Generation (Completed)
-- [x] config-loader (初期実装)
-- [x] gds-mapping
-- [x] geometry-logic
-- [x] component-generator (初期実装)
-- [x] model-builder
-- [x] validation-plot
-- [x] data-directory-setup
+- [ ] ga-optimizer -- 密度マップを個体とするGA実装、制約修正、ROM評価、および有望解のFVM再検証。 Dependencies: rom-validator
 
 ## Phase 1: FVM Model Generation (Completed)
 - [x] config-loader (初期実装)

@@ -9,7 +9,7 @@
 
 ### FVM Solver Extension (`H2-main-ext/`)
 **Purpose**: 既存の熱解析コードを拡張・整理した主要な物理ソルバー環境。
-- `src/`: 機能ごとのサブディレクトリ（ConfigLoader, GdsMapping等）。
+- `src/`: 機能ごとのサブディレクトリ（ConfigLoader, GdsMapping等）およびルート共通ファイル（`Zcoord.jl`, `NonUniform.jl`等）。
 - `test/`: ユニットテスト。
 
 ### ROM Development (`H2-rom/`)
