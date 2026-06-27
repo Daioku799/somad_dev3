@@ -5,7 +5,27 @@ using ..Sampler
 using ..Manifest
 using ..Types: SnapshotCase
 
-export run_simulation_case
+export run_simulation_case, prepare_work_dir
+
+"""
+    prepare_work_dir(case::SnapshotCase, work_base::String) -> String
+
+Create a clean work directory for the given case.
+If the directory already exists, clean its contents.
+Returns the absolute path to the prepared directory.
+"""
+function prepare_work_dir(case::SnapshotCase, work_base::String)
+    case_dir = joinpath(work_base, "case_$(case.id)")
+    if isdir(case_dir)
+        # Clean up directory contents safely
+        for item in readdir(case_dir, join=true)
+            rm(item, recursive=true, force=true)
+        end
+    else
+        mkpath(case_dir)
+    end
+    return abspath(case_dir)
+end
 
 """
     run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
@@ -17,8 +37,7 @@ Run a single FVM simulation case.
 4. Return status and error message if any.
 """
 function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
-    case_dir = joinpath(work_base, "case_$(case.id)")
-    mkpath(case_dir)
+    case_dir = prepare_work_dir(case, work_base)
     
     # 1. Generate TSV Config (Temporary dummies until Task 3 is implemented)
     tsv_config = Dict(
