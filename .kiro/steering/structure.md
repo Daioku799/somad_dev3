@@ -9,12 +9,12 @@
 
 ### FVM Solver Extension (`H2-main-ext/`)
 **Purpose**: 既存の熱解析コードを拡張・整理した主要な物理ソルバー環境。
-- `src/`: 機能ごとのサブディレクトリ（ConfigLoader, GdsMapping等）およびルート共通ファイル（`Zcoord.jl`, `NonUniform.jl`等）。
+- `src/`: 機能ごとのサブディレクトリ（ConfigLoader, ComponentGenerator, GdsMapping, ModelBuilder, ValidationPlot, GeometryLogic等）およびルート共通ファイル（`Zcoord.jl`, `NonUniform.jl`等）。
 - `test/`: ユニットテスト。
 
 ### ROM Development (`H2-rom/`)
 **Purpose**: 次数低減モデル（POD-RBF）の構築と検証。
-- `src/`: スナップショット生成、基底抽出等のロジック。
+- `src/`: スナップショット生成（SnapshotGenerator等）、基底抽出等のロジック。
 
 ### Shared Data (`data/`)
 **Purpose**: プロジェクト全体で共有されるデータ。
@@ -37,6 +37,7 @@
 - `Main.jl`: 主要な手続きロジック。
 - `Defaults.jl`: デフォルト値や定数（存在する場合）。
 - `Calculators.jl`: 純粋な計算ロジック（存在する場合）。
+- その他モジュール固有の補助ロジック（例: 配置処理用の `Layout.jl`、制約検証用の `Validator.jl` 等）。
 - `{ModuleName}.jl`: 親ファイル。上記ファイルを `include` し、インターフェースをエクスポートする。
 
 ## Naming Conventions

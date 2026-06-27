@@ -14,44 +14,44 @@
   - 定義された値がオリジナルの物理定数とビットレベルで一致することを確認する。
   - _Requirements: 1.3_
 
-- [ ] 2. Calculation Logic
-- [ ] 2.1 (P) Implement Z-marker calculation
+- [x] 2. Calculation Logic
+- [x] 2.1 (P) Implement Z-marker calculation
   - 層定義と `pg_dpth` から `zm0~zm12` を計算するロジックを `Calculators.jl` に実装する。
   - 浮動小数点誤差を防ぐため、計算結果を 15 桁で丸める処理を含める。
   - 計算された Z 座標がオリジナルのマーカー位置と正確に一致することを確認する。
   - _Requirements: 3.1, 3.2_
   - _Boundary: ConfigLoader_
-- [ ] 2.2 (P) Implement solder bump radius calculation
+- [x] 2.2 (P) Implement solder bump radius calculation
   - 推奨されるはんだバンプ半径 `1.3 * d_ufill / 2.0` を計算する関数を実装する。
   - アンダーフィル径に基づき、正しい半径が返されることを確認する。
   - _Requirements: 4.3_
   - _Boundary: ConfigLoader_
 
-- [ ] 3. JSON Loading and Validation
-- [ ] 3.1 Implement core JSON loader
+- [x] 3. JSON Loading and Validation
+- [x] 3.1 Implement core JSON loader
   - `config.json` および `tsv_config.json` をパースし、`ModelConfig` にマッピングする基本機能を `Main.jl` に実装する。
   - 配置モード（manual, random, density）の抽出と、`random_seed` による再現性の確保を行う。
   - スナップショット保存設定（フォルダ、命名規則）のロード機能を実装する。
   - 有効な JSON ファイルから `ModelConfig` が正しく生成されることを確認する。
   - _Requirements: 1.1, 4.1, 4.2, 6.1_
-- [ ] 3.2 Implement density map and optimization settings loader
+- [x] 3.2 Implement density map and optimization settings loader
   - 密度マップ設定（Gx, Gy, N_min, N_max, rho_cell_max）、製造制約、GAパラメータのロード機能を実装する。
   - `Gx`, `Gy` が未指定の場合、既定値 4x4 を適用する。
   - `density` モード時に必要な拡張パラメータがすべてロードされることを確認する。
   - _Requirements: 1.4, 5.1, 5.2, 5.4, 5.5_
-- [ ] 3.3 Implement strict validation and solver settings
+- [x] 3.3 Implement strict validation and solver settings
   - 必須パラメータの欠落時にエラーを投げるバリデーションを実装する。
   - `mu` のサイズ検証、および配置禁止セルの密度が 0 であることの検証を行う。
   - FVMソルバーの収束条件（epsilon, max_iter）および検証用シリコン熱伝導率のロードを実装する。
   - 不正な設定ファイルが適切に拒絶され、ソルバー条件が正しく反映されることを確認する。
   - _Requirements: 1.2, 5.3, 6.2, 6.3_
 
-- [ ] 4. Verification and Integration
-- [ ] 4.1 Implement original constants reproduction utility
+- [x] 4. Verification and Integration
+- [x] 4.1 Implement original constants reproduction utility
   - `H2-main-original` の設定を再現する `ModelConfig` を生成するユーティリティ関数を実装する。
   - 生成された設定がテストや比較用のベースラインとして利用可能であることを確認する。
   - _Requirements: 1.3_
-- [ ] 4.2 Integration and validation testing
+- [x] 4.2 Integration and validation testing
   - Z座標計算、半径計算、JSONバリデーションのユニットテストを `test/` に実装する。
   - 全要件（1.1〜6.3）のカバー範囲を確認し、下流コンポーネントへのデータ受け渡しを検証する。
   - すべてのテストがパスし、要件が満たされていることを確認する。

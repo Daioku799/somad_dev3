@@ -1,7 +1,7 @@
 {
   "name": "component-generator",
-  "phase": "implementation",
-  "status": "in-progress",
+  "phase": "completed",
+  "status": "completed",
   "language": "ja",
   "approvals": {
     "requirements": {

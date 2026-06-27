@@ -1,7 +1,7 @@
 {
   "name": "config-loader",
-  "phase": "tasks-generated",
-  "status": "in-progress",
+  "phase": "completed",
+  "status": "completed",
   "language": "ja",
   "approvals": {
     "requirements": {
