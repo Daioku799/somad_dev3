@@ -16,7 +16,7 @@
 ## ソルバー実行・オーケストレーション
 - [x] Task 3.1: `Runner.jl` にシミュレーションケースごとの作業ディレクトリ作成ロジックを実装する。
   - _Boundary:_ `H2-rom/src/SnapshotGenerator/Runner.jl`
-- [ ] Task 3.2: 調整済み `mu` を用いて `component-generator` を呼び出し、実座標へ展開して `tsv_config.json` を動的生成する。
+- [x] Task 3.2: 調整済み `mu` を用いて `component-generator` を呼び出し、実座標へ展開して `tsv_config.json` を動的生成する。
   - _Requirement:_ 2.2, 2.3
 - [ ] Task 3.3: ソルバーの外部プロセス起動とタイムアウト・エラーハンドリングを実装する。
   - _Requirement:_ 2.4, 2.5

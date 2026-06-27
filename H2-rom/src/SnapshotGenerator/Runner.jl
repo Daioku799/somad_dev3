@@ -2,10 +2,12 @@ module Runner
 
 using JSON
 using ..Sampler
+using ..Sampler: H2MainExt
 using ..Manifest
 using ..Types: SnapshotCase
+using .H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, generate_test_config
 
-export run_simulation_case, prepare_work_dir
+export run_simulation_case, prepare_work_dir, generate_case_configs
 
 """
     prepare_work_dir(case::SnapshotCase, work_base::String) -> String
@@ -28,58 +30,157 @@ function prepare_work_dir(case::SnapshotCase, work_base::String)
 end
 
 """
-    run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
+    generate_case_configs(case::SnapshotCase, config::ModelConfig, case_dir::String)
+
+Write both `config.json` and `tsv_config.json` to the `case_dir`.
+Ensure `tsv_mode` is "density", and the case's adjusted `mu` is correctly written.
+Validate the generated configuration using ComponentGenerator.
+"""
+function generate_case_configs(case::SnapshotCase, config::ModelConfig, case_dir::String)
+    # Validate density map presence
+    if config.tsv.density === nothing
+        error("density_map configuration is missing in config.tsv")
+    end
+    
+    # 1. Map config to config.json format
+    materials_dict = Dict{String, Any}()
+    for mat in config.materials
+        materials_dict[mat.name] = Dict(
+            "id" => mat.id,
+            "λ" => mat.lambda,
+            "ρ" => mat.rho,
+            "C" => mat.cp
+        )
+    end
+    
+    layers_array = Any[]
+    for layer in config.layers
+        push!(layers_array, Dict(
+            "name" => layer.name,
+            "thickness" => layer.thickness,
+            "divisions" => layer.divisions,
+            "grading" => layer.grading
+        ))
+    end
+    
+    dimensions_dict = Dict(
+        "h_tsv" => config.tsv.height,
+        "pg_dpth" => config.pg_dpth,
+        "s_dpth" => config.s_dpth,
+        "d_ufill" => config.d_ufill,
+        "r_bump" => config.r_bump
+    )
+    
+    config_dict = Dict(
+        "lx" => config.lx,
+        "ly" => config.ly,
+        "materials" => materials_dict,
+        "layers" => layers_array,
+        "dimensions" => dimensions_dict,
+        "snapshot_enabled" => config.snapshot_enabled,
+        "snapshot_dir" => config.snapshot_dir,
+        "fixed_silicon_lambda" => config.fixed_silicon_lambda,
+        "epsilon" => config.epsilon,
+        "max_iter" => config.max_iter
+    )
+    
+    # 2. Map config and case.mu to tsv_config.json format
+    density = config.tsv.density
+    density_map_dict = Dict(
+        "gx" => density.gx,
+        "gy" => density.gy,
+        "mu" => case.mu,
+        "n_min" => density.n_min,
+        "n_max" => density.n_max,
+        "rho_cell_max" => density.rho_cell_max,
+        "prohibited_cells" => [ [cell[1], cell[2]] for cell in density.prohibited_cells ]
+    )
+    
+    tsv_config_dict = Dict{String, Any}(
+        "tsv_mode" => "density",
+        "tsv_radius" => config.tsv.radius,
+        "density_map" => density_map_dict
+    )
+    
+    if config.tsv.manufacturing !== nothing
+        m = config.tsv.manufacturing
+        tsv_config_dict["manufacturing"] = Dict(
+            "d_tsv" => m.d_tsv,
+            "p_min" => m.p_min,
+            "ar_min" => m.ar_min,
+            "ar_max" => m.ar_max
+        )
+    end
+    
+    if config.tsv.ga !== nothing
+        ga = config.tsv.ga
+        tsv_config_dict["ga_settings"] = Dict(
+            "n_pop" => ga.n_pop,
+            "n_gen" => ga.n_gen,
+            "cx_rate" => ga.cx_rate,
+            "mut_rate" => ga.mut_rate
+        )
+    end
+    
+    # Write JSON files to case_dir
+    config_path = joinpath(case_dir, "config.json")
+    tsv_config_path = joinpath(case_dir, "tsv_config.json")
+    
+    open(config_path, "w") do io
+        JSON.print(io, config_dict)
+    end
+    
+    open(tsv_config_path, "w") do io
+        JSON.print(io, tsv_config_dict)
+    end
+    
+    # Verify generated configs can be successfully loaded and expanded by ComponentGenerator
+    try
+        loaded_config = H2MainExt.ConfigLoader.load_config(config_path, tsv_config_path)
+        H2MainExt.ComponentGenerator.generate_all_components(loaded_config)
+    catch e
+        error("Generated configuration fails layout expansion or validation: $e")
+    end
+end
+
+function default_model_config()
+    base_config = generate_test_config()
+    density_map = DensityMapConfig(4, 4, fill(0.5, 16), 0, 16, 1.0, Tuple{Int, Int}[])
+    manufacturing = ManufacturingConfig(2*base_config.tsv.radius, 50e-6, 0.0, 0.0)
+    tsv_config = TSVConfig(:density, Tuple{Float64, Float64}[], base_config.tsv.radius, base_config.tsv.height, density_map, manufacturing, nothing)
+
+    return ModelConfig(
+        base_config.materials,
+        base_config.layers,
+        tsv_config,
+        base_config.lx,
+        base_config.ly,
+        base_config.pg_dpth,
+        base_config.s_dpth,
+        base_config.d_ufill,
+        base_config.r_bump,
+        base_config.snapshot_enabled,
+        base_config.snapshot_dir,
+        base_config.fixed_silicon_lambda,
+        base_config.epsilon,
+        base_config.max_iter
+    )
+end
+
+"""
+    run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config())
 
 Run a single FVM simulation case.
 1. Create a work subdirectory.
-2. Generate config.json and tsv_config.json.
+2. Generate config.json and tsv_config.json using `generate_case_configs`.
 3. Call run.jl via Cmd.
 4. Return status and error message if any.
 """
-function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
+function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config())
     case_dir = prepare_work_dir(case, work_base)
     
-    # 1. Generate TSV Config (Temporary dummies until Task 3 is implemented)
-    tsv_config = Dict(
-        "tsv_mode" => "manual",
-        "tsv_radius" => 3.0e-5,
-        "manual_coordinates" => Tuple{Float64, Float64}[]
-    )
-    
-    # 2. Generate Base Config (copying defaults but updating dimensions if needed)
-    # For now, we assume a template config.json exists or use a default structure
-    # Let's use a default structure based on H2-main-ext requirements
-    base_config = Dict(
-        "lx" => 1.2e-3, "ly" => 1.2e-3,
-        "pg_dpth" => 5.0e-6, "s_dpth" => 1.0e-4, "d_ufill" => 5.0e-5, "r_bump" => 3.0e-5,
-        "materials" => Dict(
-            "Copper" => Dict("id"=>1, "λ"=>386.0, "ρ"=>8960.0, "C"=>383.0),
-            "Silicon" => Dict("id"=>2, "λ"=>149.0, "ρ"=>2330.0, "C"=>720.0),
-            "Solder" => Dict("id"=>3, "λ"=>50.0, "ρ"=>8500.0, "C"=>197.0),
-            "PCB" => Dict("id"=>4, "λ"=>0.4, "ρ"=>1850.0, "C"=>1000.0),
-            "Heatsink" => Dict("id"=>5, "λ"=>222.0, "ρ"=>2700.0, "C"=>921.0),
-            "Resin" => Dict("id"=>6, "λ"=>1.5, "ρ"=>2590.0, "C"=>1050.0),
-            "PowerSource" => Dict("id"=>7, "λ"=>149.0, "ρ"=>2330.0, "C"=>720.0)
-        ),
-        "layers" => [
-            Dict("name"=>"Substrate", "thickness"=>5.0e-5, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Underfill1", "thickness"=>5.0e-5, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Silicon1", "thickness"=>1.0e-4, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Underfill2", "thickness"=>5.0e-5, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Silicon2", "thickness"=>1.0e-4, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Underfill3", "thickness"=>5.0e-5, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Silicon3", "thickness"=>1.0e-4, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Underfill4", "thickness"=>5.0e-5, "divisions"=>1, "grading"=>1.0),
-            Dict("name"=>"Heatsink", "thickness"=>5.0e-5, "divisions"=>5, "grading"=>1.0)
-        ]
-    )
-
-    open(joinpath(case_dir, "config.json"), "w") do io
-        JSON.print(io, base_config)
-    end
-    open(joinpath(case_dir, "tsv_config.json"), "w") do io
-        JSON.print(io, tsv_config)
-    end
+    # Generate Configs
+    generate_case_configs(case, config, case_dir)
 
     # 3. Execute Solver
     # We use NX=240, NY=240, NZ=30 as standard
