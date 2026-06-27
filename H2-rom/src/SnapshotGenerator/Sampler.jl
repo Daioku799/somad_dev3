@@ -80,4 +80,27 @@ function validate_params(p::TSVParams)
     return true
 end
 
+"""
+    generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::Int) -> Vector{Vector{Float64}}
+
+Generate density map samples using Latin Hypercube Sampling (LHS).
+The density values are continuous in [0, 1].
+"""
+function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::Int)
+    dims = grid_size[1] * grid_size[2]
+    
+    # Perform LHS sampling
+    plan = randomLHC(n_samples, dims)
+    
+    # Scale to continuous values in [0, 1]
+    plan_norm = (plan .- rand(Float64, size(plan))) ./ n_samples
+    
+    # Convert Matrix to Vector{Vector{Float64}}
+    samples = [plan_norm[i, :] for i in 1:n_samples]
+    
+    # Note: Task 2.2 will implement constraint adjustment using adjust_density_constraints
+    
+    return samples
+end
+
 end # module
