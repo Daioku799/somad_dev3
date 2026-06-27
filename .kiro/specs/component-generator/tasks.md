@@ -8,7 +8,7 @@
   - _Requirements: 5.2_
   - _Boundary: Types.jl_
 
-- [ ] 1.2 メイン API 構造の構築
+- [x] 1.2 メイン API 構造の構築
   - `src/ComponentGenerator/ComponentGenerator.jl` において `generate_all_components` の基本シグネチャを実装する。
   - 各モジュール（Layout, Validator）へのディスパッチ枠組みを作成する。
   - _Requirements: 5.1_
