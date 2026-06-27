@@ -4,6 +4,18 @@ using LatinHypercubeSampling
 using Distributions
 using Random
 
+# Load H2-main-ext modules via a wrapper module to support relative imports (..ConfigLoader)
+module H2MainExt
+    const SRC_DIR = abspath(joinpath(@__DIR__, "../../../H2-main-ext/src"))
+    include(joinpath(SRC_DIR, "ConfigLoader/ConfigLoader.jl"))
+    using .ConfigLoader
+    include(joinpath(SRC_DIR, "ComponentGenerator/ComponentGenerator.jl"))
+    using .ComponentGenerator
+end
+
+using .H2MainExt.ComponentGenerator
+using .H2MainExt.ConfigLoader
+
 export TSVParams, generate_samples, validate_params
 
 struct TSVParams
@@ -98,9 +110,25 @@ function generate_samples(n_samples::Int, grid_size::Tuple{Int, Int}; n_limit::I
     # Convert Matrix to Vector{Vector{Float64}}
     samples = [plan_norm[i, :] for i in 1:n_samples]
     
-    # Note: Task 2.2 will implement constraint adjustment using adjust_density_constraints
+    if n_limit > 0
+        # Use default constants from H2-main-ext
+        r_tsv = H2MainExt.ConfigLoader.Defaults.R_TSV
+        lx = H2MainExt.ConfigLoader.Defaults.LX
+        ly = H2MainExt.ConfigLoader.Defaults.LY
+        p_min = 2.0 * r_tsv + 10e-6 # 50e-6 pitch
+        
+        density = DensityMapConfig(grid_size[1], grid_size[2], Float64[], 0, n_limit, 1.0, Tuple{Int, Int}[])
+        manufacturing = ManufacturingConfig(2.0 * r_tsv, p_min, 0.0, 0.0)
+        tsv_config = TSVConfig(:density, Tuple{Float64, Float64}[], r_tsv, 0.1e-3, density, manufacturing, nothing)
+        
+        n_max_matrix = ComponentGenerator.Layout.get_cell_capacities(tsv_config, lx, ly)
+        
+        for i in 1:n_samples
+            samples[i] = ComponentGenerator.Layout.adjust_density_constraints(samples[i], n_max_matrix, n_limit)
+        end
+    end
     
     return samples
 end
-
 end # module
+
