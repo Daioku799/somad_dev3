@@ -27,7 +27,7 @@ Unified component generation API:
 """
 function generate_all_components(config::ModelConfig)
     # 1. Coordinate expansion
-    pts = Layout.expand_coordinates(config.tsv)
+    pts = Layout.expand_coordinates(config.tsv, config.lx, config.ly)
     
     # 2. Validation
     validation = Validator.validate_physical_constraints(pts, config)
