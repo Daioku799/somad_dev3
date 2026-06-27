@@ -168,7 +168,7 @@ function default_model_config()
 end
 
 """
-    run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config())
+    run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config(); timeout_sec::Int=300)
 
 Run a single FVM simulation case.
 1. Create a work subdirectory.
@@ -176,7 +176,7 @@ Run a single FVM simulation case.
 3. Call run.jl via Cmd.
 4. Return status and error message if any.
 """
-function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config())
+function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config(); timeout_sec::Int=300)
     case_dir = prepare_work_dir(case, work_base)
     
     # Generate Configs
@@ -194,22 +194,55 @@ function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::
     
     log_file = joinpath(case_dir, "output.log")
     
-    success = false
+    status = "failed"
     error_msg = ""
+    timeout_expired = false
     
     try
-        # Run within the case directory so it finds config.json
         open(log_file, "w") do out
-            run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out))
+            proc = run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out), wait=false)
+            
+            t = Timer(timeout_sec) do timer
+                timeout_expired = true
+                if process_running(proc)
+                    kill(proc)
+                end
+            end
+            
+            try
+                wait(proc)
+            finally
+                close(t)
+            end
+            
+            if timeout_expired
+                status = "timeout"
+                error_msg = "Solver simulation timed out after $timeout_sec seconds."
+                println("Case $(case.id) timed out: $error_msg")
+            elseif !success(proc)
+                status = "failed"
+                error_msg = "Solver exited with non-zero exit code: $(proc.exitcode)"
+                println("Case $(case.id) failed: $error_msg")
+            else
+                if isfile(snapshot_file)
+                    status = "success"
+                else
+                    status = "failed"
+                    error_msg = "Solver finished successfully, but snapshot file was not generated."
+                    println("Case $(case.id) failed: $error_msg")
+                end
+            end
         end
-        success = true
     catch e
+        status = "failed"
         error_msg = string(e)
-        println("Case $(case.id) failed: $error_msg")
+        println("Case $(case.id) failed to start or run: $error_msg")
     end
 
-    if success && isfile(snapshot_file)
+    if status == "success"
         return "success", snapshot_file, ""
+    elseif status == "timeout"
+        return "timeout", "", error_msg
     else
         return "failed", "", error_msg
     end

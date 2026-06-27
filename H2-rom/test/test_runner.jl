@@ -95,3 +95,43 @@ end
     rm(test_work_base, recursive=true, force=true)
 end
 
+@testset "Runner Timeout and Error Handling Test" begin
+    using .SnapshotGenerator.Runner: run_simulation_case, default_model_config
+    using .SnapshotGenerator.Sampler.H2MainExt.ConfigLoader: ModelConfig
+
+    test_work_base = mktempdir()
+    case = SnapshotCase(102, "pending", fill(0.5, 16), "", 0.0)
+    config = default_model_config()
+
+    # 1. Immediate failure test (invalid solver directory causing run.jl not found or execution failure)
+    nonexistent_solver_dir = joinpath(test_work_base, "nonexistent_solver")
+    status_fail, snap_fail, err_fail = run_simulation_case(
+        case, nonexistent_solver_dir, test_work_base, config
+    )
+    @test status_fail == "failed"
+    @test isempty(snap_fail)
+    @test !isempty(err_fail)
+
+    # 2. Timeout test
+    # Create a mock solver directory with a run.jl that sleeps
+    mock_solver_dir = joinpath(test_work_base, "mock_solver")
+    mkpath(mock_solver_dir)
+    mock_run_jl = joinpath(mock_solver_dir, "run.jl")
+    write(mock_run_jl, """
+    println("Mock solver started...")
+    sleep(10)
+    println("Mock solver finished.")
+    """)
+    
+    # We call with a short timeout_sec=2
+    status_time, snap_time, err_time = run_simulation_case(
+        case, mock_solver_dir, test_work_base, config; timeout_sec=2
+    )
+    @test status_time == "timeout"
+    @test isempty(snap_time)
+    
+    # Clean up
+    rm(test_work_base, recursive=true, force=true)
+end
+
+

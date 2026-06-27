@@ -18,7 +18,7 @@
   - _Boundary:_ `H2-rom/src/SnapshotGenerator/Runner.jl`
 - [x] Task 3.2: 調整済み `mu` を用いて `component-generator` を呼び出し、実座標へ展開して `tsv_config.json` を動的生成する。
   - _Requirement:_ 2.2, 2.3
-- [ ] Task 3.3: ソルバーの外部プロセス起動とタイムアウト・エラーハンドリングを実装する。
+- [x] Task 3.3: ソルバーの外部プロセス起動とタイムアウト・エラーハンドリングを実装する。
   - _Requirement:_ 2.4, 2.5
 - [ ] Task 3.4: 解析結果を JLD2 に保存する際、メタデータとしてユニークなスナップショットIDと調整済み `mu` を含める。また、成功した結果を `data/raw/` へ移動しマニフェストを更新する。
 
