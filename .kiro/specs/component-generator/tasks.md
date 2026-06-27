@@ -1,7 +1,7 @@
 # Implementation Plan: component-generator
 
 ## 1. Foundation: Types and Interface Setup
-- [ ] 1.1 `ComponentGenerator` の内部データ構造の定義
+- [x] 1.1 `ComponentGenerator` の内部データ構造の定義
   - 密度セルの幾何学的情報（境界、中心座標）を保持する `DensityCell` 構造体を定義する。
   - バリデーション結果（エラー種別、詳細）を表現する型を定義する。
   - `Types.jl` において、`GeometryLogic` と互換性のあるプリミティブ型を整理する。
