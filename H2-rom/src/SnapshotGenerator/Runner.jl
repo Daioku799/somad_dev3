@@ -1,10 +1,13 @@
 module Runner
 
 using JSON
+using JLD2
+using UUIDs
+using Dates
 using ..Sampler
 using ..Sampler: H2MainExt
 using ..Manifest
-using ..Types: SnapshotCase
+using ..Types: SnapshotCase, SnapshotManifest
 using .H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, generate_test_config
 
 export run_simulation_case, prepare_work_dir, generate_case_configs
@@ -176,7 +179,16 @@ Run a single FVM simulation case.
 3. Call run.jl via Cmd.
 4. Return status and error message if any.
 """
-function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String, config::ModelConfig = default_model_config(); timeout_sec::Int=300)
+function run_simulation_case(
+    case::SnapshotCase,
+    solver_dir::String,
+    work_base::String,
+    config::ModelConfig = default_model_config();
+    timeout_sec::Int=300,
+    manifest::Union{SnapshotManifest, Nothing} = nothing,
+    manifest_path::String = "",
+    data_dir::String = "data"
+)
     case_dir = prepare_work_dir(case, work_base)
     
     # Generate Configs
@@ -198,6 +210,7 @@ function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::
     error_msg = ""
     timeout_expired = false
     
+    start_time = time()
     try
         open(log_file, "w") do out
             proc = run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out), wait=false)
@@ -238,9 +251,67 @@ function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::
         error_msg = string(e)
         println("Case $(case.id) failed to start or run: $error_msg")
     end
+    runtime = time() - start_time
+
+    final_jld2_path = ""
+    if status == "success"
+        raw_dir = joinpath(data_dir, "raw")
+        mkpath(raw_dir)
+        final_jld2_path = joinpath(raw_dir, "snapshot_$(case.id).jld2")
+        
+        try
+            JLD2.jldopen(snapshot_file, "r") do in_file
+                JLD2.jldopen(final_jld2_path, "w") do out_file
+                    for k in keys(in_file)
+                        if k == "theta"
+                            out_file["temperature"] = in_file["theta"]
+                        else
+                            out_file[k] = in_file[k]
+                        end
+                    end
+                    metadata = Dict{String, Any}(
+                        "snapshot_id" => string(uuid4()),
+                        "mu" => case.mu,
+                        "timestamp" => string(now())
+                    )
+                    out_file["metadata"] = metadata
+                end
+            end
+            # Clean up temporary snapshot
+            rm(snapshot_file, force=true)
+        catch e
+            status = "failed"
+            error_msg = "Post-processing failed: $e"
+            println("Case $(case.id) post-processing failed: $error_msg")
+        end
+    end
+
+    # Update manifest and case status
+    if status == "success"
+        if manifest !== nothing
+            Manifest.update_case_status!(manifest, case.id, "success"; filepath=final_jld2_path, runtime=runtime)
+            if !isempty(manifest_path)
+                Manifest.save_manifest(manifest, manifest_path)
+            end
+        else
+            case.status = "success"
+            case.filepath = final_jld2_path
+            case.runtime = runtime
+        end
+    else
+        if manifest !== nothing
+            Manifest.update_case_status!(manifest, case.id, status; filepath="", runtime=runtime)
+            if !isempty(manifest_path)
+                Manifest.save_manifest(manifest, manifest_path)
+            end
+        else
+            case.status = status
+            case.runtime = runtime
+        end
+    end
 
     if status == "success"
-        return "success", snapshot_file, ""
+        return "success", final_jld2_path, ""
     elseif status == "timeout"
         return "timeout", "", error_msg
     else

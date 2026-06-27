@@ -134,4 +134,94 @@ end
     rm(test_work_base, recursive=true, force=true)
 end
 
+@testset "Runner Successful Simulation and Post-Processing Test" begin
+    using .SnapshotGenerator.Runner: run_simulation_case, default_model_config
+    using .SnapshotGenerator.Types: SnapshotManifest, SnapshotCase
+    using .SnapshotGenerator.Manifest: save_manifest
+    using JLD2
+    using JSON3
+    using Dates
+
+    # Create temp base dir
+    test_work_base = mktempdir()
+    
+    # Paths for test data and manifest
+    test_data_dir = joinpath(test_work_base, "data")
+    mkpath(test_data_dir)
+    test_manifest_path = joinpath(test_data_dir, "manifest.json")
+    
+    # Create SnapshotCase and SnapshotManifest
+    case = SnapshotCase(105, "pending", fill(0.1, 16), "", 0.0)
+    manifest = SnapshotManifest(string(now()), Dict{String, Float64}(), Dict{String, Any}(), [case])
+    save_manifest(manifest, test_manifest_path)
+
+    # Create mock solver directory
+    mock_solver_dir = joinpath(test_work_base, "mock_solver")
+    mkpath(mock_solver_dir)
+    cp(joinpath(@__DIR__, "../Project.toml"), joinpath(mock_solver_dir, "Project.toml"))
+    if isfile(joinpath(@__DIR__, "../Manifest.toml"))
+        cp(joinpath(@__DIR__, "../Manifest.toml"), joinpath(mock_solver_dir, "Manifest.toml"))
+    end
+    mock_run_jl = joinpath(mock_solver_dir, "run.jl")
+    
+    write(mock_run_jl, """
+    using JLD2
+    
+    snap_idx = findfirst(x -> x == "--snapshot", ARGS)
+    if snap_idx !== nothing && snap_idx < length(ARGS)
+        snap_path = ARGS[snap_idx + 1]
+        mkpath(dirname(snap_path))
+        JLD2.jldopen(snap_path, "w") do file
+            file["theta"] = [1.0 2.0; 3.0 4.0]
+            file["other_val"] = "keep_me"
+        end
+    end
+    """)
+
+    config = default_model_config()
+    
+    # Run the simulation case with manifest and data_dir parameters
+    status, snap_file, err = run_simulation_case(
+        case, mock_solver_dir, test_work_base, config;
+        manifest=manifest, manifest_path=test_manifest_path, data_dir=test_data_dir
+    )
+
+    @test status == "success"
+    
+    # Verify final JLD2 path and presence
+    expected_jld2_path = joinpath(test_data_dir, "raw", "snapshot_105.jld2")
+    @test isfile(expected_jld2_path)
+    
+    # Verify temporary file is cleaned up
+    case_dir = joinpath(test_work_base, "case_105")
+    temp_snap_path = joinpath(case_dir, "snapshot.jld2")
+    @test !isfile(temp_snap_path)
+    
+    # Verify content of final JLD2 file
+    JLD2.jldopen(expected_jld2_path, "r") do file
+        @test haskey(file, "temperature")
+        @test file["temperature"] == [1.0 2.0; 3.0 4.0]
+        @test haskey(file, "other_val")
+        @test file["other_val"] == "keep_me"
+        @test haskey(file, "metadata")
+        
+        metadata = file["metadata"]
+        @test haskey(metadata, "snapshot_id")
+        @test haskey(metadata, "mu")
+        @test metadata["mu"] == fill(0.1, 16)
+        @test haskey(metadata, "timestamp")
+    end
+    
+    # Verify updated manifest
+    loaded_manifest = JSON3.read(read(test_manifest_path, String), SnapshotManifest)
+    updated_case = loaded_manifest.cases[1]
+    @test updated_case.status == "success"
+    @test updated_case.filepath == expected_jld2_path
+    @test updated_case.runtime > 0.0
+    
+    # Clean up
+    rm(test_work_base, recursive=true, force=true)
+end
+
+
 
