@@ -1,7 +1,7 @@
 # Implementation Tasks: snapshot-generator
 
 ## 基盤構築とマニフェスト管理
-- [ ] Task 1.1: `Types.jl` にマニフェスト（`SnapshotManifest`, `SnapshotCase`）の構造体を定義する。
+- [x] Task 1.1: `Types.jl` にマニフェスト（`SnapshotManifest`, `SnapshotCase`）の構造体を定義する。
   - _Boundary:_ `H2-rom/src/SnapshotGenerator/Types.jl`
 - [ ] Task 1.2: `Manifest.jl` に `manifest.json` のロード・セーブ・更新ロジックを実装する。
   - _Boundary:_ `H2-rom/src/SnapshotGenerator/Manifest.jl`

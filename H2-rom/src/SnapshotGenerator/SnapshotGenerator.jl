@@ -1,15 +1,17 @@
 module SnapshotGenerator
 
+include("Types.jl")
 include("Manifest.jl")
 include("Sampler.jl")
 include("Runner.jl")
 
-using .Manifest
+using .Types
+using .Manifest: save_manifest, load_manifest, add_case!, update_case_status!
 using .Sampler
 using .Runner
 using Dates
 
-export run_generator
+export run_generator, SnapshotManifest, SnapshotCase
 
 """
     run_generator(n_cases::Int; solver_dir="../H2-main-ext", data_dir="../data")
