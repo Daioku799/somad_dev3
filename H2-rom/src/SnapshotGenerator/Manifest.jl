@@ -3,32 +3,9 @@ module Manifest
 using JSON3
 using StructTypes
 using Dates
+using ..Types: SnapshotManifest, SnapshotCase
 
-export SimulationCase, SnapshotManifest, save_manifest, load_manifest, add_case!, update_case_status!
-
-mutable struct SimulationCase
-    id::Int
-    status::String # "pending", "success", "failed", "timeout"
-    params::Dict{String, Any}
-    snapshot_file::String
-    error_msg::String
-
-    SimulationCase() = new(0, "pending", Dict{String, Any}(), "", "")
-    SimulationCase(id, status, params, snapshot, error) = new(id, status, params, snapshot, error)
-end
-
-StructTypes.StructType(::Type{SimulationCase}) = StructTypes.Mutable()
-
-mutable struct SnapshotManifest
-    project::String
-    created_at::String
-    cases::Vector{SimulationCase}
-
-    SnapshotManifest() = new("H2-rom", "", SimulationCase[])
-    SnapshotManifest(project, created_at, cases) = new(project, created_at, cases)
-end
-
-StructTypes.StructType(::Type{SnapshotManifest}) = StructTypes.Mutable()
+export save_manifest, load_manifest, add_case!, update_case_status!
 
 """
     save_manifest(manifest::SnapshotManifest, path::String)
@@ -40,28 +17,34 @@ function save_manifest(manifest::SnapshotManifest, path::String)
 end
 
 """
-    load_manifest(path::String)
+    load_manifest(path::String) -> SnapshotManifest
 """
 function load_manifest(path::String)
     if !isfile(path)
-        return SnapshotManifest("H2-rom", string(now()), SimulationCase[])
+        return SnapshotManifest(string(now()), Dict{String, Float64}(), Dict{String, Any}(), SnapshotCase[])
     end
     return JSON3.read(read(path, String), SnapshotManifest)
 end
 
-function add_case!(manifest::SnapshotManifest, params::Dict{String, Any})
+"""
+    add_case!(manifest::SnapshotManifest, mu::Vector{Float64}) -> SnapshotCase
+"""
+function add_case!(manifest::SnapshotManifest, mu::Vector{Float64})
     new_id = isempty(manifest.cases) ? 1 : maximum(c -> c.id, manifest.cases) + 1
-    new_case = SimulationCase(new_id, "pending", params, "", "")
+    new_case = SnapshotCase(new_id, "pending", mu, "", 0.0)
     push!(manifest.cases, new_case)
     return new_case
 end
 
-function update_case_status!(manifest::SnapshotManifest, id::Int, status::String; snapshot="", error="")
+"""
+    update_case_status!(manifest::SnapshotManifest, id::Int, status::String; filepath="", runtime=0.0)
+"""
+function update_case_status!(manifest::SnapshotManifest, id::Int, status::String; filepath="", runtime=0.0)
     for c in manifest.cases
         if c.id == id
             c.status = status
-            c.snapshot_file = snapshot
-            c.error_msg = error
+            c.filepath = filepath
+            c.runtime = runtime
             break
         end
     end

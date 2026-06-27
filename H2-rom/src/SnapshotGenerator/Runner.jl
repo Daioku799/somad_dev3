@@ -3,11 +3,12 @@ module Runner
 using JSON
 using ..Sampler
 using ..Manifest
+using ..Types: SnapshotCase
 
 export run_simulation_case
 
 """
-    run_simulation_case(case::SimulationCase, solver_dir::String, work_base::String)
+    run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
 
 Run a single FVM simulation case.
 1. Create a work subdirectory.
@@ -15,15 +16,15 @@ Run a single FVM simulation case.
 3. Call run.jl via Cmd.
 4. Return status and error message if any.
 """
-function run_simulation_case(case::SimulationCase, solver_dir::String, work_base::String)
+function run_simulation_case(case::SnapshotCase, solver_dir::String, work_base::String)
     case_dir = joinpath(work_base, "case_$(case.id)")
     mkpath(case_dir)
     
-    # 1. Generate TSV Config
+    # 1. Generate TSV Config (Temporary dummies until Task 3 is implemented)
     tsv_config = Dict(
         "tsv_mode" => "manual",
-        "tsv_radius" => case.params["radius"],
-        "manual_coordinates" => case.params["coords"]
+        "tsv_radius" => 3.0e-5,
+        "manual_coordinates" => Tuple{Float64, Float64}[]
     )
     
     # 2. Generate Base Config (copying defaults but updating dimensions if needed)
