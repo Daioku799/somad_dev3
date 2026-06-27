@@ -15,7 +15,7 @@ export GeometryObject, ShapeType, CYLINDER, SPHERE, BOX
 export generate_components
 export generate_all_components
 
-using ..ConfigLoader: ModelConfig, calculate_zm
+using ..ConfigLoader: ModelConfig, calculate_zm, calculate_solder_radius
 
 """
     generate_all_components(config::ModelConfig) -> Vector{GeometryObject}
@@ -53,9 +53,14 @@ function generate_all_components(config::ModelConfig)
     # Solder Bumps (Spheres)
     dp = config.d_ufill * 0.5
     underfill_starts = [zm[2], zm[5], zm[8], zm[11]]
+    
+    r_calc = calculate_solder_radius(config.d_ufill)
+    safe_r = max(r_calc, config.tsv.radius)
+    r_bump = config.r_bump <= 0.0 ? safe_r : config.r_bump
+
     for us in underfill_starts
         for pt in pts
-            push!(objects, GeometryObject(SPHERE, (pt.x, pt.y, us + dp), (config.r_bump,), solder_id))
+            push!(objects, GeometryObject(SPHERE, (pt.x, pt.y, us + dp), (r_bump,), solder_id))
         end
     end
 
