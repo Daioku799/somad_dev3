@@ -1,7 +1,8 @@
 using Test
 
-# SnapshotGenerator を include でロード
-include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+if !isdefined(Main, :SnapshotGenerator)
+    include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+end
 using .SnapshotGenerator: SnapshotManifest, SnapshotCase
 
 @testset "Snapshot Types Test" begin

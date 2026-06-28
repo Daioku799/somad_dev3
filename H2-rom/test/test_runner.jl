@@ -1,7 +1,8 @@
 using Test
 
-# Load SnapshotGenerator
-include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+if !isdefined(Main, :SnapshotGenerator)
+    include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+end
 using .SnapshotGenerator: SnapshotCase
 using .SnapshotGenerator.Runner: prepare_work_dir
 

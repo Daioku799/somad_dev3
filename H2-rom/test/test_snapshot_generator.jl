@@ -3,8 +3,9 @@ using JSON3
 using JLD2
 using Dates
 
-# Include SnapshotGenerator
-include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+if !isdefined(Main, :SnapshotGenerator)
+    include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+end
 using .SnapshotGenerator
 
 @testset "Snapshot Generator Integration Test" begin

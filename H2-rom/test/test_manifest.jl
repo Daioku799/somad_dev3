@@ -1,5 +1,7 @@
 using Test
-include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+if !isdefined(Main, :SnapshotGenerator)
+    include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+end
 using .SnapshotGenerator: SnapshotManifest, SnapshotCase
 using .SnapshotGenerator.Manifest: save_manifest, load_manifest, add_case!, update_case_status!
 

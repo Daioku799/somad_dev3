@@ -12,8 +12,9 @@ end
 using .H2MainExt.ComponentGenerator
 using .H2MainExt.ConfigLoader
 
-
-include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+if !isdefined(Main, :SnapshotGenerator)
+    include("../src/SnapshotGenerator/SnapshotGenerator.jl")
+end
 using .SnapshotGenerator.Sampler: generate_samples
 
 @testset "Sampler generate_samples Test" begin
