@@ -33,7 +33,7 @@
   - _Requirements: 2.1_
   - _Boundary: SVDSolver_
 
-- [ ] 3.2 (P) RIC-based Truncation Logic
+- [x] 3.2 (P) RIC-based Truncation Logic
   - 累積寄与率（RIC）の計算と、しきい値（デフォルト0.999）に基づくモード数 `r` の自動選定。
   - 指定された `ric_threshold` に応じて保持する基底ベクトルを切り出す処理。
   - 選定されたモード数がメタデータとして保持される。
