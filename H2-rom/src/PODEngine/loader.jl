@@ -68,6 +68,10 @@ function load_snapshot_matrix(dir_path::String)
                 if !isnothing(z_faces)
                     grid_info["z_faces"] = z_faces
                 end
+            else
+                if grid_info["nx"] != nx || grid_info["ny"] != ny || grid_info["nz"] != nz
+                    error("Grid size inconsistency detected. First file: (nx=$(grid_info["nx"]), ny=$(grid_info["ny"]), nz=$(grid_info["nz"])). Current file $filepath: (nx=$nx, ny=$ny, nz=$nz)")
+                end
             end
         end
     end

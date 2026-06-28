@@ -78,4 +78,24 @@ end
         @test grid_info["nz"] == 2
         @test grid_info["z_centers"] == [0.05, 0.15]
     end
+
+    mktempdir() do tmpdir
+        JLD2.jldopen(joinpath(tmpdir, "snap1.jld2"), "w") do file
+            file["temperature"] = reshape(collect(1.0:18.0), 3, 3, 2)
+            file["nx"] = 3
+            file["ny"] = 3
+            file["nz"] = 2
+            file["metadata"] = Dict("snapshot_id" => "snap_1", "mu" => [0.1, 0.2])
+        end
+        
+        JLD2.jldopen(joinpath(tmpdir, "snap2.jld2"), "w") do file
+            file["temperature"] = reshape(collect(1.0:18.0), 3, 3, 2)
+            file["nx"] = 4 # Mismatched nx
+            file["ny"] = 3
+            file["nz"] = 2
+            file["metadata"] = Dict("snapshot_id" => "snap_2", "mu" => [0.3, 0.4])
+        end
+        
+        @test_throws ErrorException load_snapshot_matrix(tmpdir)
+    end
 end

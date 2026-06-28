@@ -18,7 +18,7 @@
   - _Requirements: 1.1_
   - _Boundary: SnapshotLoader_
 
-- [ ] 2.2 (P) Grid Consistency Validator
+- [x] 2.2 (P) Grid Consistency Validator
   - 全てのスナップショット間で `nx, ny, nz` が一致していることを検証するロジックの実装。
   - 不整合検出時に明示的なエラーメッセージを表示して中断する処理。
   - 異なる格子サイズのスナップショット混在時にエラーがスローされる。
