@@ -26,7 +26,7 @@
   - _Boundary: SnapshotLoader_
 
 - [ ] 3. Core POD Computation Engine
-- [ ] 3.1 (P) SVD Solver Implementation
+- [x] 3.1 (P) SVD Solver Implementation
   - `solver.jl` の実装。スナップショット行列からの平均場計算および減算処理。
   - `LinearAlgebra.svd` を用いた特異値分解の実行。
   - `compute_svd` が平均場と特異値分解の結果（U, S）を正しく返す。

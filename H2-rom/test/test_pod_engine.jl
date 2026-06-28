@@ -99,3 +99,35 @@ end
         @test_throws ErrorException load_snapshot_matrix(tmpdir)
     end
 end
+
+@testset "PODEngine SVD Solver Test" begin
+    using LinearAlgebra
+    # 既知の行列 X (3行2列)
+    X = [1.0 2.0; 3.0 5.0; 5.0 8.0]
+    
+    # 期待される平均値 (各行の平均)
+    # 1行目: (1+2)/2 = 1.5
+    # 2行目: (3+5)/2 = 4.0
+    # 3行目: (5+8)/2 = 6.5
+    expected_mean = [1.5, 4.0, 6.5]
+    
+    # まだ compute_pod が定義/エクスポートされていないため、
+    # この呼び出しは例外またはエラーを起こすはずです。
+    Ur, Sr, Vr_coeffs, mean_field = compute_pod(X; ric_threshold=0.999)
+    
+    # 平均値の検証
+    @test mean_field ≈ expected_mean
+    
+    # 中心化行列の検証
+    X_centered = X .- mean_field
+    
+    # 係数と基底を用いた復元テンソルの検証
+    # X_centered ≈ Ur * Vr_coeffs
+    @test Ur * Vr_coeffs ≈ X_centered atol=1e-12
+    
+    # 特異値と基底の関係
+    # Ur は正規直交基底であるはず: Ur' * Ur ≈ I
+    @test Ur' * Ur ≈ Matrix(I, size(Ur, 2), size(Ur, 2)) atol=1e-12
+end
+
+
