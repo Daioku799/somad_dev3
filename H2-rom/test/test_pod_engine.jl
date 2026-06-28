@@ -42,3 +42,40 @@ using .PODEngine
     @test model.mu_vectors == mu_vectors
     @test model.metadata == metadata
 end
+
+@testset "PODEngine Snapshot Loader Test" begin
+    using JLD2
+    mktempdir() do tmpdir
+        JLD2.jldopen(joinpath(tmpdir, "snap1.jld2"), "w") do file
+            file["temperature"] = reshape(collect(1.0:18.0), 3, 3, 2)
+            file["nx"] = 3
+            file["ny"] = 3
+            file["nz"] = 2
+            file["metadata"] = Dict("snapshot_id" => "snap_1", "mu" => [0.1, 0.2])
+            file["z_centers"] = [0.05, 0.15]
+        end
+        
+        JLD2.jldopen(joinpath(tmpdir, "snap2.jld2"), "w") do file
+            file["temperature"] = reshape(collect(19.0:36.0), 3, 3, 2)
+            file["nx"] = 3
+            file["ny"] = 3
+            file["nz"] = 2
+            file["metadata"] = Dict("snapshot_id" => "snap_2", "mu" => [0.3, 0.4])
+            file["z_centers"] = [0.05, 0.15]
+        end
+        
+        X, snapshot_ids, mu_vectors, grid_info = load_snapshot_matrix(tmpdir)
+        
+        @test size(X) == (18, 2)
+        @test X[:, 1] == collect(1.0:18.0)
+        @test X[:, 2] == collect(19.0:36.0)
+        @test snapshot_ids == ["snap_1", "snap_2"]
+        @test size(mu_vectors) == (2, 2)
+        @test mu_vectors[:, 1] == [0.1, 0.2]
+        @test mu_vectors[:, 2] == [0.3, 0.4]
+        @test grid_info["nx"] == 3
+        @test grid_info["ny"] == 3
+        @test grid_info["nz"] == 2
+        @test grid_info["z_centers"] == [0.05, 0.15]
+    end
+end

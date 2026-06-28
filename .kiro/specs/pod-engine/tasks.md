@@ -10,7 +10,7 @@
   - _Requirements: 4.1, 4.2_
 
 - [ ] 2. Snapshot Loading and Grid Validation
-- [ ] 2.1 (P) Snapshot Loader Implementation
+- [x] 2.1 (P) Snapshot Loader Implementation
   - `loader.jl` の実装。`JLD2` を用いて指定ディレクトリ内のスナップショットファイルを走査・ロード。
   - `snapshot_ids`（ファイル名等）および `mu` ベクトルの抽出ロジック追加。
   - 3次元温度場 `theta` のベクトル化（flatten）処理の実装。
