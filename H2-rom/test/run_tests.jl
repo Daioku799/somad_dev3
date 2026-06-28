@@ -15,4 +15,7 @@ using Test
     
     println("Running test_snapshot_generator.jl...")
     include("test_snapshot_generator.jl")
+    
+    println("Running test_pod_engine.jl...")
+    include("test_pod_engine.jl")
 end

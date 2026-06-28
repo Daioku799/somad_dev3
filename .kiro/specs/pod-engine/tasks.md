@@ -49,14 +49,14 @@
   - _Requirements: 3.1, 4.1, 4.2_
   - _Depends: 2.1, 3.1_
 
-- [ ] 5. Validation and Verification
-- [ ] 5.1 (P) Unit Testing for PODEngine
+- [x] 5. Validation and Verification
+- [x] 5.1 (P) Unit Testing for PODEngine
   - 合成データ（直交基底から生成した行列）を用いた基底抽出の精度検証。
   - 各コンポーネント（Loader, Solver）の単体テスト。
   - `julia test/test_pod_engine.jl` ですべてのテストがパスする。
   - _Requirements: 1.1, 2.1_
 
-- [ ] 5.2 Integration Test with Real Snapshots
+- [x] 5.2 Integration Test with Real Snapshots
   - `data/raw/` 配下の実際のスナップショットを用いたエンドツーエンドの実行テスト。
   - 物理的に妥当な平均温度場および特異値分布が得られるかの確認。
   - 実際のスナップショット群から次数低減モデルファイルが正常に作成される。
