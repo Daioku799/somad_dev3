@@ -2,7 +2,7 @@
 
 ## Tasks
 
-- [ ] 1. Foundation: Module Structure and Data Types
+- [x] 1. Foundation: Module Structure and Data Types
   - `H2-rom/src/PODEngine/PODEngine.jl` および `types.jl` の作成。
   - `PODModel` 構造体の定義（basis, singular_values, coefficients, mean_field, snapshot_ids, mu_vectors, metadata を保持）。
   - metadata 内に `trained_snapshot_ids` および格子情報（nx, ny, nz, dx, dy, dz, lx, ly, lz）を含める準備。
