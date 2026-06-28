@@ -130,4 +130,45 @@ end
     @test Ur' * Ur ≈ Matrix(I, size(Ur, 2), size(Ur, 2)) atol=1e-12
 end
 
+@testset "PODEngine RIC-based Truncation Test" begin
+    # 3つの異なるスケールの特異値を持つスナップショット行列を作成
+    mean_field = [1.0, 2.0, 3.0]
+    X_centered = [10.0 0.0 0.0;
+                  0.0 1.0 0.0;
+                  0.0 0.0 0.1]
+    X = X_centered .+ mean_field
+    
+    # 特異値の二乗: 100.0, 1.0, 0.01
+    # 総分散: 101.01
+    # 累積比率 (RIC):
+    # 1モード目: 100.0 / 101.01 ≈ 0.99000099
+    # 2モード目: 101.0 / 101.01 ≈ 0.99990099
+    # 3モード目: 101.01 / 101.01 = 1.0
+    
+    # 1. 異なる ric_threshold で異なるモード数が選択されるか検証
+    Ur, Sr, Vr_coeffs, mf = compute_pod(X; ric_threshold=0.95)
+    @test length(Sr) == 1
+    
+    Ur, Sr, Vr_coeffs, mf = compute_pod(X; ric_threshold=0.995)
+    @test length(Sr) == 2
+    
+    Ur, Sr, Vr_coeffs, mf = compute_pod(X; ric_threshold=0.99999)
+    @test length(Sr) == 3
+    
+    # 2. デフォルトのしきい値 (0.999) の検証
+    Ur_def, Sr_def, Vr_coeffs_def, mf_def = compute_pod(X)
+    @test length(Sr_def) == 2
+    
+    # 3. エッジケース: しきい値が 1.0 のとき
+    Ur_1, Sr_1, Vr_coeffs_1, mf_1 = compute_pod(X; ric_threshold=1.0)
+    @test length(Sr_1) == 3
+    
+    # 4. エッジケース: ゼロ分散 (平坦な行列)
+    X_flat = [2.0 2.0 2.0; 2.0 2.0 2.0; 2.0 2.0 2.0]
+    Ur_flat, Sr_flat, Vr_coeffs_flat, mf_flat = compute_pod(X_flat; ric_threshold=0.999)
+    @test length(Sr_flat) == 1
+    @test all(Sr_flat .≈ 0.0)
+end
+
+
 
