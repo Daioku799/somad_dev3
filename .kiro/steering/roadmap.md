@@ -25,10 +25,10 @@
 ## Specs (dependency order)
 
 ### Phase 2: Density Map Refactoring
-- [ ] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none
+- [x] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none
 - [x] heat3ds-ext -- 温度場（θ）を `.jld2` 形式で保存する機能を `heat3ds.jl` に追加。 Dependencies: none
-- [ ] component-generator -- 密度マップから実TSV座標への展開ロジック、およびピッチ・チップ範囲検証の追加。 Dependencies: config-loader
-- [ ] snapshot-generator -- 密度マップのサンプリングによるFVM一括実行への変更。 Dependencies: component-generator, heat3ds-ext
+- [x] component-generator -- 密度マップから実TSV座標への展開ロジック、およびピッチ・チップ範囲検証の追加。 Dependencies: config-loader
+- [x] snapshot-generator -- 密度マップのサンプリングによるFVM一括実行への変更。 Dependencies: component-generator, heat3ds-ext
 
 ### Phase 3: Offline ROM Construction
 - [ ] pod-engine -- スナップショット行列からのSVDによる空間基底抽出。 Dependencies: snapshot-generator

@@ -39,4 +39,5 @@
 
 #### Acceptance Criteria
 1. When 検証が完了した際, the system shall すべての指標をまとめた評価レポート（MarkdownまたはJSON形式）を生成する。
-2. The system shall 選択された検証ケースについて、ROMの予測値、FVMの解析値、およびそれらの差分（誤差マップ）を並べた比較断面プロットを生成する。
+2. The system shall **`Plots.jl`** を使用して、選択された検証ケースの ROM 予測値、FVM 解析値、およびそれらの差分（誤差マップ）を並べた比較断面プロット（PNG等の画像ファイル）を生成すること。
+3. The system shall ヘッドレス環境（GUIがないCI環境など）での実行に対応するため、GR バックエンドにおける非表示描画（例: `ENV["GKSwstype"] = "100"` 設定）によるテスト・動作確認を標準仕様とすること。

@@ -10,13 +10,14 @@
 
 ## Requirements
 
-### Requirement 1: RBFモデルの学習
-**Objective:** 解析エンジニアとして、密度マップとPOD係数のペアからRBFモデルを学習させ、未知の入力に対する予測を可能にしたい。
+### Requirement 1: 抽象補間インターフェースとRBFモデルの学習
+**Objective:** 解析エンジニアとして、補間アルゴリズム（モーダル係数決定法）をオプショナルで変更可能としつつ、デフォルトでRBFを用いて学習を安定させたい。
 
 #### Acceptance Criteria
-1. When 学習データセット（密度マップ `mu` とPOD係数 `a` のペア）が提供されたとき、`rom-interpolator` はRBFネットワークの重みを算出すること。
-2. While 重み算出中、`rom-interpolator` は計算の進捗または完了ステータスを表示すること。
-3. If 学習データが不適切（サンプル数が不足している、または次元が不一致など）な場合、`rom-interpolator` はエラーを表示して処理を中断すること。
+1. The `rom-interpolator` shall 抽象型 `AbstractInterpolator` またはそれに準じるインターフェースを定義し、具体的な決定アルゴリズムを分離（オプショナルに切り替え可能）すること。
+2. When 学習データセット（密度マップ `mu` とPOD係数 `a` のペア）が提供されたとき、`fit!(interpolator::AbstractInterpolator, X::Matrix{Float64}, Y::Matrix{Float64})` などの統一された API で重みを学習できること。
+3. The `rom-interpolator` shall デフォルトの具象実装としてガウスカーネル（Gaussian Kernel）を用いた RBF ネットワークモデル (`RBFInterpolator`) を提供すること。
+4. If 学習データが不適切（サンプル数が不足している、または次元が不一致など）な場合、補間エンジンの学習時にエラーを表示して処理を中断すること。
 
 ### Requirement 2: 入力データのデータスケーリング（Data Scaling）
 **Objective:** 解析エンジニアとして、密度マップの各セル値をデータスケーリング（Data Scaling）することで、学習を安定させ予測精度を向上させたい。
@@ -42,8 +43,9 @@
 2. When モデルの読込が要求されたとき、`rom-interpolator` は指定されたファイルから学習済みモデルを復元すること。
 
 ### Requirement 5: 予測の信頼性評価（外挿検知）
-**Objective:** 解析エンジニアとして、入力パラメータが学習データの範囲外（外挿）である場合にそれを検知し、予測結果の信頼性を判断したい。
+**Objective:** 解析エンジニアとして、入力パラメータが学習データの範囲外（外挿）である場合にそれを検知しつつ、判定アルゴリズムを将来的に差し替え可能にしたい。
 
 #### Acceptance Criteria
-1. The `rom-interpolator` shall 入力された密度マップ `mu` が、学習に使用されたデータの範囲内にあるかを判定する API `is_reliable(model, mu)` を提供すること。
-2. When 入力 `mu` のいずれかの要素が学習データの最小値・最大値の範囲を超えている場合、`is_reliable` は `false` を返し、信頼性が低いことを示すこと。
+1. The `rom-interpolator` shall 入力された密度マップ `mu` が学習データの範囲内にあるかを判定する API `is_reliable(interpolator, mu)` を提供すること。
+2. **[デフォルト判定 (案A)]** `is_reliable` のデフォルトの実装として、学習データの各セルごとの最小値・最大値の範囲 $[mu_{min, i}, mu_{max, i}]$ 内に入力 `mu` のすべてのセル値が収まっているかを検証するボックス型チェックを採用すること。
+3. **[拡張性]** 信頼性判定処理は、学習されたデータ構造から独立した判定関数、または多重ディスパッチによって定義され、将来的に凸包（Convex Hull）判定や距離ベース判定などの高度な幾何判定アルゴリズムへ容易に差し替えができる設計とすること。
