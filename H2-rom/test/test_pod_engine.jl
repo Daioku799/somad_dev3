@@ -170,5 +170,90 @@ end
     @test all(Sr_flat .≈ 0.0)
 end
 
+@testset "PODEngine Model Persistence Test" begin
+    # Create a dummy model
+    basis = [1.0 2.0; 3.0 4.0; 5.0 6.0]
+    singular_values = [10.0, 5.0]
+    coefficients = [1.0 2.0; 3.0 4.0]
+    mean_field = [1.5, 2.5, 3.5]
+    snapshot_ids = ["s1", "s2"]
+    mu_vectors = [0.1 0.2; 0.3 0.4]
+    metadata = Dict{String, Any}(
+        "ric_threshold" => 0.99,
+        "n_modes" => 2,
+        "trained_snapshot_ids" => ["s1", "s2"],
+        "grid" => Dict{String, Any}(
+            "dims" => (3, 1, 1),
+            "spacing" => (0.5, 0.5, 0.5),
+            "physical_size" => (1.5, 0.5, 0.5)
+        )
+    )
+    
+    model = PODModel(basis, singular_values, coefficients, mean_field, snapshot_ids, mu_vectors, metadata)
+    
+    mktempdir() do tmpdir
+        filepath = joinpath(tmpdir, "model.jld2")
+        
+        # This should fail initially because save_pod_model is not defined/exported
+        save_pod_model(filepath, model)
+        
+        # Load the model
+        loaded_model = load_pod_model(filepath)
+        
+        # Verify fields
+        @test loaded_model.basis == model.basis
+        @test loaded_model.singular_values == model.singular_values
+        @test loaded_model.coefficients == model.coefficients
+        @test loaded_model.mean_field == model.mean_field
+        @test loaded_model.snapshot_ids == model.snapshot_ids
+        @test loaded_model.mu_vectors == model.mu_vectors
+        @test loaded_model.metadata == model.metadata
+    end
+end
+
+@testset "PODEngine Pipeline Integration Test" begin
+    using JLD2
+    mktempdir() do raw_dir
+        # Create dummy snapshots
+        JLD2.jldopen(joinpath(raw_dir, "snap1.jld2"), "w") do file
+            file["temperature"] = reshape(collect(1.0:6.0), 3, 2, 1)
+            file["nx"] = 3
+            file["ny"] = 2
+            file["nz"] = 1
+            file["metadata"] = Dict("snapshot_id" => "snap_1", "mu" => [0.1, 0.2])
+        end
+        
+        JLD2.jldopen(joinpath(raw_dir, "snap2.jld2"), "w") do file
+            file["temperature"] = reshape(collect(7.0:12.0), 3, 2, 1)
+            file["nx"] = 3
+            file["ny"] = 2
+            file["nz"] = 1
+            file["metadata"] = Dict("snapshot_id" => "snap_2", "mu" => [0.3, 0.4])
+        end
+        
+        mktempdir() do model_dir
+            model_path = joinpath(model_dir, "pod_model.jld2")
+            
+            # Run the generator orchestrator
+            run_pod_generation(raw_dir, model_path; ric_threshold=0.999)
+            
+            # Load and verify the generated model
+            model = load_pod_model(model_path)
+            
+            @test size(model.basis, 1) == 6
+            @test length(model.singular_values) >= 1
+            @test size(model.coefficients, 2) == 2
+            @test length(model.mean_field) == 6
+            @test model.snapshot_ids == ["snap_1", "snap_2"]
+            @test size(model.mu_vectors) == (2, 2)
+            @test model.metadata["ric_threshold"] == 0.999
+            @test model.metadata["n_modes"] == length(model.singular_values)
+            @test model.metadata["trained_snapshot_ids"] == ["snap_1", "snap_2"]
+            @test model.metadata["grid"]["dims"] == (3, 2, 1)
+        end
+    end
+end
+
+
 
 

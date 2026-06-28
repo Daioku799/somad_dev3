@@ -41,7 +41,7 @@
   - _Boundary: SVDSolver_
 
 - [ ] 4. Integration and Result Persistence
-- [ ] 4.1 POD Projection and Model Storage
+- [x] 4.1 POD Projection and Model Storage
   - 抽出された基底 $U_r$ への射影による POD 係数 $A = U_r^T X$ の算出。
   - `data/models/pod_model.jld2` への一括保存処理の実装。
   - `snapshot_ids`, `mu_vectors`, `trained_snapshot_ids`, および格子メタデータが正しく保存されること。
