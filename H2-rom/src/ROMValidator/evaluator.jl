@@ -110,7 +110,7 @@ function calculate_hotspot_error(
     if length(theta_fvm) != length(theta_rom)
         throw(DimensionMismatch("FVM vector length ($(length(theta_fvm))) does not match ROM vector length ($(length(theta_rom)))"))
     end
-
+ 
     # Check required keys in grid_info
     required_keys = ["nx", "ny", "nz", "lx", "ly", "z_centers"]
     for key in required_keys
@@ -118,43 +118,43 @@ function calculate_hotspot_error(
             throw(KeyError(key))
         end
     end
-
+ 
     nx = grid_info["nx"]
     ny = grid_info["ny"]
     nz = grid_info["nz"]
     lx = grid_info["lx"]
     ly = grid_info["ly"]
     z_centers = grid_info["z_centers"]
-
+ 
     grid_total = nx * ny * nz
     if length(theta_fvm) != grid_total
         throw(DimensionMismatch("Vector length ($(length(theta_fvm))) does not match grid configuration dimensions ($(grid_total))"))
     end
-
+ 
     # 2. Argmax calculation
     idx_fvm = argmax(theta_fvm)
     idx_rom = argmax(theta_rom)
-
+ 
     # Helper function to convert 1D index (Column-major) to physical coordinates (x, y, z)
     function idx_to_coords(idx::Int)::Tuple{Float64, Float64, Float64}
         k = div(idx - 1, nx * ny) + 1
         r = mod(idx - 1, nx * ny)
         j = div(r, nx) + 1
         i = mod(r, nx) + 1
-
+ 
         dx = lx / nx
         dy = ly / ny
-
+ 
         x = (i - 0.5) * dx
         y = (j - 0.5) * dy
         z = z_centers[k]
-
+ 
         return (x, y, z)
     end
-
+ 
     x_fvm, y_fvm, z_fvm = idx_to_coords(idx_fvm)
     x_rom, y_rom, z_rom = idx_to_coords(idx_rom)
-
+ 
     # 3. Calculate Euclidean distance
     dist = sqrt((x_fvm - x_rom)^2 + (y_fvm - y_rom)^2 + (z_fvm - z_rom)^2)
     return dist
@@ -188,7 +188,7 @@ function evaluate_validation_results(
     if length(results) == 0
         throw(ArgumentError("Validation results vector must not be empty"))
     end
-
+ 
     n_samples = length(results)
     
     sum_l2 = 0.0
@@ -229,3 +229,69 @@ function evaluate_validation_results(
     
     return ValidationSummary(results, mean_metrics, max_metrics, overall_status)
 end
+
+"""
+    run_validation(
+        model_path::String,
+        snapshot_dir::String,
+        output_dir::String,
+        trained_snapshot_ids::Vector{String},
+        grid_info::Dict{String, Any},
+        basis::Matrix{Float64},
+        mean_field::Vector{Float64};
+        tmax_threshold::Float64=2.0
+    ) -> ValidationSummary
+
+Orchestrate the validation process for the ROM model: select validation data, evaluate ROM predictions,
+calculate error metrics, judge accuracy, and generate slice comparison plots and a summary report.
+"""
+function run_validation(
+    model_path::String,
+    snapshot_dir::String,
+    output_dir::String,
+    trained_snapshot_ids::Vector{String},
+    grid_info::Dict{String, Any},
+    basis::Matrix{Float64},
+    mean_field::Vector{Float64};
+    tmax_threshold::Float64=2.0
+)::ValidationSummary
+    # 1. Identify validation sample files
+    sample_files = get_validation_samples(snapshot_dir, trained_snapshot_ids)
+    if isempty(sample_files)
+        throw(ArgumentError("No validation samples found in $snapshot_dir"))
+    end
+
+    # 2. Load model
+    model = ROMInterpolator.load_rom_model(model_path)
+
+    results = ValidationResult[]
+
+    # 3. Evaluate each sample
+    for file in sample_files
+        theta_fvm, mu, snapshot_id = load_test_case(file)
+        
+        # ROM prediction and reconstruction
+        theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
+        
+        # Calculate error metrics
+        l2_err = calculate_l2_error(theta_fvm, theta_rom)
+        tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
+        hotspot_err = calculate_hotspot_error(theta_fvm, theta_rom, grid_info)
+        
+        is_passed = tmax_err <= tmax_threshold
+        
+        push!(results, ValidationResult(snapshot_id, l2_err, tmax_err, hotspot_err, is_passed))
+        
+        # Generate slice comparison plots
+        generate_comparison_plots(theta_fvm, theta_rom, grid_info, output_dir, snapshot_id)
+    end
+
+    # 4. Generate ValidationSummary
+    summary = evaluate_validation_results(results; tmax_threshold=tmax_threshold)
+
+    # 5. Generate Markdown and JSON reports
+    generate_report(summary, output_dir)
+
+    return summary
+end
+

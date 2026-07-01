@@ -6,6 +6,7 @@ if !isdefined(Main, :ROMValidator)
 end
 using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results
 using JLD2
+using JSON3
 
 @testset "ROMValidator Types Test" begin
     # ValidationResult のインスタンス化テスト
@@ -211,5 +212,242 @@ end
     # 4. Test evaluate_validation_results with empty input (expect ArgumentError)
     @test_throws ArgumentError evaluate_validation_results(ValidationResult[]; tmax_threshold=2.0)
 end
+
+@testset "ROMValidator Task 3.1 Test" begin
+    using .ROMValidator: generate_report
+
+    results = [
+        ValidationResult("sample_1", 0.01, 1.2, 0.02, true),
+        ValidationResult("sample_2", 0.03, 1.8, 0.04, true)
+    ]
+    summary = evaluate_validation_results(results; tmax_threshold=2.0)
+
+    test_dir = mktempdir()
+    try
+        generate_report(summary, test_dir)
+
+        md_path = joinpath(test_dir, "validation.md")
+        json_path = joinpath(test_dir, "validation.json")
+
+        @test isfile(md_path)
+        @test isfile(json_path)
+
+        # JSON 内容の検証
+        json_content = JSON3.read(read(json_path, String))
+        @test string(json_content.overall_status) == "validated"
+        @test json_content.mean_metrics.relative_l2_error ≈ 0.02
+        @test json_content.mean_metrics.tmax_error ≈ 1.5
+        @test json_content.mean_metrics.hotspot_dist ≈ 0.03
+        @test json_content.max_metrics.tmax_error ≈ 1.8
+
+        # MD 内容の検証
+        md_content = read(md_path, String)
+        @test occursin("validated", md_content)
+        @test occursin("0.02", md_content)
+        @test occursin("1.5", md_content)
+        @test occursin("1.8", md_content)
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
+@testset "ROMValidator Task 3.2 Test" begin
+    using .ROMValidator: generate_comparison_plots
+    
+    grid_info = Dict{String, Any}(
+        "nx" => 2,
+        "ny" => 3,
+        "nz" => 4,
+        "lx" => 1.2e-3,
+        "ly" => 1.2e-3,
+        "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+    )
+    
+    theta_fvm = collect(1.0:24.0)
+    theta_rom = theta_fvm .+ 0.1
+    
+    test_dir = mktempdir()
+    try
+        generate_comparison_plots(theta_fvm, theta_rom, grid_info, test_dir, "test_sample")
+        
+        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.15.png"))
+        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.35.png"))
+        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.55.png"))
+        @test isfile(joinpath(test_dir, "test_sample_comparison_yz_x_0.50.png"))
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
+@testset "ROMValidator Task 4.1 Test" begin
+    using .ROMValidator: run_validation
+    
+    # We can define a dummy Interpolator for testing orchestrator without full JLD2 model save/load,
+    # or we can mock load_rom_model and evaluate_rom.
+    # To keep it simple and self-contained, we can mock:
+    # 1. JLD2 save a dummy dict as model.
+    # 2. Define custom evaluate_rom and load_rom_model if ROMInterpolator is not fully loaded,
+    # or just import ROMInterpolator.
+    
+    if !isdefined(Main, :ROMInterpolator)
+        try
+            include("../ROMInterpolator/ROMInterpolator.jl")
+        catch
+            include("../src/ROMInterpolator/ROMInterpolator.jl")
+        end
+    end
+    
+    using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
+    
+    test_dir = mktempdir()
+    try
+        # 1. Create dummy snapshots in raw_dir
+        raw_dir = joinpath(test_dir, "raw")
+        mkpath(raw_dir)
+        
+        # Grid parameters: 2 * 3 * 4 = 24 elements
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        
+        # Snapshot 1 (trained)
+        snap1_path = joinpath(raw_dir, "snap1.jld2")
+        jldsave(snap1_path; temperature=collect(1.0:24.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => [1.0, 2.0]))
+        
+        # Snapshot 2 (validation)
+        snap2_path = joinpath(raw_dir, "snap2.jld2")
+        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, metadata=Dict("snapshot_id" => "snap_2", "mu" => [3.0, 4.0]))
+        
+        # 2. Create dummy trained RBFInterpolator model and save it
+        model_path = joinpath(test_dir, "rom_model.jld2")
+        model = RBFInterpolator(
+            zeros(2, 2), # weights (shape: N_basis x N_centers)
+            [1.0 3.0; 2.0 4.0], # centers (N_centers x N_dim, where N_centers = 2, N_dim = 2)
+            1.0, # epsilon
+            ScalingParams([1.0, 2.0], [3.0, 4.0]), # scaling_params
+            [1.0 3.0; 2.0 4.0], # parameter_bounds (2 x N_dim)
+            Dict{String, Any}("kernel_type" => "gaussian")
+        )
+        save_rom_model(model_path, model)
+        
+        # Dummy basis (24 x 2) and mean field (24)
+        basis = ones(24, 2)
+        mean_field = zeros(24)
+        
+        # Run validation
+        # Since we use dummy model and basis, evaluate_rom might produce some output.
+        # Let's verify run_validation runs through.
+        output_dir = joinpath(test_dir, "output")
+        
+        summary = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["snap_1"], # trained_snapshot_ids
+            grid_info,
+            basis,
+            mean_field;
+            tmax_threshold=30.0
+        )
+        
+        @test summary.overall_status == :validated
+        @test length(summary.results) == 1
+        @test summary.results[1].sample_id == "snap_2"
+        
+        # Check files
+        @test isfile(joinpath(output_dir, "validation.json"))
+        @test isfile(joinpath(output_dir, "validation.md"))
+        @test isfile(joinpath(output_dir, "snap_2_comparison_xy_z_0.15.png"))
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
+@testset "ROMValidator Task 5.1 Test" begin
+    # Task 5.1: E2E Verification
+    # Verify that the entire end-to-end flow executes without throwing any exceptions
+    # under simulated headless environments.
+    using .ROMValidator: run_validation
+    using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
+    
+    test_dir = mktempdir()
+    try
+        raw_dir = joinpath(test_dir, "raw")
+        mkpath(raw_dir)
+        
+        # 2 * 3 * 4 = 24 elements grid
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        
+        # Write multiple snapshots
+        jldsave(joinpath(raw_dir, "snap_t1.jld2"); temperature=collect(1.0:24.0), metadata=Dict("snapshot_id" => "trained1", "mu" => [1.0, 2.0]))
+        jldsave(joinpath(raw_dir, "snap_v1.jld2"); temperature=collect(1.0:24.0) .+ 0.5, metadata=Dict("snapshot_id" => "val1", "mu" => [3.0, 4.0]))
+        jldsave(joinpath(raw_dir, "snap_v2.jld2"); temperature=collect(1.0:24.0) .+ 1.5, metadata=Dict("snapshot_id" => "val2", "mu" => [5.0, 6.0]))
+        
+        model_path = joinpath(test_dir, "rom_model.jld2")
+        model = RBFInterpolator(
+            zeros(2, 2), # weights
+            [1.0 3.0; 2.0 4.0], # centers
+            1.0, # epsilon
+            ScalingParams([1.0, 2.0], [3.0, 4.0]), # scaling
+            [1.0 3.0; 2.0 4.0], # parameter_bounds
+            Dict{String, Any}("kernel_type" => "gaussian")
+        )
+        save_rom_model(model_path, model)
+        
+        basis = ones(24, 2)
+        mean_field = zeros(24)
+        output_dir = joinpath(test_dir, "output")
+        
+        # Execute run_validation in headless emulation (GKSwstype = 100 should be set internally)
+        summary = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["trained1"], # trained list
+            grid_info,
+            basis,
+            mean_field;
+            tmax_threshold=30.0
+        )
+        
+        # Verify result summary structure and values
+        @test summary.overall_status == :validated
+        @test length(summary.results) == 2
+        
+        # Verify all expected plot files are generated
+        for val_id in ["val1", "val2"]
+            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.15.png"))
+            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.35.png"))
+            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.55.png"))
+            @test isfile(joinpath(output_dir, "$(val_id)_comparison_yz_x_0.50.png"))
+        end
+        
+        # Report files validation
+        @test isfile(joinpath(output_dir, "validation.json"))
+        @test isfile(joinpath(output_dir, "validation.md"))
+        
+        # Test report content
+        report_md = read(joinpath(output_dir, "validation.md"), String)
+        @test occursin("# ROM Validation Report", report_md)
+        @test occursin("Overall Status", report_md)
+        @test occursin("val1", report_md)
+        @test occursin("val2", report_md)
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
 
 
