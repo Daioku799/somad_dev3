@@ -7,7 +7,7 @@
   - 実行可能な `struct` 定義が `src/ROMInterpolator/types.jl` に存在すること
   - _Requirements: 1.1, 1.3, 4.1_
 
-- [ ] 1.2 (P) 密度マップの正規化 (Data Scaling) ロジックの実装
+- [x] 1.2 (P) 密度マップの正規化 (Data Scaling) ロジックの実装
   - 学習データから最小値・最大値を抽出する `fit_scaler` の実装
   - 入力ベクトルを指定範囲（例: [0, 1]）にスケーリングする `scale_data` の実装
   - 予測時に学習時のパラメータを再利用できること
