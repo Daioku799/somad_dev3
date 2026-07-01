@@ -1,7 +1,7 @@
 # Implementation Plan: rom-validator
 
 ## 1. Foundation: モジュール基盤と型定義
-- [ ] 1.1 モジュール構造とデータ型の定義
+- [x] 1.1 モジュール構造とデータ型の定義
   - `ValidationResult`, `ValidationSummary` 構造体の定義
   - `ROMValidator.jl` と `types.jl` の作成。必要なライブラリのインポート設定
   - _Requirements: 1.1, 1.2, 1.3_
