@@ -1,7 +1,7 @@
 # Implementation Plan: rom-interpolator
 
 ## 1. Foundation: データ構造と正規化
-- [ ] 1.1 `ROMInterpolator` モジュールの基本構造と型定義
+- [x] 1.1 `ROMInterpolator` モジュールの基本構造と型定義
   - 抽象型 `AbstractInterpolator` および具象型 `RBFInterpolator`, `ScalingParams` 等の定義
   - `LinearAlgebra`, `JLD2` のインポートと基本モジュール構成の構築
   - 実行可能な `struct` 定義が `src/ROMInterpolator/types.jl` に存在すること
