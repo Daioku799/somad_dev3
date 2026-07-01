@@ -4,7 +4,7 @@ using Test
 if !isdefined(Main, :ROMValidator)
     include("../src/ROMValidator/ROMValidator.jl")
 end
-using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error
+using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error
 using JLD2
 
 @testset "ROMValidator Types Test" begin
@@ -108,4 +108,65 @@ end
     # Empty vector
     @test_throws ArgumentError calculate_tmax_error(Float64[], Float64[])
 end
+
+@testset "ROMValidator Task 2.2 Test" begin
+    # Grid setup: nx=2, ny=3, nz=4, total = 24
+    grid_info = Dict{String, Any}(
+        "nx" => 2,
+        "ny" => 3,
+        "nz" => 4,
+        "lx" => 10.0,
+        "ly" => 15.0,
+        "z_centers" => [1.0, 2.0, 3.0, 4.0]
+    )
+
+    # Correct dimensions (length 24)
+    fvm = zeros(24)
+    rom = zeros(24)
+    
+    # Check physical coordinates:
+    # dx = 10/2 = 5.0, dy = 15/3 = 5.0
+    
+    # Hotspot 1: Index 1 (FVM)
+    # k = (1-1)÷6 + 1 = 1 -> z = 1.0
+    # rem = 0
+    # j = 0÷2 + 1 = 1 -> y = 0.5 * 5.0 = 2.5
+    # i = 0%2 + 1 = 1 -> x = 0.5 * 5.0 = 2.5
+    # (x, y, z) = (2.5, 2.5, 1.0)
+    fvm[1] = 100.0 # Max at index 1
+
+    # Hotspot 2: Index 2 (ROM)
+    # k = (2-1)÷6 + 1 = 1 -> z = 1.0
+    # rem = 1
+    # j = 1÷2 + 1 = 1 -> y = 0.5 * 5.0 = 2.5
+    # i = 1%2 + 1 = 2 -> x = 1.5 * 5.0 = 7.5
+    # (x, y, z) = (7.5, 2.5, 1.0)
+    rom[2] = 100.0 # Max at index 2
+    # Expected distance: 5.0
+    @test calculate_hotspot_error(fvm, rom, grid_info) ≈ 5.0
+
+    # Hotspot 3: Index 11
+    # k = (11-1)÷6 + 1 = 2 -> z = 2.0
+    # rem = 4
+    # j = 4÷2 + 1 = 3 -> y = 2.5 * 5.0 = 12.5
+    # i = 4%2 + 1 = 1 -> x = 0.5 * 5.0 = 2.5
+    # (x, y, z) = (2.5, 12.5, 2.0)
+    rom_alt = zeros(24)
+    rom_alt[11] = 100.0
+    # Expected distance: sqrt((2.5-2.5)^2 + (12.5-2.5)^2 + (2.0-1.0)^2) = sqrt(100 + 1) = sqrt(101) ≈ 10.0498756
+    @test calculate_hotspot_error(fvm, rom_alt, grid_info) ≈ sqrt(101.0)
+
+    # Input validations
+    # 1. Length mismatch between fvm and rom
+    @test_throws DimensionMismatch calculate_hotspot_error(fvm, zeros(23), grid_info)
+    # 2. Length mismatch with grid total size
+    @test_throws DimensionMismatch calculate_hotspot_error(zeros(23), zeros(23), grid_info)
+    # 3. Missing keys in grid_info
+    for key in ["nx", "ny", "nz", "lx", "ly", "z_centers"]
+        bad_grid = copy(grid_info)
+        delete!(bad_grid, key)
+        @test_throws KeyError calculate_hotspot_error(fvm, rom, bad_grid)
+    end
+end
+
 

@@ -94,3 +94,70 @@ function calculate_tmax_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Floa
     return abs(maximum(theta_fvm) - maximum(theta_rom))
 end
 
+"""
+    calculate_hotspot_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Float64}, grid_info::Dict{String, Any}) -> Float64
+
+Calculate the geometric Euclidean distance between the hot spots of the FVM and ROM temperatures.
+Throws `DimensionMismatch` if the lengths of the two vectors do not match or if they do not match the grid configuration.
+Throws `KeyError` if any of the required keys (`nx`, `ny`, `nz`, `lx`, `ly`, `z_centers`) are missing from `grid_info`.
+"""
+function calculate_hotspot_error(
+    theta_fvm::Vector{Float64}, 
+    theta_rom::Vector{Float64}, 
+    grid_info::Dict{String, Any}
+)::Float64
+    # 1. Input validation
+    if length(theta_fvm) != length(theta_rom)
+        throw(DimensionMismatch("FVM vector length ($(length(theta_fvm))) does not match ROM vector length ($(length(theta_rom)))"))
+    end
+
+    # Check required keys in grid_info
+    required_keys = ["nx", "ny", "nz", "lx", "ly", "z_centers"]
+    for key in required_keys
+        if !haskey(grid_info, key)
+            throw(KeyError(key))
+        end
+    end
+
+    nx = grid_info["nx"]
+    ny = grid_info["ny"]
+    nz = grid_info["nz"]
+    lx = grid_info["lx"]
+    ly = grid_info["ly"]
+    z_centers = grid_info["z_centers"]
+
+    grid_total = nx * ny * nz
+    if length(theta_fvm) != grid_total
+        throw(DimensionMismatch("Vector length ($(length(theta_fvm))) does not match grid configuration dimensions ($(grid_total))"))
+    end
+
+    # 2. Argmax calculation
+    idx_fvm = argmax(theta_fvm)
+    idx_rom = argmax(theta_rom)
+
+    # Helper function to convert 1D index (Column-major) to physical coordinates (x, y, z)
+    function idx_to_coords(idx::Int)::Tuple{Float64, Float64, Float64}
+        k = div(idx - 1, nx * ny) + 1
+        r = mod(idx - 1, nx * ny)
+        j = div(r, nx) + 1
+        i = mod(r, nx) + 1
+
+        dx = lx / nx
+        dy = ly / ny
+
+        x = (i - 0.5) * dx
+        y = (j - 0.5) * dy
+        z = z_centers[k]
+
+        return (x, y, z)
+    end
+
+    x_fvm, y_fvm, z_fvm = idx_to_coords(idx_fvm)
+    x_rom, y_rom, z_rom = idx_to_coords(idx_rom)
+
+    # 3. Calculate Euclidean distance
+    dist = sqrt((x_fvm - x_rom)^2 + (y_fvm - y_rom)^2 + (z_fvm - z_rom)^2)
+    return dist
+end
+
+

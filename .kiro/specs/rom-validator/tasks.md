@@ -18,7 +18,7 @@
   - _Requirements: 1.1, 1.2_
   - _Boundary: Evaluator_
 
-- [ ] 2.2 (P) ホットスポット位置幾何誤差の算出処理
+- [x] 2.2 (P) ホットスポット位置幾何誤差の算出処理
   - 1D平坦化インデックスから物理空間 3D 座標 $(x, y, z)$ への逆変換の実装
   - FVMとROMの最高温度点の間の直線（ユークリッド）物理距離を算出する `calculate_hotspot_error` の実装
   - _Requirements: 1.3_
