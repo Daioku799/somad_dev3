@@ -69,3 +69,25 @@ end
     @test scaled_eps[1, :] ≈ [0.0, 0.0]
 end
 
+@testset "ROMInterpolator RBF Kernel Test" begin
+    X = [1.0 2.0 3.0;
+         4.0 5.0 6.0]
+    
+    centers = [1.0 2.0;
+               4.0 6.0]
+    
+    epsilon = 0.5
+    
+    expected = [
+        1.0                      exp(-1.25);
+        exp(-0.5)                exp(-0.25);
+        exp(-2.0)                exp(-0.25)
+    ]
+    
+    # We call ROMInterpolator.compute_kernel_matrix which is not yet implemented or exported.
+    # This will fail with UndefVarError because compute_kernel_matrix doesn't exist.
+    kernel_matrix = ROMInterpolator.compute_kernel_matrix(X, centers, epsilon)
+    @test kernel_matrix ≈ expected
+end
+
+
