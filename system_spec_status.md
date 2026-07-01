@@ -16,7 +16,7 @@ graph TD
     POD --> ROM[rom-interpolator]:::finished
     ROM --> Val[rom-validator]:::finished
     ROM --> GA[ga-optimizer]:::progress
-    ValPlot[validation-plot]:::progress
+    ValPlot[validation-plot]:::finished
 ```
 
 ---
@@ -35,7 +35,7 @@ graph TD
 | **`pod-engine`** | スナップショット行列の構築、SVD（特異値分解）による空間基底（PODモード）抽出、およびRIC寄与率に基づく次元削減。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/pod-engine/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/pod-engine/tasks.md) |
 | **`rom-interpolator`** | POD係数と密度マップ `mu` を紐付ける RBF 補間モデルの構築・学習・予測・保存、および温度場の3D再構成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/tasks.md) |
 | **`rom-validator`** | 未学習データに対する予測誤差（L2、Tmax、幾何位置）算出、合否判定、および統一断面比較プロット・レポート生成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/tasks.md) |
-| **`validation-plot`** | 最適化された密度マップや、実座標に展開されたTSV配置のレイアウトなどを可視化する個別プロット機能。 | 🟡 開発中 | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/tasks.md) |
+| **`validation-plot`** | 最適化された密度マップや、実座標に展開されたTSV配置のレイアウトなどを可視化する個別プロット機能。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/tasks.md) |
 | **`ga-optimizer`** | 遺伝的アルゴリズムによる最適密度マップ探索。交叉・突然変異、制約修正、ROM高速評価、外挿検知、FVM再検証を含む。 | 🟡 開発中 | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/tasks.md) |
 
 ---
