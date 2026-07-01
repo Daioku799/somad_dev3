@@ -5,8 +5,9 @@ include("ModelBuilder/ModelBuilder.jl")
 using .ModelBuilder
 using .ModelBuilder.ConfigLoader
 using .ModelBuilder.Grid
+using .ModelBuilder.ComponentGenerator
 
-export fillID!, setLambda!, model_test
+export fillID!, setLambda!, setProperties!, model_test
 
 """
     fillID!(ID, ox, Δh, Z)
@@ -16,29 +17,32 @@ Note: In our new system, build_model handles the full lifecycle.
 We use this wrapper to populate the ID array provided by the solver.
 """
 function fillID!(ID::Array{UInt8,3}, ox, Δh, Z::Vector{Float64})
-    # Since the solver provides ID and Z, we need to ensure our logic matches.
-    # For baseline, we assume generate_test_config() is used.
     config = generate_test_config()
     
-    # We call build_model internally but since ID is already allocated, 
-    # we manually run the filling part.
-    nxy = size(ID, 1) - 2
     zm = calculate_zm(config)
+    objects = generate_components(config, zm)
     
-    # Reuse the internal filling functions by making them accessible or duplicating
-    # For Absolute Identity, we implement the filling here directly calling ModelBuilder logic.
+    # A. PowerGrid
     ModelBuilder.fill_power_grid!(ID, config, zm, ox, Δh, Z)
     
-    objects = generate_components(config, zm)
+    # B. TSVs (CYLINDER)
     for obj in objects
         if obj.type == ModelBuilder.ComponentGenerator.CYLINDER
             ModelBuilder.fill_cylinder!(ID, obj, ox, Δh, Z)
-        elseif obj.type == ModelBuilder.ComponentGenerator.SPHERE
+        end
+    end
+    
+    # C. Silicon Plates
+    ModelBuilder.fill_plates!(ID, config, zm, ox, Δh, Z)
+    
+    # D. Solder Bumps (SPHERE)
+    for obj in objects
+        if obj.type == ModelBuilder.ComponentGenerator.SPHERE
             ModelBuilder.fill_sphere!(ID, obj, ox, Δh, Z)
         end
     end
     
-    ModelBuilder.fill_plates!(ID, config, zm, ox, Δh, Z)
+    # E. Resin
     ModelBuilder.fill_resin!(ID, 6) # MAT_RESIN
 end
 
@@ -48,6 +52,11 @@ end
 Original signature maintained.
 """
 function setLambda!(λ::Array{Float64,3}, ρ::Array{Float64,3}, cp::Array{Float64,3}, ID::Array{UInt8,3})
+    config = generate_test_config()
+    ModelBuilder.set_properties!(λ, ρ, cp, ID, config.materials)
+end
+
+function setProperties!(λ::Array{Float64,3}, ρ::Array{Float64,3}, cp::Array{Float64,3}, ID::Array{UInt8,3})
     config = generate_test_config()
     ModelBuilder.set_properties!(λ, ρ, cp, ID, config.materials)
 end
