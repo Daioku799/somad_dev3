@@ -3,7 +3,7 @@ using Test
 if !isdefined(Main, :ROMInterpolator)
     include("../src/ROMInterpolator/ROMInterpolator.jl")
 end
-using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable
+using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable, reconstruct_field
 
 @testset "ROMInterpolator Types Test" begin
     # Dummy fields for ScalingParams
@@ -170,4 +170,23 @@ end
     @test_throws DimensionMismatch is_reliable(rbf, [2.0])
     @test_throws DimensionMismatch is_reliable(rbf, [2.0, 5.0, 1.0])
 end
+
+@testset "ROMInterpolator Reconstructor Test" begin
+    # 1. Correct linear combination test
+    coeffs = [1.0, 2.0]
+    basis = [1.0 2.0; 3.0 4.0; 5.0 6.0]
+    mean_field = [0.1, 0.2, 0.3]
+    
+    expected = [5.1, 11.2, 17.3]
+    @test reconstruct_field(coeffs, basis, mean_field) ≈ expected
+
+    # 2. DimensionMismatch validation test (basis columns != length(coeffs))
+    coeffs_bad = [1.0, 2.0, 3.0]
+    @test_throws DimensionMismatch reconstruct_field(coeffs_bad, basis, mean_field)
+
+    # 3. DimensionMismatch validation test (basis rows != length(mean_field))
+    mean_field_bad = [0.1, 0.2]
+    @test_throws DimensionMismatch reconstruct_field(coeffs, basis, mean_field_bad)
+end
+
 
