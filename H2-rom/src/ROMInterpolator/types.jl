@@ -13,6 +13,7 @@ mutable struct RBFInterpolator <: AbstractInterpolator
     epsilon::Float64
     scaling_params::ScalingParams
     parameter_bounds::Matrix{Float64} # shape: 2 x N_dim (bounds for extrapolation detection)
+    metadata::Dict{String, Any}
 
     function RBFInterpolator(epsilon::Float64)
         new(
@@ -20,12 +21,17 @@ mutable struct RBFInterpolator <: AbstractInterpolator
             Matrix{Float64}(undef, 0, 0),
             epsilon,
             ScalingParams(Float64[], Float64[]),
-            Matrix{Float64}(undef, 0, 0)
+            Matrix{Float64}(undef, 0, 0),
+            Dict{String, Any}()
         )
     end
 
     function RBFInterpolator(weights::Matrix{Float64}, centers::Matrix{Float64}, epsilon::Float64, scaling_params::ScalingParams, parameter_bounds::Matrix{Float64})
-        new(weights, centers, epsilon, scaling_params, parameter_bounds)
+        new(weights, centers, epsilon, scaling_params, parameter_bounds, Dict{String, Any}())
+    end
+
+    function RBFInterpolator(weights::Matrix{Float64}, centers::Matrix{Float64}, epsilon::Float64, scaling_params::ScalingParams, parameter_bounds::Matrix{Float64}, metadata::Dict{String, Any})
+        new(weights, centers, epsilon, scaling_params, parameter_bounds, metadata)
     end
 end
 

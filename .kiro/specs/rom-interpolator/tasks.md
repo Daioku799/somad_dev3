@@ -54,7 +54,7 @@
   - _Boundary: Reconstructor_
 
 ## 4. Integration & Persistence: パイプラインと永続化
-- [ ] 4.1 モデルの保存・読み込み機能
+- [x] 4.1 モデルの保存・読み込み機能
   - `JLD2` を用いた `AbstractInterpolator`（`RBFInterpolator`）オブジェクト全体のシリアライズとデシリアライズ
   - `save_rom_model(filepath, model)` および `load_rom_model(filepath)` の実装
   - モデルが正しくファイルに保存・復元されること

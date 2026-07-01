@@ -28,6 +28,7 @@ using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fi
     @test rbf.epsilon == epsilon
     @test rbf.scaling_params === scaling
     @test rbf.parameter_bounds == parameter_bounds
+    @test rbf.metadata isa Dict{String, Any}
 end
 
 @testset "ROMInterpolator Scaling Test" begin
@@ -116,6 +117,7 @@ end
     @test rbf.scaling_params.min_vals == [1.0, 4.0]
     @test rbf.scaling_params.max_vals == [3.0, 6.0]
     @test rbf.parameter_bounds == [1.0 4.0; 3.0 6.0] # 2 x N_dim
+    @test rbf.metadata["kernel_type"] == "gaussian"
 
     # 5. Predict and verify reconstruction accuracy
     for i in 1:3
@@ -210,5 +212,49 @@ end
     empty_theta = Float64[]
     @test_throws ArgumentError get_tmax(empty_theta)
 end
+
+@testset "ROMInterpolator Persistence Test" begin
+    using .ROMInterpolator: save_rom_model, load_rom_model
+
+    # Create dummy model
+    min_vals = [0.0, 0.1]
+    max_vals = [1.0, 0.9]
+    scaling = ScalingParams(min_vals, max_vals)
+    weights = [1.0 2.0; 3.0 4.0]
+    centers = [0.1 0.2; 0.3 0.4]
+    epsilon = 0.5
+    parameter_bounds = [0.0 0.1; 1.0 0.9]
+    
+    model = RBFInterpolator(weights, centers, epsilon, scaling, parameter_bounds)
+    model.metadata = Dict{String, Any}("kernel_type" => "gaussian", "custom_key" => "custom_val")
+
+    # Use a temporary directory for output within the workspace
+    temp_dir = joinpath(@__DIR__, "temp_persistence_test")
+    rm(temp_dir; force=true, recursive=true)
+    
+    filepath = joinpath(temp_dir, "nested", "rom_model.jld2")
+    
+    # Save the model
+    save_rom_model(filepath, model)
+    
+    @test isfile(filepath)
+    
+    # Load the model
+    loaded_model = load_rom_model(filepath)
+    
+    # Verify loaded model type and field values
+    @test loaded_model isa RBFInterpolator
+    @test loaded_model.weights == model.weights
+    @test loaded_model.centers == model.centers
+    @test loaded_model.epsilon == model.epsilon
+    @test loaded_model.scaling_params.min_vals == model.scaling_params.min_vals
+    @test loaded_model.scaling_params.max_vals == model.scaling_params.max_vals
+    @test loaded_model.parameter_bounds == model.parameter_bounds
+    @test loaded_model.metadata == model.metadata
+    
+    # Clean up
+    rm(temp_dir; force=true, recursive=true)
+end
+
 
 

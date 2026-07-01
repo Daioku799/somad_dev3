@@ -72,6 +72,7 @@ function fit!(interpolator::RBFInterpolator, X::Matrix{Float64}, Y::Matrix{Float
     interpolator.centers = X_scaled
     interpolator.scaling_params = scaling_params
     interpolator.parameter_bounds = parameter_bounds
+    interpolator.metadata["kernel_type"] = "gaussian"
 
     return interpolator
 end
