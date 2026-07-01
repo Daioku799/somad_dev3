@@ -1,0 +1,60 @@
+using JLD2
+
+"""
+    get_validation_samples(raw_dir::String, trained_snapshot_ids::Vector{String}) -> Vector{String}
+
+Search for `.jld2` files inside `raw_dir`. Load `metadata` from each file, extract `snapshot_id`
+(from `metadata["snapshot_id"]`), and check if it is NOT in `trained_snapshot_ids`.
+Return the list of file paths for these unlearned snapshots.
+"""
+function get_validation_samples(raw_dir::String, trained_snapshot_ids::Vector{String})::Vector{String}
+    validation_samples = String[]
+    if !isdir(raw_dir)
+        return validation_samples
+    end
+    
+    for file in readdir(raw_dir; join=true)
+        if isfile(file) && endswith(file, ".jld2")
+            try
+                JLD2.jldopen(file, "r") do jld
+                    if haskey(jld, "metadata")
+                        meta = jld["metadata"]
+                        if haskey(meta, "snapshot_id")
+                            snapshot_id = meta["snapshot_id"]
+                            if !(snapshot_id in trained_snapshot_ids)
+                                push!(validation_samples, file)
+                            end
+                        end
+                    end
+                end
+            catch e
+                @warn "Failed to read JLD2 file: $file" exception=e
+            end
+        end
+    end
+    return validation_samples
+end
+
+"""
+    load_test_case(filepath::String) -> Tuple{Vector{Float64}, Vector{Float64}, String}
+
+Load `temperature` and `metadata` from the specified JLD2 file. Flat-map `temperature`
+using `vec` if it is a 3D array (or vector). Return `(temperature_vector, mu_vector, snapshot_id)`.
+"""
+function load_test_case(filepath::String)::Tuple{Vector{Float64}, Vector{Float64}, String}
+    local temp, meta
+    JLD2.jldopen(filepath, "r") do jld
+        temp = jld["temperature"]
+        meta = jld["metadata"]
+    end
+    
+    temp_vec = vec(temp)
+    temp_vec_float = convert(Vector{Float64}, temp_vec)
+    
+    mu_vec = meta["mu"]
+    mu_vec_float = convert(Vector{Float64}, vec(mu_vec))
+    
+    snapshot_id = string(meta["snapshot_id"])
+    
+    return (temp_vec_float, mu_vec_float, snapshot_id)
+end

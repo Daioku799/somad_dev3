@@ -6,7 +6,7 @@
   - `ROMValidator.jl` と `types.jl` の作成。必要なライブラリのインポート設定
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 1.2 (P) 評価用データ（スナップショット）の特定ロジック
+- [x] 1.2 (P) 評価用データ（スナップショット）の特定ロジック
   - `data/raw/` からモデル構築に使用されなかった検証用データを特定する `get_validation_samples` の実装
   - _Requirements: 2.1, 2.2_
   - _Boundary: Evaluator_
