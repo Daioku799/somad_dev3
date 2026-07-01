@@ -18,4 +18,7 @@ using Test
     
     println("Running test_pod_engine.jl...")
     include("test_pod_engine.jl")
+    
+    println("Running test_rom_interpolator.jl...")
+    include("test_rom_interpolator.jl")
 end
