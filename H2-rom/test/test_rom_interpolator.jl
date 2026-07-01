@@ -305,5 +305,75 @@ end
     rm(temp_dir; force=true, recursive=true)
 end
 
+@testset "ROMInterpolator Integration with PODEngine Test" begin
+    # 1. Load PODEngine safely
+    if !isdefined(Main, :PODEngine)
+        include("../src/PODEngine/PODEngine.jl")
+    end
+    using .PODEngine
+    using .ROMInterpolator: train_rom, evaluate_rom, get_tmax
+
+    # 2. Simulate snapshot data generation
+    # Let N_grid = 120 (spatial points), N_snapshots = 15, N_dim = 8 (parameter dimension)
+    N_grid = 120
+    N_snapshots = 15
+    N_dim = 8
+
+    # Generate parameter matrix mu_vectors (N_dim x N_snapshots) in [0.1, 0.9]
+    import Random
+    rng = Random.MersenneTwister(42)
+    mu_vectors = 0.1 .+ 0.8 .* rand(rng, N_dim, N_snapshots)
+
+    # Generate snapshot matrix (N_grid x N_snapshots)
+    # The temperature field should be physically plausible (e.g. [20.0, 900.0])
+    base_temp = 300.0 .+ 200.0 .* sin.(range(0, pi, length=N_grid)) # ranges from 300 to 500
+    X_snapshots = zeros(N_grid, N_snapshots)
+    for i in 1:N_snapshots
+        # Parametric variation
+        var_factor = sum(mu_vectors[:, i]) / N_dim # ranges around 0.5
+        X_snapshots[:, i] = base_temp .* (0.8 + 0.4 * var_factor) # temperature ranges [240, 720]
+    end
+
+    # 3. Compute POD modes, singular values, coefficients, and mean field
+    basis, singular_values, coefficients, mean_field = PODEngine.compute_pod(X_snapshots; ric_threshold=0.999)
+
+    # N_modes is the number of selected modes
+    N_modes = size(basis, 2)
+    @test N_modes > 0
+    @test size(coefficients) == (N_modes, N_snapshots)
+
+    # 4. Train RBF Interpolator model
+    temp_dir = joinpath(@__DIR__, "temp_integration_test")
+    rm(temp_dir; force=true, recursive=true)
+    model_path = joinpath(temp_dir, "integrated_rom_model.jld2")
+
+    model = train_rom(mu_vectors, coefficients, model_path; epsilon=1.0, lambda=1e-8)
+    @test model isa RBFInterpolator
+    @test isfile(model_path)
+
+    # 5. Evaluate the trained ROM interpolator model on a new parameter mu_new
+    min_bounds = minimum(mu_vectors, dims=2)
+    max_bounds = maximum(mu_vectors, dims=2)
+    mu_new = vec(min_bounds + 0.5 * (max_bounds - min_bounds))
+
+    # Evaluate the model
+    theta_new = evaluate_rom(model, basis, mean_field, mu_new)
+
+    # 6. Verify temperature field physical plausibility
+    # Check length
+    @test length(theta_new) == N_grid
+
+    # Check that temperature values are in a reasonable physical range [20.0, 1000.0]
+    @test all(20.0 .<= theta_new .<= 1000.0)
+
+    # Check get_tmax calculates the maximum temperature correctly
+    tmax = get_tmax(theta_new)
+    @test tmax ≈ maximum(theta_new)
+
+    # Clean up
+    rm(temp_dir; force=true, recursive=true)
+end
+
+
 
 
