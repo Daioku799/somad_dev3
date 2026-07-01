@@ -10,7 +10,7 @@ graph TD
     Config[config-loader]:::finished --> Model[model-builder]:::finished
     Geom[geometry-logic]:::finished --> Model
     GDS[gds-mapping]:::finished --> Model
-    Model --> FVM[heat3ds-ext]:::progress
+    Model --> FVM[heat3ds-ext]:::finished
     FVM --> Snap[snapshot-generator]:::finished
     Snap --> POD[pod-engine]:::finished
     POD --> ROM[rom-interpolator]:::finished
@@ -30,7 +30,7 @@ graph TD
 | **`geometry-logic`** | 各セル重心がプリミティブ（直方体・円柱・球）に含まれるかどうかの幾何判定と、BBoxによる早期棄却による高速化。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/geometry-logic/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/geometry-logic/tasks.md) |
 | **`gds-mapping`** | GDSIIレイヤーからのレイアウト（多角形ポリゴン）の読み込み、およびチップ座標系へのマッピングと包含判定。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/gds-mapping/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/gds-mapping/tasks.md) |
 | **`model-builder`** | 3D解析グリッドの自動生成、材料IDマップ（ID-map）の充填、および物性値（熱伝導率等）の格子へのマッピング。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/model-builder/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/model-builder/tasks.md) |
-| **`heat3ds-ext`** | 3次元FVMシミュレータ `heat3ds.jl` の拡張。設計パラメータ `mu` の受け取りと、結果の自動 JLD2 保存機能。 | 🟡 開発中 | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/heat3ds-ext/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/heat3ds-ext/tasks.md) |
+| **`heat3ds-ext`** | 3次元FVMシミュレータ `heat3ds.jl` の拡張。設計パラメータ `mu` の受け取りと、結果の自動 JLD2 保存機能。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/heat3ds-ext/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/heat3ds-ext/tasks.md) |
 | **`snapshot-generator`** | 密度マップのサンプリング（LHS等）および、制約（総TSV本数等）の検証を行った上でのFVM一括実行自動制御。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/snapshot-generator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/snapshot-generator/tasks.md) |
 | **`pod-engine`** | スナップショット行列の構築、SVD（特異値分解）による空間基底（PODモード）抽出、およびRIC寄与率に基づく次元削減。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/pod-engine/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/pod-engine/tasks.md) |
 | **`rom-interpolator`** | POD係数と密度マップ `mu` を紐付ける RBF 補間モデルの構築・学習・予測・保存、および温度場の3D再構成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/tasks.md) |
