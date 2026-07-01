@@ -58,3 +58,39 @@ function load_test_case(filepath::String)::Tuple{Vector{Float64}, Vector{Float64
     
     return (temp_vec_float, mu_vec_float, snapshot_id)
 end
+
+"""
+    calculate_l2_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Float64}) -> Float64
+
+Calculate the relative L2 error between FVM temperature and ROM predicted temperature.
+Throws `DimensionMismatch` if the lengths of the two vectors do not match.
+Returns `0.0` if the L2 norm of `theta_fvm` is less than `1e-12` to avoid zero division.
+"""
+function calculate_l2_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Float64})::Float64
+    if length(theta_fvm) != length(theta_rom)
+        throw(DimensionMismatch("Vectors must have the same length (FVM: $(length(theta_fvm)), ROM: $(length(theta_rom)))"))
+    end
+    norm_fvm = norm(theta_fvm)
+    if norm_fvm < 1e-12
+        return 0.0
+    end
+    return norm(theta_fvm - theta_rom) / norm_fvm
+end
+
+"""
+    calculate_tmax_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Float64}) -> Float64
+
+Calculate the absolute maximum temperature difference between FVM and ROM temperatures.
+Throws `ArgumentError` if either vector is empty.
+Throws `DimensionMismatch` if the lengths of the two vectors do not match.
+"""
+function calculate_tmax_error(theta_fvm::Vector{Float64}, theta_rom::Vector{Float64})::Float64
+    if length(theta_fvm) == 0
+        throw(ArgumentError("Vectors must not be empty"))
+    end
+    if length(theta_fvm) != length(theta_rom)
+        throw(DimensionMismatch("Vectors must have the same length (FVM: $(length(theta_fvm)), ROM: $(length(theta_rom)))"))
+    end
+    return abs(maximum(theta_fvm) - maximum(theta_rom))
+end
+

@@ -12,7 +12,7 @@
   - _Boundary: Evaluator_
 
 ## 2. Core: 精度検証アルゴリズムの実装
-- [ ] 2.1 (P) 相対L2誤差およびTmax誤差の算出処理
+- [x] 2.1 (P) 相対L2誤差およびTmax誤差の算出処理
   - 解析温度場と予測温度場の間の相対L2ノルム誤差を計算する `calculate_l2_error`
   - それぞれの最高温度の差を計算する `calculate_tmax_error` の実装
   - _Requirements: 1.1, 1.2_
