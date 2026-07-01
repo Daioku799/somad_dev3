@@ -8,6 +8,6 @@ include("scaler.jl")
 include("interpolator.jl")
 
 export AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data
-export compute_kernel_matrix
+export compute_kernel_matrix, fit!, predict
 
 end # module

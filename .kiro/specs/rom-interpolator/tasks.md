@@ -23,7 +23,7 @@
   - _Requirements: 1.3_
   - _Boundary: Interpolator_
 
-- [ ] 2.2 RBF 重み算出（学習）および予測 API の実装
+- [x] 2.2 RBF 重み算出（学習）および予測 API の実装 (fit!, predict)
   - 抽象 API `fit!(interpolator::AbstractInterpolator, X::Matrix{Float64}, Y::Matrix{Float64})` および `predict(interpolator::AbstractInterpolator, x::Vector{Float64})` の定義
   - `RBFInterpolator` における最小二乗法を用いた重み行列の算出と予測処理
   - サンプル数不足や次元不一致に対するバリデーションとエラー表示の実装

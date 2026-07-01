@@ -31,3 +31,67 @@ function compute_kernel_matrix(X::Matrix{Float64}, centers::Matrix{Float64}, eps
     
     return Phi
 end
+
+"""
+    fit!(interpolator::AbstractInterpolator, X::Matrix{Float64}, Y::Matrix{Float64}; lambda::Float64=1e-6)
+
+RBF補間モデルの重みとスケーリングパラメータなどを学習データ (X, Y) から算出します。
+- `X`: 入力パラメータ行列 (N_dim x N_samples)
+- `Y`: 出力（PODモード係数）行列 (N_modes x N_samples)
+- `lambda`: 正則化パラメータ (デフォルト 1e-6)
+"""
+function fit!(interpolator::RBFInterpolator, X::Matrix{Float64}, Y::Matrix{Float64}; lambda::Float64=1e-6)
+    N_dim, N_s = size(X)
+    N_modes, N_s_Y = size(Y)
+
+    if N_s != N_s_Y
+        throw(ArgumentError("入力データ X (サンプル数: $(N_s)) と出力データ Y (サンプル数: $(N_s_Y)) のサンプル数が一致しません。"))
+    end
+    if N_s == 0
+        throw(ArgumentError("学習サンプルの数が 0 です。少なくとも 1 つ以上のサンプルが必要です。"))
+    end
+
+    # 1. スケーラーのフィッティングとスケーリング
+    scaling_params = fit_scaler(X)
+    X_scaled = scale_data(X, scaling_params)
+
+    # 2. パラメータ境界の計算 (2 x N_dim)
+    # 1行目は各次元の最小値、2行目は最大値
+    parameter_bounds = Matrix{Float64}(undef, 2, N_dim)
+    parameter_bounds[1, :] .= scaling_params.min_vals
+    parameter_bounds[2, :] .= scaling_params.max_vals
+
+    # 3. カーネル行列の計算 (N_s x N_s)
+    Phi = compute_kernel_matrix(X_scaled, X_scaled, interpolator.epsilon)
+
+    # 4. 重みの算出: W = Y / (Phi + lambda * I) (N_modes x N_s)
+    W = Y / (Phi + lambda * I)
+
+    # フィールドの更新
+    interpolator.weights = W
+    interpolator.centers = X_scaled
+    interpolator.scaling_params = scaling_params
+    interpolator.parameter_bounds = parameter_bounds
+
+    return interpolator
+end
+
+"""
+    predict(interpolator::AbstractInterpolator, x::Vector{Float64}) -> Vector{Float64}
+
+学習済みの補間モデルを用いて、未知のパラメータ `x` (長さ N_dim) に対する出力（PODモード係数）を予測します。
+"""
+function predict(interpolator::RBFInterpolator, x::Vector{Float64})::Vector{Float64}
+    # 1. 入力スケーリング
+    x_scaled = scale_data(x, interpolator.scaling_params)
+
+    # 2. カーネルベクトルの計算 (1 x N_s)
+    phi_x = compute_kernel_matrix(reshape(x_scaled, :, 1), interpolator.centers, interpolator.epsilon)
+
+    # 3. 係数の予測 (N_modes x 1)
+    phi_x_vec = vec(phi_x)
+    a = interpolator.weights * phi_x_vec
+
+    return a
+end
+

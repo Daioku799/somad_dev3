@@ -90,4 +90,50 @@ end
     @test kernel_matrix ≈ expected
 end
 
+@testset "ROMInterpolator fit! and predict Test" begin
+    using .ROMInterpolator: fit!, predict
+
+    # 1. Initialization
+    epsilon = 0.5
+    rbf = RBFInterpolator(epsilon)
+    @test rbf.epsilon == epsilon
+    @test isempty(rbf.weights)
+
+    # 2. Dummy training data
+    # 2 input dimensions, 3 samples, 3 output modes
+    X = [1.0 2.0 3.0;
+         4.0 5.0 6.0]
+    Y = [10.0 20.0 30.0;
+         40.0 50.0 60.0;
+         70.0 80.0 90.0]
+
+    # 3. Execution of fit!
+    fit!(rbf, X, Y; lambda=1e-6)
+
+    # 4. Assert fields after fit!
+    @test size(rbf.weights) == (3, 3) # N_modes x N_samples
+    @test size(rbf.centers) == (2, 3) # N_dim x N_samples
+    @test rbf.scaling_params.min_vals == [1.0, 4.0]
+    @test rbf.scaling_params.max_vals == [3.0, 6.0]
+    @test rbf.parameter_bounds == [1.0 4.0; 3.0 6.0] # 2 x N_dim
+
+    # 5. Predict and verify reconstruction accuracy
+    for i in 1:3
+        x = X[:, i]
+        y_pred = predict(rbf, x)
+        @test y_pred ≈ Y[:, i] atol=1e-3
+    end
+
+    # 6. Input validation tests
+    # Mismatched sample sizes
+    X_bad = [1.0 2.0; 4.0 5.0]
+    @test_throws ArgumentError fit!(rbf, X_bad, Y)
+
+    # Empty dataset
+    X_empty = Matrix{Float64}(undef, 2, 0)
+    Y_empty = Matrix{Float64}(undef, 3, 0)
+    @test_throws ArgumentError fit!(rbf, X_empty, Y_empty)
+end
+
+
 
