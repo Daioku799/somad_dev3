@@ -2,16 +2,40 @@ module Primitives
 
 export is_included_rect, is_included_cyl, is_included_sph
 
+const TOLERANCE = 1e-12
+
+"""
+    check_bbox_overlap(a1, a2, b1, b2; tol=TOLERANCE) -> Bool
+
+Check if bounding box A (a1, a2) overlaps with bounding box B (b1, b2) under tolerance.
+"""
+function check_bbox_overlap(a1, a2, b1, b2; tol=TOLERANCE)
+    axlo, aylo, azlo = min.(a1, a2)
+    axhi, ayhi, azhi = max.(a1, a2)
+    bxlo, bylo, bzlo = min.(b1, b2)
+    bxhi, byhi, bzhi = max.(b1, b2)
+
+    return (axlo - tol <= bxhi) && (axhi + tol >= bxlo) &&
+           (aylo - tol <= byhi) && (ayhi + tol >= bylo) &&
+           (azlo - tol <= bzhi) && (azhi + tol >= bzlo)
+end
+
 """
     is_included_rect(a1, a2, b1, b2) -> Bool
 
 セルA(a1,a2) が直方体のジオメトリ領域B(b1,b2) に 50%以上含まれている場合 true を返す。
-a1,a2,b1,b2 は対角をなす2点の座標 (x,y,z) タプル。
-(移植元: H2-main-original/src/modelA.jl)
 """
 function is_included_rect(a1, a2, b1, b2)
+    # BBox early rejection
+    if !check_bbox_overlap(a1, a2, b1, b2)
+        return false
+    end
+
     # Aの体積
     volA = abs((a2[1] - a1[1]) * (a2[2] - a1[2]) * (a2[3] - a1[3]))
+    if volA <= 0.0
+        return false
+    end
 
     # 重なり体積
     axlo, aylo, azlo = min.(a1, a2)
@@ -19,9 +43,6 @@ function is_included_rect(a1, a2, b1, b2)
     bxlo, bylo, bzlo = min.(b1, b2)
     bxhi, byhi, bzhi = max.(b1, b2)
 
-    ox = max(0.0, min(axhi, bxhi) - max(axlo, bxlo))
-    oy = max(0.0, min(ayhi, bylo + (byhi-bylo)) - max(aylo, bxlo)) # Wait, original logic had a small typo in variable names? Let's check.
-    # Recalculating based on standard overlap:
     ox = max(0.0, min(axhi, bxhi) - max(axlo, bxlo))
     oy = max(0.0, min(ayhi, byhi) - max(aylo, bylo))
     oz = max(0.0, min(azhi, bzhi) - max(azlo, bzlo))
@@ -35,12 +56,29 @@ end
     is_included_cyl(a1, a2, cyl_ctr, cyl_r, cyl_zmin, cyl_zmax; samples=50)
 
 直方体(a1,a2)の体積のうち、円柱（Z軸方向）に含まれる割合が50%以上ならtrue。
-(移植元: H2-main-original/src/modelA.jl)
 """
 function is_included_cyl(a1, a2, cyl_ctr, cyl_r, cyl_zmin, cyl_zmax; samples=50)
+    # BBox early rejection
+    b1 = (cyl_ctr[1] - cyl_r, cyl_ctr[2] - cyl_r, cyl_zmin)
+    b2 = (cyl_ctr[1] + cyl_r, cyl_ctr[2] + cyl_r, cyl_zmax)
+    if !check_bbox_overlap(a1, a2, b1, b2)
+        return false
+    end
+
     xlo, ylo, zlo = min.(a1, a2)
     xhi, yhi, zhi = max.(a1, a2)
     volA = (xhi - xlo) * (yhi - ylo) * (zhi - zlo)
+    if volA <= 0.0
+        return false
+    end
+
+    # Early true: 8 corners inside cylinder
+    corners = ((xlo,ylo,zlo),(xlo,ylo,zhi),(xlo,yhi,zlo),(xlo,yhi,zhi),
+               (xhi,ylo,zlo),(xhi,ylo,zhi),(xhi,yhi,zlo),(xhi,yhi,zhi))
+    all_inside = all(((x - cyl_ctr[1])^2 + (y - cyl_ctr[2])^2 <= (cyl_r + TOLERANCE)^2 && cyl_zmin - TOLERANCE <= z <= cyl_zmax + TOLERANCE) for (x,y,z) in corners)
+    if all_inside
+        return true
+    end
 
     inside_count = 0
     total_count = 0
@@ -53,7 +91,7 @@ function is_included_cyl(a1, a2, cyl_ctr, cyl_r, cyl_zmin, cyl_zmax; samples=50)
         dx = x - cyl_ctr[1]
         dy = y - cyl_ctr[2]
         r2 = dx^2 + dy^2
-        if r2 <= cyl_r^2 && cyl_zmin <= z <= cyl_zmax
+        if r2 <= (cyl_r + TOLERANCE)^2 && (cyl_zmin - TOLERANCE <= z <= cyl_zmax + TOLERANCE)
             inside_count += 1
         end
         total_count += 1
@@ -67,21 +105,29 @@ end
     is_included_sph(a1, a2, center, radius; samples=50) -> Bool
 
 直方体 A (対角点 a1, a2) の体積のうち、球 (center, radius) に含まれる割合が50%以上なら true。
-(移植元: H2-main-original/src/modelA.jl)
 """
 function is_included_sph(a1, a2, center, radius; samples::Int=50)
+    # BBox early rejection
+    b1 = (center[1] - radius, center[2] - radius, center[3] - radius)
+    b2 = (center[1] + radius, center[2] + radius, center[3] + radius)
+    if !check_bbox_overlap(a1, a2, b1, b2)
+        return false
+    end
+
     xlo, ylo, zlo = min.(a1, a2)
     xhi, yhi, zhi = max.(a1, a2)
     volA = (xhi - xlo) * (yhi - ylo) * (zhi - zlo)
-    volA <= 0 && return false
+    if volA <= 0.0
+        return false
+    end
 
     cx, cy, cz = center
-    r2 = radius^2
+    r2_with_tol = (radius + TOLERANCE)^2
 
-    # Early true: 8 corners inside
+    # Early true: 8 corners inside sphere
     corners = ((xlo,ylo,zlo),(xlo,ylo,zhi),(xlo,yhi,zlo),(xlo,yhi,zhi),
                (xhi,ylo,zlo),(xhi,ylo,zhi),(xhi,yhi,zlo),(xhi,yhi,zhi))
-    all_inside = all(((x - cx)^2 + (y - cy)^2 + (z - cz)^2 <= r2) for (x,y,z) in corners)
+    all_inside = all(((x - cx)^2 + (y - cy)^2 + (z - cz)^2 <= r2_with_tol) for (x,y,z) in corners)
     if all_inside
         return true
     end
@@ -98,7 +144,7 @@ function is_included_sph(a1, a2, center, radius; samples::Int=50)
         for j in 1:samples
             z = zlo + dz/2
             for k in 1:samples
-                if (x - cx)^2 + (y - cy)^2 + (z - cz)^2 <= r2
+                if (x - cx)^2 + (y - cy)^2 + (z - cz)^2 <= r2_with_tol
                     inside_count += 1
                 end
                 z += dz

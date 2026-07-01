@@ -18,6 +18,14 @@ function is_included_chip(a1, a2, layer::Any, zmin::Float64, zmax::Float64; samp
     if czhi <= zmin || czlo >= zmax
         return false
     end
+    
+    # Calculate Z overlap ratio
+    z_vol = czhi - czlo
+    if z_vol <= 0.0
+        return false
+    end
+    z_overlap = max(0.0, min(czhi, zmax) - max(czlo, zmin))
+    z_ratio = z_overlap / z_vol
 
     # 2. XY sub-sampling check in GDS layer
     xlo, xhi = min(a1[1], a2[1]), max(a1[1], a2[1])
@@ -34,7 +42,10 @@ function is_included_chip(a1, a2, layer::Any, zmin::Float64, zmax::Float64; samp
         end
     end
     
-    return (inside_count / total_count) >= 0.5
+    xy_ratio = inside_count / total_count
+    overall_ratio = xy_ratio * z_ratio
+    
+    return overall_ratio >= 0.5
 end
 
 end # module
