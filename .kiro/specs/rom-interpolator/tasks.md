@@ -47,7 +47,7 @@
   - _Requirements: 3.2_
   - _Boundary: Reconstructor_
 
-- [ ] 3.2 (P) 3Dグリッド形状への変換と最高温度抽出
+- [x] 3.2 (P) 3Dグリッド形状への変換と最高温度抽出
   - 1次元ベクトル形式の温度場を、元の $Nx \times Ny \times Nz$ グリッド形状に変換する機能
   - 再構成温度場から最高温度を抽出する `get_tmax(theta)` の実装
   - _Requirements: 3.3, 3.4_

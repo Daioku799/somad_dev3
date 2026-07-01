@@ -3,7 +3,7 @@ using Test
 if !isdefined(Main, :ROMInterpolator)
     include("../src/ROMInterpolator/ROMInterpolator.jl")
 end
-using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable, reconstruct_field
+using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable, reconstruct_field, reshape_to_3d, get_tmax
 
 @testset "ROMInterpolator Types Test" begin
     # Dummy fields for ScalingParams
@@ -187,6 +187,28 @@ end
     # 3. DimensionMismatch validation test (basis rows != length(mean_field))
     mean_field_bad = [0.1, 0.2]
     @test_throws DimensionMismatch reconstruct_field(coeffs, basis, mean_field_bad)
+end
+
+@testset "ROMInterpolator Reshape to 3D and Get Tmax Test" begin
+    # 1. Test reshape_to_3d with valid input
+    theta = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    grid_size = (2, 2, 2)
+    reshaped = reshape_to_3d(theta, grid_size)
+    @test size(reshaped) == (2, 2, 2)
+    @test reshaped[1, 1, 1] == 1.0
+    @test reshaped[2, 2, 2] == 8.0
+
+    # 2. Test reshape_to_3d with size mismatch (DimensionMismatch)
+    bad_grid_size = (2, 2, 3)
+    @test_throws DimensionMismatch reshape_to_3d(theta, bad_grid_size)
+
+    # 3. Test get_tmax with valid input
+    @test get_tmax(theta) == 8.0
+    @test get_tmax([5.5, -1.0, 12.3, 0.0]) == 12.3
+
+    # 4. Test get_tmax with empty input (ArgumentError)
+    empty_theta = Float64[]
+    @test_throws ArgumentError get_tmax(empty_theta)
 end
 
 

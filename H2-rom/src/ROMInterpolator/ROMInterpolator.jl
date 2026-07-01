@@ -10,6 +10,6 @@ include("reconstructor.jl")
 
 export AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable
 export compute_kernel_matrix, fit!, predict
-export reconstruct_field
+export reconstruct_field, reshape_to_3d, get_tmax
 
 end # module
