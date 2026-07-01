@@ -4,7 +4,7 @@ using Test
 if !isdefined(Main, :ROMValidator)
     include("../src/ROMValidator/ROMValidator.jl")
 end
-using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error
+using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results
 using JLD2
 
 @testset "ROMValidator Types Test" begin
@@ -167,6 +167,49 @@ end
         delete!(bad_grid, key)
         @test_throws KeyError calculate_hotspot_error(fvm, rom, bad_grid)
     end
+end
+
+@testset "ROMValidator Task 2.3 Test" begin
+    # 1. Test judge_accuracy
+    @test judge_accuracy(1.5; tmax_threshold=2.0) == :validated
+    @test judge_accuracy(2.0; tmax_threshold=2.0) == :validated
+    @test judge_accuracy(2.1; tmax_threshold=2.0) == :unfit
+    @test judge_accuracy(1.9) == :validated  # default tmax_threshold = 2.0
+    @test judge_accuracy(2.5) == :unfit
+
+    # 2. Test evaluate_validation_results with valid inputs (expect :validated)
+    results_pass = [
+        ValidationResult("sample_1", 0.01, 1.2, 0.02, true),
+        ValidationResult("sample_2", 0.03, 1.8, 0.04, true)
+    ]
+    summary_pass = evaluate_validation_results(results_pass; tmax_threshold=2.0)
+    
+    @test summary_pass.overall_status == :validated
+    # mean relative_l2_error = (0.01 + 0.03)/2 = 0.02
+    # mean tmax_error = (1.2 + 1.8)/2 = 1.5
+    # mean hotspot_dist = (0.02 + 0.04)/2 = 0.03
+    @test summary_pass.mean_metrics["relative_l2_error"] ≈ 0.02
+    @test summary_pass.mean_metrics["tmax_error"] ≈ 1.5
+    @test summary_pass.mean_metrics["hotspot_dist"] ≈ 0.03
+
+    # max relative_l2_error = 0.03
+    # max tmax_error = 1.8
+    # max hotspot_dist = 0.04
+    @test summary_pass.max_metrics["relative_l2_error"] ≈ 0.03
+    @test summary_pass.max_metrics["tmax_error"] ≈ 1.8
+    @test summary_pass.max_metrics["hotspot_dist"] ≈ 0.04
+
+    # 3. Test evaluate_validation_results with unfit output (mean tmax_error > threshold)
+    results_fail = [
+        ValidationResult("sample_1", 0.01, 1.8, 0.02, true),
+        ValidationResult("sample_2", 0.03, 2.4, 0.04, true)
+    ]
+    summary_fail = evaluate_validation_results(results_fail; tmax_threshold=2.0)
+    @test summary_fail.overall_status == :unfit
+    @test summary_fail.mean_metrics["tmax_error"] ≈ 2.1 # (1.8 + 2.4) / 2
+
+    # 4. Test evaluate_validation_results with empty input (expect ArgumentError)
+    @test_throws ArgumentError evaluate_validation_results(ValidationResult[]; tmax_threshold=2.0)
 end
 
 

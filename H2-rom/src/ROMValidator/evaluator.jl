@@ -160,4 +160,72 @@ function calculate_hotspot_error(
     return dist
 end
 
+"""
+    judge_accuracy(mean_tmax_error::Float64; tmax_threshold::Float64=2.0) -> Symbol
 
+Judge whether the model accuracy is acceptable based on the mean Tmax error.
+Returns `:validated` if the error is within the threshold, or `:unfit` otherwise.
+"""
+function judge_accuracy(mean_tmax_error::Float64; tmax_threshold::Float64=2.0)::Symbol
+    if mean_tmax_error <= tmax_threshold
+        return :validated
+    else
+        return :unfit
+    end
+end
+
+"""
+    evaluate_validation_results(results::Vector{ValidationResult}; tmax_threshold::Float64=2.0) -> ValidationSummary
+
+Aggregate validation results from multiple samples to calculate mean and max error metrics,
+and determine the overall validation status.
+Throws `ArgumentError` if the input vector is empty.
+"""
+function evaluate_validation_results(
+    results::Vector{ValidationResult}; 
+    tmax_threshold::Float64=2.0
+)::ValidationSummary
+    if length(results) == 0
+        throw(ArgumentError("Validation results vector must not be empty"))
+    end
+
+    n_samples = length(results)
+    
+    sum_l2 = 0.0
+    sum_tmax = 0.0
+    sum_hotspot = 0.0
+    
+    max_l2 = -Inf
+    max_tmax = -Inf
+    max_hotspot = -Inf
+    
+    for r in results
+        sum_l2 += r.relative_l2_error
+        sum_tmax += r.tmax_error
+        sum_hotspot += r.hotspot_dist
+        
+        max_l2 = max(max_l2, r.relative_l2_error)
+        max_tmax = max(max_tmax, r.tmax_error)
+        max_hotspot = max(max_hotspot, r.hotspot_dist)
+    end
+    
+    mean_l2 = sum_l2 / n_samples
+    mean_tmax = sum_tmax / n_samples
+    mean_hotspot = sum_hotspot / n_samples
+    
+    mean_metrics = Dict{String, Float64}(
+        "relative_l2_error" => mean_l2,
+        "tmax_error" => mean_tmax,
+        "hotspot_dist" => mean_hotspot
+    )
+    
+    max_metrics = Dict{String, Float64}(
+        "relative_l2_error" => max_l2,
+        "tmax_error" => max_tmax,
+        "hotspot_dist" => max_hotspot
+    )
+    
+    overall_status = judge_accuracy(mean_tmax; tmax_threshold=tmax_threshold)
+    
+    return ValidationSummary(results, mean_metrics, max_metrics, overall_status)
+end

@@ -24,7 +24,7 @@
   - _Requirements: 1.3_
   - _Boundary: Evaluator_
 
-- [ ] 2.3 精度合格判定ロジックの実装
+- [x] 2.3 精度合格判定ロジックの実装
   - 各ケースの評価および、平均Tmax誤差を閾値（既定 2.0 K）と比較して合否（`:validated`/`:unfit`）を決定するロジックの実装
   - _Requirements: 3.1, 3.2, 3.3_
   - _Boundary: Evaluator_
