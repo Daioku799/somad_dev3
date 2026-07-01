@@ -17,9 +17,9 @@ function is_point_in_polygon(x, y, poly)
     end
 
     # 2. PolygonOps.inpolygon
-    # Returns 1 for inside, 0 for outside, 0.5 for boundary
+    # Returns 1 for inside, -1 for boundary, 0 for outside
     val = inpolygon((x, y), poly.vertices)
-    return val >= 0.5
+    return val != 0
 end
 
 """
