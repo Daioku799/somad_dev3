@@ -32,7 +32,7 @@
   - _Boundary: Interpolator_
   - _Depends: 1.2_
 
-- [ ] 2.3 (P) 外挿検知（信頼性判定）API の実装
+- [x] 2.3 (P) 外挿検知（信頼性判定）API の実装
   - 入力 `mu` が学習データの範囲内にあるか判定する `is_reliable(interpolator::AbstractInterpolator, mu::Vector{Float64})` の実装
   - `RBFInterpolator` に対して、デフォルトで各セルごとの最小値・最大値範囲内であるか（ボックス判定）を確認する処理の実装
   - 判定ロジックが差し替え可能（拡張性）であることの確認

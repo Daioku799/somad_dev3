@@ -3,7 +3,7 @@ using Test
 if !isdefined(Main, :ROMInterpolator)
     include("../src/ROMInterpolator/ROMInterpolator.jl")
 end
-using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data
+using .ROMInterpolator: AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable
 
 @testset "ROMInterpolator Types Test" begin
     # Dummy fields for ScalingParams
@@ -135,5 +135,39 @@ end
     @test_throws ArgumentError fit!(rbf, X_empty, Y_empty)
 end
 
+@testset "ROMInterpolator is_reliable Test" begin
+    epsilon = 0.5
+    rbf = RBFInterpolator(epsilon)
 
+    # 1. Dummy training data
+    # 2 input dimensions, 3 samples, 3 output modes
+    X = [1.0 2.0 3.0;
+         4.0 5.0 6.0]
+    Y = [10.0 20.0 30.0;
+         40.0 50.0 60.0;
+         70.0 80.0 90.0]
+    fit!(rbf, X, Y)
+
+    # parameter_bounds is [1.0 4.0; 3.0 6.0]
+
+    # 2. In-bounds parameters (true)
+    @test is_reliable(rbf, [2.0, 5.0]) == true
+    @test is_reliable(rbf, [1.0, 4.0]) == true
+    @test is_reliable(rbf, [3.0, 6.0]) == true
+
+    # 3. Near-boundary parameters (tol = 1e-9)
+    @test is_reliable(rbf, [1.0 - 0.99e-9, 4.0]) == true
+    @test is_reliable(rbf, [3.0 + 0.99e-9, 6.0]) == true
+    @test is_reliable(rbf, [1.0 - 1.01e-9, 4.0]) == false
+    @test is_reliable(rbf, [3.0 + 1.01e-9, 6.0]) == false
+
+    # 4. Out-of-bounds parameters (false)
+    @test is_reliable(rbf, [0.0, 5.0]) == false
+    @test is_reliable(rbf, [2.0, 7.0]) == false
+    @test is_reliable(rbf, [0.0, 7.0]) == false
+
+    # 5. Dimension mismatch (DimensionMismatch)
+    @test_throws DimensionMismatch is_reliable(rbf, [2.0])
+    @test_throws DimensionMismatch is_reliable(rbf, [2.0, 5.0, 1.0])
+end
 

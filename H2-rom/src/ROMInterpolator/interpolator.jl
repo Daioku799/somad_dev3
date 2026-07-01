@@ -95,3 +95,33 @@ function predict(interpolator::RBFInterpolator, x::Vector{Float64})::Vector{Floa
     return a
 end
 
+"""
+    is_reliable(interpolator::AbstractInterpolator, mu::Vector{Float64})::Bool
+
+入力パラメータ `mu` がモデルの信頼領域（外挿でない領域）内にあるかどうかを判定します。
+"""
+function is_reliable end
+
+"""
+    is_reliable(interpolator::RBFInterpolator, mu::Vector{Float64})::Bool
+
+`RBFInterpolator` の信頼領域判定。入力 `mu` の各次元が、学習データのパラメータ範囲（許容誤差 tol = 1e-9）に収まっているか判定します。
+"""
+function is_reliable(interpolator::RBFInterpolator, mu::Vector{Float64})::Bool
+    N_dim = size(interpolator.parameter_bounds, 2)
+    if length(mu) != N_dim
+        throw(DimensionMismatch("次元不一致: 入力パラメータの次元数は $(length(mu)) ですが、補間器の次元数は $(N_dim) です。"))
+    end
+
+    tol = 1e-9
+    @inbounds for i in 1:N_dim
+        min_val = interpolator.parameter_bounds[1, i]
+        max_val = interpolator.parameter_bounds[2, i]
+        if !(min_val - tol <= mu[i] <= max_val + tol)
+            return false
+        end
+    end
+    return true
+end
+
+

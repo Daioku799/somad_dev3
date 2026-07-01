@@ -7,7 +7,7 @@ include("types.jl")
 include("scaler.jl")
 include("interpolator.jl")
 
-export AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data
+export AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_data, is_reliable
 export compute_kernel_matrix, fit!, predict
 
 end # module
