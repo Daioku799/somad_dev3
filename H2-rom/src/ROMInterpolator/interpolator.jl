@@ -125,4 +125,30 @@ function is_reliable(interpolator::RBFInterpolator, mu::Vector{Float64})::Bool
     return true
 end
 
+"""
+    train_rom(X::Matrix{Float64}, Y::Matrix{Float64}, model_path::String; epsilon::Float64=1.0, lambda::Float64=1e-6) -> RBFInterpolator
+
+RBF補間器を初期化し、与えられた学習データ X, Y を用いて訓練 (fit!) を実行し、モデルを指定されたパスに保存します。
+"""
+function train_rom(X::Matrix{Float64}, Y::Matrix{Float64}, model_path::String; epsilon::Float64=1.0, lambda::Float64=1e-6)::RBFInterpolator
+    interpolator = RBFInterpolator(epsilon)
+    fit!(interpolator, X, Y; lambda=lambda)
+    save_rom_model(model_path, interpolator)
+    return interpolator
+end
+
+"""
+    evaluate_rom(model::AbstractInterpolator, basis::Matrix{Float64}, mean_field::Vector{Float64}, mu::Vector{Float64}) -> Vector{Float64}
+
+学習済みモデルを用いて POD 係数を予測し、POD 基底と平均温度場から温度場を再構成します。
+入力パラメータ mu が信頼領域外（外挿領域）にある場合は、警告メッセージを出力します。
+"""
+function evaluate_rom(model::AbstractInterpolator, basis::Matrix{Float64}, mean_field::Vector{Float64}, mu::Vector{Float64})::Vector{Float64}
+    if !is_reliable(model, mu)
+        @warn "[Warning] Input parameter mu is outside the training bounds (extrapolation)."
+    end
+    coeffs = predict(model, mu)
+    return reconstruct_field(coeffs, basis, mean_field)
+end
+
 

@@ -256,5 +256,54 @@ end
     rm(temp_dir; force=true, recursive=true)
 end
 
+@testset "ROMInterpolator High-Level API Test" begin
+    # train_rom と evaluate_rom をインポート
+    using .ROMInterpolator: train_rom, evaluate_rom
+
+    # テストデータ
+    X = [1.0 2.0 3.0;
+         4.0 5.0 6.0]
+    Y = [10.0 20.0 30.0;
+         40.0 50.0 60.0;
+         70.0 80.0 90.0]
+         
+    temp_dir = joinpath(@__DIR__, "temp_high_level_test")
+    rm(temp_dir; force=true, recursive=true)
+    model_path = joinpath(temp_dir, "rom_model.jld2")
+    
+    # 1. train_rom の検証
+    model = train_rom(X, Y, model_path; epsilon=0.5, lambda=1e-9)
+    
+    @test model isa RBFInterpolator
+    @test isfile(model_path)
+    @test model.epsilon == 0.5
+    @test size(model.weights) == (3, 3)
+    
+    # 2. evaluate_rom の検証 (範囲内)
+    basis = [1.0 0.0 0.0;
+             0.0 1.0 0.0;
+             0.0 0.0 1.0;
+             0.1 0.2 0.3]
+    mean_field = [0.1, 0.2, 0.3, 0.4]
+    
+    mu_in = [2.0, 5.0]
+    theta_in = evaluate_rom(model, basis, mean_field, mu_in)
+    
+    # 計算された theta_in が期待値に近いことを確認
+    expected_in = [20.1, 50.2, 80.3, 36.4]
+    @test theta_in ≈ expected_in atol=1e-3
+    
+    # 3. evaluate_rom の検証 (範囲外: 外挿警告が発生すること)
+    mu_out = [0.0, 5.0]
+    
+    @test_logs (:warn, "[Warning] Input parameter mu is outside the training bounds (extrapolation).") begin
+        theta_out = evaluate_rom(model, basis, mean_field, mu_out)
+        @test length(theta_out) == 4
+    end
+    
+    # クリーンアップ
+    rm(temp_dir; force=true, recursive=true)
+end
+
 
 

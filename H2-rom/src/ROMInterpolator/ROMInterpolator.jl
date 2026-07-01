@@ -13,5 +13,6 @@ export AbstractInterpolator, ScalingParams, RBFInterpolator, fit_scaler, scale_d
 export compute_kernel_matrix, fit!, predict
 export reconstruct_field, reshape_to_3d, get_tmax
 export save_rom_model, load_rom_model
+export train_rom, evaluate_rom
 
 end # module
