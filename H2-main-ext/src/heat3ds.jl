@@ -115,7 +115,7 @@ end
 function q3d(NX::Int, NY::Int, NZ::Int,
          solver::String="sor", smoother::String="";
          epsilon::Float64=1.0e-6, par::String="thread", is_steady::Bool=false,
-         snapshot_path::String="")
+         snapshot_path::String="", mu::Vector{Float64}=Float64[])
     global itr_tol = epsilon
     println("Julia version: $(VERSION)")
 
@@ -203,19 +203,24 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     # 6. Save snapshot
     if !isempty(snapshot_path)
         println("Saving snapshot to: $snapshot_path")
-        JLD2.save(snapshot_path, Dict(
-            "theta" => wk.θ,
-            "id_map" => ID,
-            "lambda" => wk.λ,
-            "z_centers" => ZC,
-            "z_faces" => Z,
-            "nx" => NX, "ny" => NY, "nz" => NZ,
-            "config_summary" => Dict(
-                "tsv_count" => length(config.tsv.coords),
-                "tsv_radius" => config.tsv.radius,
-                "tsv_coords" => config.tsv.coords
-            )
-        ))
+        try
+            JLD2.save(snapshot_path, Dict(
+                "theta" => wk.θ,
+                "id_map" => ID,
+                "lambda" => wk.λ,
+                "z_centers" => ZC,
+                "z_faces" => Z,
+                "nx" => NX, "ny" => NY, "nz" => NZ,
+                "mu" => mu,
+                "config_summary" => Dict(
+                    "tsv_count" => length(config.tsv.coords),
+                    "tsv_radius" => config.tsv.radius,
+                    "tsv_coords" => config.tsv.coords
+                )
+            ))
+        catch e
+            @warn "Failed to save snapshot: $e"
+        end
     end
 end
 
