@@ -2,4 +2,9 @@
 *Zone.Identifier*
 plots/
 test_id_*.png
+verify_output/
+config.json
+tsv_config.json
+temp3*
+*.csv
 
