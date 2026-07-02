@@ -1,9 +1,10 @@
 module Main
 
 using ..Types: GeometryObject, ShapeType, CYLINDER, SPHERE, BOX
-# Access ConfigLoader
+# Access ConfigLoader and Layout
 include("../ConfigLoader/ConfigLoader.jl")
 using .ConfigLoader
+using ..Layout
 
 export generate_components
 
@@ -11,12 +12,18 @@ export generate_components
     generate_components(config::Any, zm::Vector{Float64})
 
 Generate a list of GeometryObject (TSVs and Bumps) based on config and calculated markers.
+Supports expanding coordinates from density map when mode is :density.
 """
 function generate_components(config::Any, zm::Vector{Float64})
     objects = GeometryObject[]
     
-    # Coordinates from config (already extracted in ConfigLoader.generate_test_config or load_config)
-    coords = config.tsv.coords
+    # Extract coordinates, expanding them from density map if in density mode
+    coords = if config.tsv.mode == :density
+        expanded_pts = Layout.expand_coordinates(config.tsv, config.lx, config.ly)
+        [(p.x, p.y) for p in expanded_pts]
+    else
+        config.tsv.coords
+    end
     
     # Material IDs based on Defaults.jl
     # MAT_COPPER = 1, MAT_SOLDER = 3

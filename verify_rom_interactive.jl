@@ -80,7 +80,7 @@ try
           "density_map": {
             "gx": 4, "gy": 4,
             "mu": $(mu),
-            "n_min": 0, "n_max": 8,
+            "n_min": 0, "n_max": 120,
             "rho_cell_max": 1.0,
             "prohibited_cells": []
           },
@@ -159,7 +159,7 @@ try
       "density_map": {
         "gx": 4, "gy": 4,
         "mu": $(mu_test),
-        "n_min": 0, "n_max": 8,
+        "n_min": 0, "n_max": 120,
         "rho_cell_max": 1.0,
         "prohibited_cells": []
       },
