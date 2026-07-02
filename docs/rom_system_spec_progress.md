@@ -110,17 +110,17 @@ graph TD
 #### 1) 一様分布パターン (Snapshot 1)
 * **特徴**: 左側のIDマップには、全面に分散した黄色のTSV（銅）と、4マスの赤色発熱ブロックが均等に配置されています。右側の温度分布は、熱源の周辺で非一様に温度が上昇（最高温度346.8K付近）しつつ、TSVによる一様な放熱効果が見られます。
 
-![Snapshot 1 (Uniform)](/home/somadwsl/.gemini/antigravity-cli/brain/25410296-cf2d-4920-9e83-bc4ac1732631/rom_plots/snapshot_1_sidebyside_xy.png)
+![Snapshot 1 (Uniform)](../rom_plots/snapshot_1_sidebyside_xy.png)
 
 #### 2) 中央集中パターン (Snapshot 2)
 * **特徴**: 左側のIDマップにおいて、TSV（黄色）がチップ中央の4マスに密集して配置されています。右側の温度分布では、TSVが密集している中央領域で局所的に熱伝導が促進され、温度が低く抑えられている物理挙動が確認できます。
 
-![Snapshot 2 (Center)](/home/somadwsl/.gemini/antigravity-cli/brain/25410296-cf2d-4920-9e83-bc4ac1732631/rom_plots/snapshot_2_sidebyside_xy.png)
+![Snapshot 2 (Center)](../rom_plots/snapshot_2_sidebyside_xy.png)
 
 #### 3) 四隅集中パターン (Snapshot 3)
 * **特徴**: 左側のIDマップにおいて、TSV（黄色）がチップの外周四隅のセルに密集して配置されています。右側の温度分布では、TSVのない中央の発熱部で温度が上昇し、四隅で温度が局所的に下がる非一様な温度場（等温等高線の歪み）が正確に算出されています。
 
-![Snapshot 3 (Corner)](/home/somadwsl/.gemini/antigravity-cli/brain/25410296-cf2d-4920-9e83-bc4ac1732631/rom_plots/snapshot_3_sidebyside_xy.png)
+![Snapshot 3 (Corner)](../rom_plots/snapshot_3_sidebyside_xy.png)
 
 ---
 
@@ -128,7 +128,7 @@ graph TD
 
 3枚の極小スナップショットから構築した16次元入力RBF-ROMに対して、学習データに含まれない「左上から右下に向かうグラデーション密度パターン」を入力した際の予測結果です。
 
-![ROM vs FVM Comparison](/home/somadwsl/.gemini/antigravity-cli/brain/25410296-cf2d-4920-9e83-bc4ac1732631/rom_plots/rom_fvm_comparison_xy.png)
+![ROM vs FVM Comparison](../rom_plots/rom_fvm_comparison_xy.png)
 
 * **左側 (FVM Reference)**: FVMソルバーが約23秒かけて計算した厳密な温度分布等高線図。
 * **中央 (ROM Predicted)**: 構築されたROMがミリ秒単位で瞬時に再構成・予測した温度分布等高線図。
