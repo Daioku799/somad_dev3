@@ -30,7 +30,7 @@ end
 using .ValidationPlot
 
 # 出力ディレクトリの設定
-out_dir = "verify_output"
+out_dir = "rom_plots"
 mkpath(out_dir)
 
 # 格子サイズ設定 (FVM)
