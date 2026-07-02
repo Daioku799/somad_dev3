@@ -106,8 +106,8 @@ try
         # 正常に生成されているかアサート
         @assert isfile(snap_path) "Snapshot file not generated!"
         
-        # スナップショットの可視化 (温度スケール 300K - 360K に固定)
-        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.348e-3, out_dir=out_dir, clims=(300.0, 360.0))
+        # スナップショットの可視化 (温度スケール 330K - 350K に固定)
+        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.348e-3, out_dir=out_dir, clims=(330.0, 350.0))
         println("  -> Visualized snapshot $(idx) to: $(out_dir)/snapshot_$(idx)_sidebyside_xy.png")
     end
     
@@ -197,7 +197,7 @@ try
     
     # 比較プロットの生成 (絶対誤差マップ含む)
     Z_faces = ref_data["z_faces"]
-    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, (NX+2, NY+2, length(Z_faces)), Z_faces; zc=0.348e-3, out_dir=out_dir, clims=(300.0, 360.0))
+    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, (NX+2, NY+2, length(Z_faces)), Z_faces; zc=0.348e-3, out_dir=out_dir, clims=(330.0, 350.0))
     println("  -> Visualized comparison plot to: $(out_dir)/rom_fvm_comparison_xy.png")
     
     # ----------------------------------------------------------------

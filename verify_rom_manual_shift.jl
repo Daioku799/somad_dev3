@@ -84,12 +84,12 @@ try
         cp("legacy/H2-main_TSV_Opt/config.json", "config.json", force=true)
         
         # FVM実行と保存 (設計パラメータとして 1次元の [shift] を渡す)
-        q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-3, par="sequential", is_steady=true, snapshot_path=snap_path, mu=[shift])
+        q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-5, par="sequential", is_steady=true, snapshot_path=snap_path, mu=[shift])
         
         @assert isfile(snap_path) "Snapshot file not generated!"
         
-        # スナップショットの可視化 (温度スケール 300K - 360K に固定)
-        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.33e-3, out_dir=out_dir, clims=(300.0, 360.0))
+        # スナップショットの可視化 (温度スケール 330K - 350K に固定)
+        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.348e-3, out_dir=out_dir, clims=(330.0, 350.0))
         println("  -> Visualized snapshot $(idx) to: $(out_dir)/snap_shift_$(idx)_sidebyside_xy.png")
     end
     
@@ -138,7 +138,7 @@ try
     }
     """
     write("tsv_config.json", tsv_json_test)
-    q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-3, par="sequential", is_steady=true, snapshot_path=ref_snap, mu=[shift_test])
+    q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-5, par="sequential", is_steady=true, snapshot_path=ref_snap, mu=[shift_test])
     
     ref_data = JLD2.load(ref_snap)
     theta_fvm = vec(ref_data["theta"])
@@ -155,7 +155,7 @@ try
     
     # 比較プロットの生成 (絶対誤差マップ含む)
     Z_faces = ref_data["z_faces"]
-    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, size(ref_data["theta"]), Z_faces; zc=0.33e-3, out_dir=out_dir, clims=(300.0, 360.0))
+    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, size(ref_data["theta"]), Z_faces; zc=0.348e-3, out_dir=out_dir, clims=(330.0, 350.0))
     println("  -> Visualized comparison plot to: $(out_dir)/rom_fvm_comparison_xy.png")
     
     println("\n==================================================")
