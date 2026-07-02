@@ -34,7 +34,7 @@ out_dir = "rom_plots"
 mkpath(out_dir)
 
 # 格子サイズ設定 (FVM)
-NX, NY, NZ = 12, 12, 30
+NX, NY, NZ = 60, 60, 30
 
 println("\n==================================================")
 println("     ROM Interactive Verification Playground")
