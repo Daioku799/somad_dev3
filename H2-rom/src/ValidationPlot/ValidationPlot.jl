@@ -197,7 +197,7 @@ function plot_heatsource_tsv_overlay_nu_save(ID::Array{UInt8,3}, zc, SZ, ox, dh,
     title_str = "Material Distribution at Z=" * @sprintf("%.3f", zc*1000) * " mm"
     
     p = heatmap(x_edges, y_edges, s',
-                c=palette(custom_palette), clims=(0.5, 7.5), colorbar=false,
+                c=cgrad(custom_palette, 7, categorical=true), clims=(0.5, 7.5), colorbar=false,
                 xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                 xlabel="Position X [mm]", ylabel="Position Y [mm]", title=title_str,
                 size=(1000, 900), aspect_ratio=:equal, legend=false)
@@ -242,12 +242,54 @@ function plot_heatsource_tsv_overlay_nu_return(ID::Array{UInt8,3}, zc, SZ, ox, d
     title_str = "ID Map Z=" * @sprintf("%.3f", zc*1000) * "mm"
     
     p = heatmap(x_edges, y_edges, s',
-                c=palette(custom_palette), clims=(0.5, 7.5), colorbar=false,
+                c=cgrad(custom_palette, 7, categorical=true), clims=(0.5, 7.5), colorbar=false,
                 xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                 xlabel="X [mm]", ylabel="Y [mm]", title=title_str, aspect_ratio=:equal)
     return p
 end
 
-export plot_snapshot_xy, plot_singular_values, plot_rom_comparison
+"""
+    plot_density_map(mu::Vector{Float64}, out_path::String; title::String="TSV Density Map")
+
+Plot the 4x4 (or dynamically shaped) TSV density map parameter.
+Saves the plot to `out_path` as a heatmap with numerical value annotations.
+"""
+function plot_density_map(mu::Vector{Float64}, out_path::String; title::String="TSV Density Map")
+    n = length(mu)
+    gx = gy = floor(Int, sqrt(n))
+    if gx * gy != n
+        error("Density map size $(n) must be a perfect square (e.g. 16 for 4x4 grid)")
+    end
+    
+    grid_data = reshape(mu, (gy, gx)) # gy rows, gx cols
+    
+    lx = 1.2 # mm
+    dx = lx / gx
+    x_centers = [dx * (i - 0.5) for i in 1:gx]
+    y_centers = [dx * (j - 0.5) for j in 1:gy]
+    
+    annotations = Tuple{Float64, Float64, Any}[]
+    for i in 1:gx
+        for j in 1:gy
+            val = grid_data[j, i]
+            push!(annotations, (x_centers[i], y_centers[j], text(@sprintf("%.2f", val), 10, :black, :center)))
+        end
+    end
+    
+    p = heatmap(x_centers, y_centers, grid_data,
+                c=:YlGnBu, clims=(0.0, 1.0),
+                xlims=(0.0, lx), ylims=(0.0, lx),
+                xlabel="X Position [mm]", ylabel="Y Position [mm]", title=title,
+                aspect_ratio=:equal, size=(600, 500),
+                colorbar_title="TSV Density")
+    
+    annotate!(p, annotations)
+    
+    mkpath(dirname(out_path))
+    savefig(p, out_path)
+    return p
+end
+
+export plot_snapshot_xy, plot_singular_values, plot_rom_comparison, plot_density_map
 
 end # module

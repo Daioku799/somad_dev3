@@ -70,6 +70,11 @@ try
     for (idx, mu) in enumerate(mu_list)
         snap_path = joinpath(out_dir, "snapshot_$(idx).jld2")
         push!(snapshot_files, snap_path)
+        
+        # 密度マップパラメータ自体のプロット保存
+        ValidationPlot.plot_density_map(mu, joinpath(out_dir, "density_map_$(idx).png"), title="TSV Density Map $(idx)")
+        println("  -> Visualized density map $(idx) to: $(out_dir)/density_map_$(idx).png")
+        
         println("  -> Running FVM for mu_$(idx)...")
         
         # tsv_config.json の動的生成
@@ -96,13 +101,13 @@ try
         cp("legacy/H2-main_TSV_Opt/config.json", "config.json", force=true)
         
         # FVM実行と保存
-        q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-3, par="sequential", is_steady=true, snapshot_path=snap_path, mu=mu)
+        q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-5, par="sequential", is_steady=true, snapshot_path=snap_path, mu=mu)
         
         # 正常に生成されているかアサート
         @assert isfile(snap_path) "Snapshot file not generated!"
         
         # スナップショットの可視化 (温度スケール 300K - 360K に固定)
-        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.33e-3, out_dir=out_dir, clims=(300.0, 360.0))
+        ValidationPlot.plot_snapshot_xy(snap_path; zc=0.348e-3, out_dir=out_dir, clims=(300.0, 360.0))
         println("  -> Visualized snapshot $(idx) to: $(out_dir)/snapshot_$(idx)_sidebyside_xy.png")
     end
     
@@ -170,7 +175,12 @@ try
     }
     """
     write("tsv_config.json", tsv_json_test)
-    q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-3, par="sequential", is_steady=true, snapshot_path=ref_snap, mu=mu_test)
+    
+    # テスト用密度マップパラメータ自体のプロット保存
+    ValidationPlot.plot_density_map(mu_test, joinpath(out_dir, "density_map_test.png"), title="Unknown TSV Density Map (Test)")
+    println("  -> Visualized density map test to: $(out_dir)/density_map_test.png")
+    
+    q3d(NX, NY, NZ, "cg", "gs"; epsilon=1e-5, par="sequential", is_steady=true, snapshot_path=ref_snap, mu=mu_test)
     
     ref_data = JLD2.load(ref_snap)
     theta_fvm = vec(ref_data["theta"])
@@ -187,7 +197,7 @@ try
     
     # 比較プロットの生成 (絶対誤差マップ含む)
     Z_faces = ref_data["z_faces"]
-    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, (NX+2, NY+2, length(Z_faces)), Z_faces; zc=0.33e-3, out_dir=out_dir, clims=(300.0, 360.0))
+    ValidationPlot.plot_rom_comparison(theta_fvm, theta_rom, (NX+2, NY+2, length(Z_faces)), Z_faces; zc=0.348e-3, out_dir=out_dir, clims=(300.0, 360.0))
     println("  -> Visualized comparison plot to: $(out_dir)/rom_fvm_comparison_xy.png")
     
     # ----------------------------------------------------------------
