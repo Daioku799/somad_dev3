@@ -10,6 +10,12 @@ export expand_coordinates, get_cell_capacities, adjust_density_constraints
 
 Expand coordinates list based on configuration, applying density-map centering layout
 if mode is `:density`.
+
+# Silicon Boundary Logic
+- The silicon margin `0.1e-3` (0.1 mm) is a fixed design constraint, consistent with the validation logic in `Validator.jl`.
+- In `:density` mode, the TSV placement grid division is strictly confined to the silicon implementation domain:
+  `[0.1e-3, lx - 0.1e-3]` in the X-dimension and `[0.1e-3, ly - 0.1e-3]` in the Y-dimension.
+- In `:manual` and `:random` modes, coordinates are extracted directly from the config. Any coordinates falling outside the silicon domain (with margin and TSV radius constraints) are expected to be caught downstream by the validator (`validate_physical_constraints` in `Validator.jl`).
 """
 function expand_coordinates(config::TSVConfig, lx::Float64, ly::Float64)
     if config.mode == :density
@@ -20,6 +26,15 @@ function expand_coordinates(config::TSVConfig, lx::Float64, ly::Float64)
         gx = config.density.gx
         gy = config.density.gy
         p_min = config.manufacturing.p_min
+        
+        # Fixed design constraint: Silicon margin of 0.1e-3 (0.1 mm).
+        # This margin is consistent with the boundary validation constraint in Validator.jl.
+        # In `:density` mode, the grid cells are strictly confined within [margin, lx - margin] and [margin, ly - margin].
+        margin = 0.1e-3
+        x_si_min = margin
+        x_si_max = lx - margin
+        y_si_min = margin
+        y_si_max = ly - margin
         
         # 1. Calculate capacities of each cell
         n_max_matrix = get_cell_capacities(config, lx, ly)
@@ -38,6 +53,9 @@ function expand_coordinates(config::TSVConfig, lx::Float64, ly::Float64)
         # Reshape mu to gx x gy matrix for easy indexing (Julia is column-major)
         mu_matrix = reshape(mu, gx, gy)
         
+        dx_cell = (x_si_max - x_si_min) / gx
+        dy_cell = (y_si_max - y_si_min) / gy
+        
         for j in 1:gy
             for i in 1:gx
                 mu_val = mu_matrix[i, j]
@@ -48,23 +66,23 @@ function expand_coordinates(config::TSVConfig, lx::Float64, ly::Float64)
                     continue
                 end
                 
-                # Cell bounds
-                x_min = (i - 1) * (lx / gx)
-                x_max = i * (lx / gx)
-                y_min = (j - 1) * (ly / gy)
-                y_max = j * (ly / gy)
+                # Cell bounds inside silicon range
+                x_min = x_si_min + (i - 1) * dx_cell
+                x_max = x_si_min + i * dx_cell
+                y_min = y_si_min + (j - 1) * dy_cell
+                y_max = y_si_min + j * dy_cell
                 
                 # Maximum rows/columns inside the cell
-                Nx = floor(Int, (x_max - x_min - 2.0 * g) / p_min) + 1
-                Ny = floor(Int, (y_max - y_min - 2.0 * g) / p_min) + 1
+                Nx = floor(Int, (dx_cell - 2.0 * g + 1e-9) / p_min) + 1
+                Ny = floor(Int, (dy_cell - 2.0 * g + 1e-9) / p_min) + 1
                 
                 if Nx <= 0 || Ny <= 0
                     continue
                 end
                 
                 # Spacing offset to center the grid inside the cell
-                dx = ((x_max - x_min - 2.0 * g) - (Nx - 1) * p_min) / 2.0
-                dy = ((y_max - y_min - 2.0 * g) - (Ny - 1) * p_min) / 2.0
+                dx = ((dx_cell - 2.0 * g) - (Nx - 1) * p_min) / 2.0
+                dy = ((dy_cell - 2.0 * g) - (Ny - 1) * p_min) / 2.0
                 
                 # Generate all grid coordinate candidates
                 cell_pts = Point2D[]
@@ -93,6 +111,8 @@ function expand_coordinates(config::TSVConfig, lx::Float64, ly::Float64)
         return pts
     else
         # Manual or random mode (default coordinate extraction)
+        # Any coordinates falling outside the silicon implementation domain (considering margin and radius)
+        # are expected to be checked and caught downstream by the validator (Validator.jl).
         pts = Point2D[]
         for (x, y) in config.coords
             push!(pts, Point2D(x, y))
@@ -114,6 +134,9 @@ end
     get_cell_capacities(config::TSVConfig, lx::Float64, ly::Float64) -> Matrix{Int}
 
 Get cell capacities grid based on physical spacing and guard configurations.
+
+# Silicon Boundary Logic
+- The capacity calculation is based on the silicon implementation domain with a fixed margin constraint of `0.1e-3` (0.1 mm) on each boundary, consistent with the validation logic in `Validator.jl`.
 """
 function get_cell_capacities(config::TSVConfig, lx::Float64, ly::Float64)
     if config.density === nothing || config.manufacturing === nothing
@@ -127,16 +150,22 @@ function get_cell_capacities(config::TSVConfig, lx::Float64, ly::Float64)
     n_max_matrix = Matrix{Int}(undef, gx, gy)
     g = p_min / 2.0
     
+    # Fixed design constraint: Silicon margin of 0.1e-3 (0.1 mm).
+    # Confines cell capacity calculation to the silicon implementation domain [margin, lx - margin].
+    margin = 0.1e-3
+    x_si_min = margin
+    x_si_max = lx - margin
+    y_si_min = margin
+    y_si_max = ly - margin
+    
+    dx_cell = (x_si_max - x_si_min) / gx
+    dy_cell = (y_si_max - y_si_min) / gy
+    
+    Nx = floor(Int, (dx_cell - 2.0 * g + 1e-9) / p_min) + 1
+    Ny = floor(Int, (dy_cell - 2.0 * g + 1e-9) / p_min) + 1
+    
     for j in 1:gy
         for i in 1:gx
-            x_min = (i - 1) * (lx / gx)
-            x_max = i * (lx / gx)
-            y_min = (j - 1) * (ly / gy)
-            y_max = j * (ly / gy)
-            
-            Nx = floor(Int, (x_max - x_min - 2.0 * g) / p_min) + 1
-            Ny = floor(Int, (y_max - y_min - 2.0 * g) / p_min) + 1
-            
             if Nx <= 0 || Ny <= 0
                 n_max_matrix[i, j] = 0
             else
