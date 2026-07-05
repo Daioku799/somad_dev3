@@ -16,12 +16,13 @@ function validate_physical_constraints(coords::Vector{Point2D}, config::ModelCon
     ly = config.ly
 
     # 1. Boundary checks
+    margin = 0.1e-3
     for (idx, pt) in enumerate(coords)
-        if pt.x < radius || pt.x > lx - radius || pt.y < radius || pt.y > ly - radius
+        if pt.x < margin + radius || pt.x > lx - margin - radius || pt.y < margin + radius || pt.y > ly - margin - radius
             return ValidationResult(
                 false,
                 BOUNDARY_VIOLATION,
-                "Boundary violation at index $idx: point ($(pt.x), $(pt.y)) is out of bounds for chip size ($lx, $ly) with TSV radius $radius"
+                "Boundary violation at index $idx: point ($(pt.x), $(pt.y)) is out of bounds for silicon domain with margin $margin and TSV radius $radius"
             )
         end
     end
