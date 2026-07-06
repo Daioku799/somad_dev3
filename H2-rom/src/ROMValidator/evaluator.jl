@@ -126,9 +126,16 @@ function calculate_hotspot_error(
     ly = grid_info["ly"]
     z_centers = grid_info["z_centers"]
  
+    # Determine grid format (ghost cells included or not)
     grid_total = nx * ny * nz
-    if length(theta_fvm) != grid_total
-        throw(DimensionMismatch("Vector length ($(length(theta_fvm))) does not match grid configuration dimensions ($(grid_total))"))
+    mz = length(z_centers)
+    ghost_grid_total = (nx + 2) * (ny + 2) * mz
+    
+    use_ghost = false
+    if length(theta_fvm) == ghost_grid_total
+        use_ghost = true
+    elseif length(theta_fvm) != grid_total
+        throw(DimensionMismatch("Vector length ($(length(theta_fvm))) does not match grid configuration dimensions (regular: $(grid_total), ghost: $(ghost_grid_total))"))
     end
  
     # 2. Argmax calculation
@@ -137,18 +144,31 @@ function calculate_hotspot_error(
  
     # Helper function to convert 1D index (Column-major) to physical coordinates (x, y, z)
     function idx_to_coords(idx::Int)::Tuple{Float64, Float64, Float64}
-        k = div(idx - 1, nx * ny) + 1
-        r = mod(idx - 1, nx * ny)
-        j = div(r, nx) + 1
-        i = mod(r, nx) + 1
- 
-        dx = lx / nx
-        dy = ly / ny
- 
-        x = (i - 0.5) * dx
-        y = (j - 0.5) * dy
-        z = z_centers[k]
- 
+        if use_ghost
+            mx = nx + 2
+            my = ny + 2
+            k = div(idx - 1, mx * my) + 1
+            r = mod(idx - 1, mx * my)
+            j = div(r, mx) + 1
+            i = mod(r, mx) + 1
+            
+            dx = lx / nx
+            dy = ly / ny
+            x = (i - 1.5) * dx
+            y = (j - 1.5) * dy
+            z = z_centers[k]
+        else
+            k = div(idx - 1, nx * ny) + 1
+            r = mod(idx - 1, nx * ny)
+            j = div(r, nx) + 1
+            i = mod(r, nx) + 1
+     
+            dx = lx / nx
+            dy = ly / ny
+            x = (i - 0.5) * dx
+            y = (j - 0.5) * dy
+            z = z_centers[k]
+        end
         return (x, y, z)
     end
  

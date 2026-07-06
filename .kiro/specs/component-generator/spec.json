@@ -1,7 +1,7 @@
 {
   "name": "component-generator",
-  "phase": "completed",
-  "status": "completed",
+  "phase": "tasks-generated",
+  "status": "in-progress",
   "language": "ja",
   "approvals": {
     "requirements": {

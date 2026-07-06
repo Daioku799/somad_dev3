@@ -4,7 +4,7 @@ using Test
 module Original
     # H2-main-original/src/modelA.jl をロード
     # 競合を避けるため、Original.modelA になる
-    include("../../H2-main-original/src/modelA.jl")
+    include("../../legacy/H2-main-original/src/modelA.jl")
 end
 
 module New

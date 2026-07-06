@@ -31,9 +31,9 @@
 - [x] snapshot-generator -- 密度マップのサンプリングによるFVM一括実行への変更。 Dependencies: component-generator, heat3ds-ext
 
 ### Phase 3: Offline ROM Construction
-- [ ] pod-engine -- スナップショット行列からのSVDによる空間基底抽出。 Dependencies: snapshot-generator
-- [ ] rom-interpolator -- 密度ベクトル `mu` からPOD係数へのRBF写像の構築。 Dependencies: pod-engine
-- [ ] rom-validator -- 未知密度マップに対するROM予測精度の評価。 Dependencies: rom-interpolator
+- [x] pod-engine -- スナップショット行列からのSVDによる空間基底抽出。 Dependencies: snapshot-generator
+- [x] rom-interpolator -- 密度ベクトル `mu` からPOD係数へのRBF写像の構築。 Dependencies: pod-engine
+- [x] rom-validator -- 未知密度マップに対するROM予測精度の評価。 Dependencies: rom-interpolator
 
 ### Phase 4: GA Optimization
 - [ ] ga-optimizer -- 密度マップを個体とするGA実装、制約修正、ROM評価、および有望解のFVM再検証。 Dependencies: rom-validator

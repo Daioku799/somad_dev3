@@ -4,8 +4,8 @@ using JLD2
 
 # 1. 依存モジュールのロード
 println(">>> 1. Loading core modules...")
-push!(LOAD_PATH, abspath("H2-main-ext/src"))
-using modelA
+include(joinpath(abspath("H2-main-ext/src"), "modelA.jl"))
+using .modelA
 if !isdefined(Main, :q3d)
     include(joinpath(abspath("H2-main-ext/src"), "heat3ds.jl"))
 end

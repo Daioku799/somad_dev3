@@ -86,8 +86,17 @@ function generate_comparison_plots(
     dy = ly / ny
 
     # Reshape vectors to 3D Arrays (Column-major layout)
-    fvm_3d = reshape(theta_fvm, nx, ny, nz)
-    rom_3d = reshape(theta_rom, nx, ny, nz)
+    mz = length(z_centers)
+    ghost_grid_total = (nx + 2) * (ny + 2) * mz
+    if length(theta_fvm) == ghost_grid_total
+        fvm_full = reshape(theta_fvm, nx + 2, ny + 2, mz)
+        rom_full = reshape(theta_rom, nx + 2, ny + 2, mz)
+        fvm_3d = fvm_full[2:(nx+1), 2:(ny+1), :]
+        rom_3d = rom_full[2:(nx+1), 2:(ny+1), :]
+    else
+        fvm_3d = reshape(theta_fvm, nx, ny, nz)
+        rom_3d = reshape(theta_rom, nx, ny, nz)
+    end
 
     # Coordinates in mm
     x_coords_mm = [(i - 0.5) * dx * 1000.0 for i in 1:nx]

@@ -200,7 +200,7 @@ function run_simulation_case(
     abs_solver_dir = abspath(solver_dir)
     abs_run_jl = abspath(joinpath(abs_solver_dir, "run.jl"))
     
-    cmd = `julia --project=$(abs_solver_dir) $(abs_run_jl) 240 240 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
+    cmd = `julia --project=$(abs_solver_dir) $(abs_run_jl) 60 60 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
     
     println("Starting Case $(case.id)...")
     

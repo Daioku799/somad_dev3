@@ -17,9 +17,17 @@ end
         rm(snapshot_file)
     end
     
-    # テストに必要な設定ファイルをコピー
-    cp("./H2-main_TSV_Opt/config.json", "config.json", force=true)
-    cp("./H2-main_TSV_Opt/tsv_config.json", "tsv_config.json", force=true)
+    # テスト開始前に設定ファイルが元々存在していたか記録
+    config_existed = isfile("config.json")
+    tsv_config_existed = isfile("tsv_config.json")
+    
+    # 存在しない場合のみコピー
+    if !config_existed
+        cp("./H2-main-ext/config.json", "config.json", force=true)
+    end
+    if !tsv_config_existed
+        cp("./H2-main-ext/tsv_config.json", "tsv_config.json", force=true)
+    end
     
     mu_test = [0.1, 0.2, 0.3, 0.4, 0.5]
     
@@ -47,17 +55,24 @@ end
         if isfile(snapshot_file)
             rm(snapshot_file)
         end
-        if isfile("config.json")
+        if !config_existed && isfile("config.json")
             rm("config.json")
         end
-        if isfile("tsv_config.json")
+        if !tsv_config_existed && isfile("tsv_config.json")
             rm("tsv_config.json")
         end
     end
     
-    # テスト用に再コピー
-    cp("./H2-main_TSV_Opt/config.json", "config.json", force=true)
-    cp("./H2-main_TSV_Opt/tsv_config.json", "tsv_config.json", force=true)
+    # テスト開始前に設定ファイルが元々存在していたか記録
+    config_existed_2 = isfile("config.json")
+    tsv_config_existed_2 = isfile("tsv_config.json")
+    
+    if !config_existed_2
+        cp("./H2-main-ext/config.json", "config.json", force=true)
+    end
+    if !tsv_config_existed_2
+        cp("./H2-main-ext/tsv_config.json", "tsv_config.json", force=true)
+    end
     
     try
         # 2. snapshot_path 未指定時のテスト (ファイルが作成されない)
@@ -71,10 +86,10 @@ end
             epsilon=1.0e-3, par="sequential", is_steady=true,
             snapshot_path=invalid_path, mu=mu_test)
     finally
-        if isfile("config.json")
+        if !config_existed_2 && isfile("config.json")
             rm("config.json")
         end
-        if isfile("tsv_config.json")
+        if !tsv_config_existed_2 && isfile("tsv_config.json")
             rm("tsv_config.json")
         end
     end

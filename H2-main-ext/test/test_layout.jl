@@ -12,7 +12,7 @@ using .ComponentGenerator.Layout
 
 @testset "Layout Generation Tests" begin
     # Helper to construct TSVConfig and ModelConfig for testing
-    function make_test_density_config(; lx=1.0e-3, ly=1.0e-3, gx=2, gy=2, mu=[1.0, 1.0, 1.0, 1.0], p_min=0.1e-3)
+    function make_test_density_config(; lx=1.2e-3, ly=1.2e-3, gx=2, gy=2, mu=[1.0, 1.0, 1.0, 1.0], p_min=0.1e-3)
         density = DensityMapConfig(
             gx,
             gy,
@@ -41,7 +41,7 @@ using .ComponentGenerator.Layout
     end
 
     @testset "get_cell_capacities" begin
-        tsv, lx, ly = make_test_density_config(lx=1.0e-3, ly=1.0e-3, gx=2, gy=2, p_min=0.1e-3)
+        tsv, lx, ly = make_test_density_config(lx=1.2e-3, ly=1.2e-3, gx=2, gy=2, p_min=0.1e-3)
         capacities = get_cell_capacities(tsv, lx, ly)
         # Expected:
         # cell bounds: 0.5 x 0.5. g = 0.05.
@@ -78,7 +78,7 @@ using .ComponentGenerator.Layout
         # cell 2: round(0.4 * 25) = 10
         # cell 3: round(0.0 * 25) = 0
         # cell 4: round(0.2 * 25) = 5
-        tsv, lx, ly = make_test_density_config(lx=1.0e-3, ly=1.0e-3, gx=2, gy=2, mu=mu, p_min=0.1e-3)
+        tsv, lx, ly = make_test_density_config(lx=1.2e-3, ly=1.2e-3, gx=2, gy=2, mu=mu, p_min=0.1e-3)
         pts = expand_coordinates(tsv, lx, ly)
         
         # Total points should be 25 + 10 + 0 + 5 = 40
@@ -89,9 +89,9 @@ using .ComponentGenerator.Layout
         # Check all pair distances
         for i in 1:length(pts)
             pt_i = pts[i]
-            # Check chip boundaries
-            @test 0.0 <= pt_i.x <= lx
-            @test 0.0 <= pt_i.y <= ly
+            # Check silicon boundaries
+            @test 0.1e-3 <= pt_i.x <= lx - 0.1e-3
+            @test 0.1e-3 <= pt_i.y <= ly - 0.1e-3
             for j in (i+1):length(pts)
                 pt_j = pts[j]
                 dist = sqrt((pt_i.x - pt_j.x)^2 + (pt_i.y - pt_j.y)^2)
@@ -100,14 +100,14 @@ using .ComponentGenerator.Layout
         end
         
         # Verify points distribution per cell
-        # Cell 1 (x in [0, 0.5], y in [0, 0.5]): 25 pts
-        # Cell 2 (x in [0.5, 1.0], y in [0, 0.5]): 10 pts
-        # Cell 3 (x in [0, 0.5], y in [0.5, 1.0]): 0 pts
-        # Cell 4 (x in [0.5, 1.0], y in [0.5, 1.0]): 5 pts
-        cell1_count = count(p -> 0.0 <= p.x <= 0.5e-3 && 0.0 <= p.y <= 0.5e-3, pts)
-        cell2_count = count(p -> 0.5e-3 <= p.x <= 1.0e-3 && 0.0 <= p.y <= 0.5e-3, pts)
-        cell3_count = count(p -> 0.0 <= p.x <= 0.5e-3 && 0.5e-3 <= p.y <= 1.0e-3, pts)
-        cell4_count = count(p -> 0.5e-3 <= p.x <= 1.0e-3 && 0.5e-3 <= p.y <= 1.0e-3, pts)
+        # Cell 1 (x in [0.1, 0.6], y in [0.1, 0.6]): 25 pts
+        # Cell 2 (x in [0.6, 1.1], y in [0.1, 0.6]): 10 pts
+        # Cell 3 (x in [0.1, 0.6], y in [0.6, 1.1]): 0 pts
+        # Cell 4 (x in [0.6, 1.1], y in [0.6, 1.1]): 5 pts
+        cell1_count = count(p -> 0.1e-3 <= p.x <= 0.6e-3 && 0.1e-3 <= p.y <= 0.6e-3, pts)
+        cell2_count = count(p -> 0.6e-3 <= p.x <= 1.1e-3 && 0.1e-3 <= p.y <= 0.6e-3, pts)
+        cell3_count = count(p -> 0.1e-3 <= p.x <= 0.6e-3 && 0.6e-3 <= p.y <= 1.1e-3, pts)
+        cell4_count = count(p -> 0.6e-3 <= p.x <= 1.1e-3 && 0.6e-3 <= p.y <= 1.1e-3, pts)
         
         @test cell1_count == 25
         @test cell2_count == 10

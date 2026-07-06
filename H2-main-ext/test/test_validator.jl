@@ -54,29 +54,49 @@ using .ComponentGenerator.Validator
         @test res.is_valid == true
         @test res.error_type == Types.NO_ERROR
 
-        # Boundary violation (left: x < radius)
-        coords_left = [Point2D(0.019e-3, 0.5e-3)]
+        # Boundary violation (left: x < margin + radius)
+        coords_left = [Point2D(0.119e-3, 0.5e-3)]
         res_left = validate_physical_constraints(coords_left, config)
         @test res_left.is_valid == false
         @test res_left.error_type == Types.BOUNDARY_VIOLATION
 
-        # Boundary violation (right: x > lx - radius)
-        coords_right = [Point2D(0.981e-3, 0.5e-3)]
+        # Boundary violation (right: x > lx - margin - radius)
+        coords_right = [Point2D(0.881e-3, 0.5e-3)]
         res_right = validate_physical_constraints(coords_right, config)
         @test res_right.is_valid == false
         @test res_right.error_type == Types.BOUNDARY_VIOLATION
 
-        # Boundary violation (bottom: y < radius)
-        coords_bottom = [Point2D(0.5e-3, 0.019e-3)]
+        # Boundary violation (bottom: y < margin + radius)
+        coords_bottom = [Point2D(0.5e-3, 0.119e-3)]
         res_bottom = validate_physical_constraints(coords_bottom, config)
         @test res_bottom.is_valid == false
         @test res_bottom.error_type == Types.BOUNDARY_VIOLATION
 
-        # Boundary violation (top: y > ly - radius)
-        coords_top = [Point2D(0.5e-3, 0.981e-3)]
+        # Boundary violation (top: y > ly - margin - radius)
+        coords_top = [Point2D(0.5e-3, 0.881e-3)]
         res_top = validate_physical_constraints(coords_top, config)
         @test res_top.is_valid == false
         @test res_top.error_type == Types.BOUNDARY_VIOLATION
+
+        # Explicit Silicon Boundary Edge Checks
+        # Verify that a coordinate exactly at the silicon inner boundary (x = 0.12e-3) is VALID
+        coords_exact = [Point2D(0.12e-3, 0.5e-3)]
+        res_exact = validate_physical_constraints(coords_exact, config)
+        @test res_exact.is_valid == true
+        @test res_exact.error_type == Types.NO_ERROR
+
+        # Verify that a coordinate slightly outside the silicon inner boundary (x = 0.119e-3) is INVALID (BOUNDARY_VIOLATION)
+        coords_outside_slight = [Point2D(0.119e-3, 0.5e-3)]
+        res_outside_slight = validate_physical_constraints(coords_outside_slight, config)
+        @test res_outside_slight.is_valid == false
+        @test res_outside_slight.error_type == Types.BOUNDARY_VIOLATION
+
+        # Verify that coordinates located outside the silicon bounds but inside the chip bounds (e.g. 0.11e-3) are BOUNDARY_VIOLATION
+        # (0.11e-3 with radius 0.02e-3 means 0.11e-3 - 0.02e-3 = 0.09e-3 < 0.1e-3 (margin), which violates the boundary)
+        coords_inside_chip_outside_silicon = [Point2D(0.11e-3, 0.5e-3)]
+        res_chip_silicon = validate_physical_constraints(coords_inside_chip_outside_silicon, config)
+        @test res_chip_silicon.is_valid == false
+        @test res_chip_silicon.error_type == Types.BOUNDARY_VIOLATION
     end
 
     @testset "Pitch violation tests" begin
