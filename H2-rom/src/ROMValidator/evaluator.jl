@@ -320,3 +320,63 @@ function run_validation(
     return summary
 end
 
+"""
+    measure_dataset_size(snapshot_dir::String) -> Int64
+
+Calculate the total file size (in bytes) of all `.jld2` snapshot files in `snapshot_dir`.
+If the directory does not exist, return 0.
+"""
+function measure_dataset_size(snapshot_dir::String)::Int64
+    if !isdir(snapshot_dir)
+        return 0
+    end
+    total_size = 0
+    for file in readdir(snapshot_dir; join=true)
+        if isfile(file) && endswith(file, ".jld2")
+            total_size += filesize(file)
+        end
+    end
+    return total_size
+end
+
+"""
+    measure_fvm_runtime(manifest_path::String) -> Tuple{Float64, Float64}
+
+Calculate the total and average runtime (in seconds) of successful FVM cases from `manifest.json`.
+Returns `(total_runtime, average_runtime)`.
+If the manifest file does not exist, return `(0.0, 0.0)`.
+If there are no successful cases, return `(0.0, 0.0)`.
+"""
+function measure_fvm_runtime(manifest_path::String)::Tuple{Float64, Float64}
+    if !isfile(manifest_path)
+        @warn "Manifest file not found: $manifest_path"
+        return (0.0, 0.0)
+    end
+    
+    try
+        content = read(manifest_path, String)
+        manifest = JSON3.read(content, Dict{String, Any})
+        
+        total_runtime = 0.0
+        success_count = 0
+        
+        if haskey(manifest, "cases")
+            for case_obj in manifest["cases"]
+                status = get(case_obj, "status", "")
+                if status == "success"
+                    runtime = Float64(get(case_obj, "runtime", 0.0))
+                    total_runtime += runtime
+                    success_count += 1
+                end
+            end
+        end
+        
+        avg_runtime = success_count > 0 ? total_runtime / success_count : 0.0
+        return (total_runtime, avg_runtime)
+    catch e
+        @error "Failed to parse manifest file: $manifest_path" exception=e
+        return (0.0, 0.0)
+    end
+end
+
+

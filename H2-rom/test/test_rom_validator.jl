@@ -4,7 +4,7 @@ using Test
 if !isdefined(Main, :ROMValidator)
     include("../src/ROMValidator/ROMValidator.jl")
 end
-using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results
+using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results, measure_dataset_size, measure_fvm_runtime
 using JLD2
 using JSON3
 
@@ -550,6 +550,77 @@ end
         rm(test_dir, recursive=true, force=true)
     end
 end
+
+@testset "ROMValidator Measurement Logic Test" begin
+    # 1. measure_dataset_size test
+    test_dir = mktempdir()
+    try
+        # Directory does not exist or empty
+        @test measure_dataset_size(joinpath(test_dir, "nonexistent")) == 0
+        @test measure_dataset_size(test_dir) == 0
+
+        # Create dummy JLD2 files and check sizes
+        file1 = joinpath(test_dir, "snap1.jld2")
+        file2 = joinpath(test_dir, "snap2.jld2")
+        other_file = joinpath(test_dir, "other.txt")
+
+        write(file1, "12345") # 5 bytes
+        write(file2, "1234567890") # 10 bytes
+        write(other_file, "123456789012345") # 15 bytes (should be ignored)
+
+        # Expected dataset size: 5 + 10 = 15 bytes
+        @test measure_dataset_size(test_dir) == 15
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+
+    # 2. measure_fvm_runtime test
+    test_dir2 = mktempdir()
+    try
+        manifest_path = joinpath(test_dir2, "manifest.json")
+        
+        # Manifest does not exist
+        @test measure_fvm_runtime(manifest_path) == (0.0, 0.0)
+
+        # Valid manifest with mixed statuses
+        manifest_data = Dict(
+            "cases" => [
+                Dict("id" => 1, "status" => "success", "runtime" => 10.0),
+                Dict("id" => 2, "status" => "failed", "runtime" => 5.0),
+                Dict("id" => 3, "status" => "success", "runtime" => 20.0),
+                Dict("id" => 4, "status" => "pending", "runtime" => 0.0)
+            ]
+        )
+        
+        open(manifest_path, "w") do io
+            JSON3.write(io, manifest_data)
+        end
+
+        # Total runtime = 10.0 + 20.0 = 30.0
+        # Success count = 2
+        # Average runtime = 30.0 / 2 = 15.0
+        tot, avg = measure_fvm_runtime(manifest_path)
+        @test tot ≈ 30.0
+        @test avg ≈ 15.0
+
+        # Manifest with no success cases
+        manifest_data_no_success = Dict(
+            "cases" => [
+                Dict("id" => 1, "status" => "failed", "runtime" => 10.0)
+            ]
+        )
+        open(manifest_path, "w") do io
+            JSON3.write(io, manifest_data_no_success)
+        end
+
+        tot_ns, avg_ns = measure_fvm_runtime(manifest_path)
+        @test tot_ns == 0.0
+        @test avg_ns == 0.0
+    finally
+        rm(test_dir2, recursive=true, force=true)
+    end
+end
+
 
 
 
