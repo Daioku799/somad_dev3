@@ -327,25 +327,29 @@ function run_validation(
 
     # 3. Evaluate each sample
     for file in sample_files
-        theta_fvm, mu, snapshot_id = load_test_case(file)
-        
-        # ROM prediction and reconstruction
-        theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
-        
-        # Calculate error metrics
-        l2_err = calculate_l2_error(theta_fvm, theta_rom)
-        tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
-        hotspot_err = calculate_hotspot_error(theta_fvm, theta_rom, grid_info)
-        
-        is_passed = tmax_err <= tmax_threshold
-        
-        push!(results, ValidationResult(snapshot_id, l2_err, tmax_err, hotspot_err, is_passed))
-        
-        # Generate slice comparison plots
-        generate_comparison_plots(
-            theta_fvm, theta_rom, grid_info, output_dir, snapshot_id, mu;
-            save_individuals=save_individuals, normalize=normalize_plots
-        )
+        try
+            theta_fvm, mu, snapshot_id = load_test_case(file)
+            
+            # ROM prediction and reconstruction
+            theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
+            
+            # Calculate error metrics
+            l2_err = calculate_l2_error(theta_fvm, theta_rom)
+            tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
+            hotspot_err = calculate_hotspot_error(theta_fvm, theta_rom, grid_info)
+            
+            is_passed = tmax_err <= tmax_threshold
+            
+            push!(results, ValidationResult(snapshot_id, l2_err, tmax_err, hotspot_err, is_passed))
+            
+            # Generate slice comparison plots
+            generate_comparison_plots(
+                theta_fvm, theta_rom, grid_info, output_dir, snapshot_id, mu;
+                save_individuals=save_individuals, normalize=normalize_plots
+            )
+        catch e
+            @warn "Failed to process validation sample file: $file" exception=e
+        end
     end
 
     # 4. Evaluate self-reproduction error on trained snapshots
@@ -354,14 +358,18 @@ function run_validation(
     trained_files = get_trained_samples(snapshot_dir, trained_snapshot_ids)
     
     for file in trained_files
-        theta_fvm, mu, snapshot_id = load_test_case(file)
-        theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
-        
-        l2_err = calculate_l2_error(theta_fvm, theta_rom)
-        tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
-        
-        push!(self_l2_errors, l2_err)
-        push!(self_tmax_errors, tmax_err)
+        try
+            theta_fvm, mu, snapshot_id = load_test_case(file)
+            theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
+            
+            l2_err = calculate_l2_error(theta_fvm, theta_rom)
+            tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
+            
+            push!(self_l2_errors, l2_err)
+            push!(self_tmax_errors, tmax_err)
+        catch e
+            @warn "Failed to process trained sample file for self-reproduction: $file" exception=e
+        end
     end
     
     mean_self_l2 = isempty(self_l2_errors) ? 0.0 : sum(self_l2_errors) / length(self_l2_errors)

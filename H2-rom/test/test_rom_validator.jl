@@ -730,6 +730,97 @@ end
     end
 end
 
+@testset "ROMValidator Task 7.3 Test" begin
+    using .ROMValidator: run_validation
+    using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
+    
+    test_dir = mktempdir()
+    try
+        raw_dir = joinpath(test_dir, "raw")
+        mkpath(raw_dir)
+        
+        # Grid parameters: 2 * 3 * 4 = 24 elements
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        
+        # Snapshot 1 (trained)
+        snap1_path = joinpath(raw_dir, "snap1.jld2")
+        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => fill(1.5, 16)))
+        
+        # Snapshot 2 (validation)
+        snap2_path = joinpath(raw_dir, "snap2.jld2")
+        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_2", "mu" => collect(range(0.0, 1.0, length=16))))
+        
+        # Snapshot 3 (Corrupt: mismatched dimensions)
+        snap3_path = joinpath(raw_dir, "snap3.jld2")
+        jldsave(snap3_path; temperature=collect(1.0:10.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_3", "mu" => collect(range(0.0, 1.0, length=16))))
+        
+        # Snapshot 4 (Corrupt: invalid format)
+        snap4_path = joinpath(raw_dir, "snap4.jld2")
+        write(snap4_path, "corrupted file contents")
+
+        # Create dummy trained RBFInterpolator model
+        model_path = joinpath(test_dir, "rom_model.jld2")
+        model = RBFInterpolator(
+            zeros(2, 2), # weights
+            zeros(16, 2), # centers
+            1.0, # epsilon
+            ScalingParams(zeros(16), ones(16)), # scaling_params
+            vcat(zeros(1, 16), ones(1, 16)), # parameter_bounds
+            Dict{String, Any}("kernel_type" => "gaussian")
+        )
+        save_rom_model(model_path, model)
+        
+        # Dummy basis (24 x 2)
+        basis = reshape(collect(1.0:48.0), 24, 2) ./ 10.0
+        
+        mean_field = collect(1.0:24.0) .+ 0.3
+        output_dir = joinpath(test_dir, "output")
+        
+        # Run validation
+        summary = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["snap_1"], # trained_snapshot_ids
+            grid_info,
+            basis,
+            mean_field;
+            tmax_threshold=2.0,
+            save_individuals=false
+        )
+        
+        @test summary.overall_status == :validated
+        # Only snap_2 should be in results (snap_3 and snap_4 skipped)
+        @test length(summary.results) == 1
+        @test summary.results[1].sample_id == "snap_2"
+        @test isfile(joinpath(output_dir, "validation.json"))
+        @test isfile(joinpath(output_dir, "validation.md"))
+        
+        # Test self-reproduction corruption error skip
+        summary_self_corrupt = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["snap_1", "snap_3"], # trained_snapshot_ids (snap_3 is corrupt)
+            grid_info,
+            basis,
+            mean_field;
+            tmax_threshold=2.0,
+            save_individuals=false
+        )
+        @test summary_self_corrupt.overall_status == :validated
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
 
 
 
