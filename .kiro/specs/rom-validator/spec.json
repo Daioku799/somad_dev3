@@ -1,7 +1,7 @@
 {
   "feature_name": "rom-validator",
   "created_at": "2025-05-14T12:00:00Z",
-  "updated_at": "2026-07-05T17:18:00Z",
+  "updated_at": "2026-07-07T21:07:00Z",
   "language": "ja",
   "phase": "completed",
   "status": "completed",
@@ -21,4 +21,3 @@
   },
   "ready_for_implementation": true
 }
-
