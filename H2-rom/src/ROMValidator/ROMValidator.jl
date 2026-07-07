@@ -31,7 +31,7 @@ include("reporter.jl")
 
 
 export ValidationResult, ValidationSummary
-export get_validation_samples, load_test_case
+export get_validation_samples, get_trained_samples, load_test_case
 export calculate_l2_error, calculate_tmax_error, calculate_hotspot_error
 export judge_accuracy, evaluate_validation_results
 export generate_report, generate_comparison_plots, run_validation

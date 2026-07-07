@@ -36,6 +36,42 @@ function get_validation_samples(raw_dir::String, trained_snapshot_ids::Vector{St
 end
 
 """
+    get_trained_samples(raw_dir::String, trained_snapshot_ids::Vector{String}) -> Vector{String}
+
+Search for `.jld2` files inside `raw_dir`. Load `metadata` from each file, extract `snapshot_id`
+(from `metadata["snapshot_id"]`), and check if it is IN `trained_snapshot_ids`.
+Return the list of file paths for these trained snapshots.
+"""
+function get_trained_samples(raw_dir::String, trained_snapshot_ids::Vector{String})::Vector{String}
+    trained_samples = String[]
+    if !isdir(raw_dir)
+        return trained_samples
+    end
+    
+    for file in readdir(raw_dir; join=true)
+        if isfile(file) && endswith(file, ".jld2")
+            try
+                JLD2.jldopen(file, "r") do jld
+                    if haskey(jld, "metadata")
+                        meta = jld["metadata"]
+                        if haskey(meta, "snapshot_id")
+                            snapshot_id = meta["snapshot_id"]
+                            if snapshot_id in trained_snapshot_ids
+                                push!(trained_samples, file)
+                            end
+                        end
+                    end
+                end
+            catch e
+                @warn "Failed to read JLD2 file: $file" exception=e
+            end
+        end
+    end
+    return trained_samples
+end
+
+"""
+
     load_test_case(filepath::String) -> Tuple{Vector{Float64}, Vector{Float64}, String}
 
 Load `temperature` and `metadata` from the specified JLD2 file. Flat-map `temperature`
@@ -274,6 +310,7 @@ function run_validation(
     basis::Matrix{Float64},
     mean_field::Vector{Float64};
     tmax_threshold::Float64=2.0,
+    self_reproduce_threshold::Float64=0.5,
     save_individuals::Bool=false,
     normalize_plots::Bool=false
 )::ValidationSummary
@@ -311,10 +348,55 @@ function run_validation(
         )
     end
 
-    # 4. Generate ValidationSummary
-    summary = evaluate_validation_results(results; tmax_threshold=tmax_threshold)
+    # 4. Evaluate self-reproduction error on trained snapshots
+    self_l2_errors = Float64[]
+    self_tmax_errors = Float64[]
+    trained_files = get_trained_samples(snapshot_dir, trained_snapshot_ids)
+    
+    for file in trained_files
+        theta_fvm, mu, snapshot_id = load_test_case(file)
+        theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
+        
+        l2_err = calculate_l2_error(theta_fvm, theta_rom)
+        tmax_err = calculate_tmax_error(theta_fvm, theta_rom)
+        
+        push!(self_l2_errors, l2_err)
+        push!(self_tmax_errors, tmax_err)
+    end
+    
+    mean_self_l2 = isempty(self_l2_errors) ? 0.0 : sum(self_l2_errors) / length(self_l2_errors)
+    max_self_l2 = isempty(self_l2_errors) ? 0.0 : maximum(self_l2_errors)
+    mean_self_tmax = isempty(self_tmax_errors) ? 0.0 : sum(self_tmax_errors) / length(self_tmax_errors)
+    max_self_tmax = isempty(self_tmax_errors) ? 0.0 : maximum(self_tmax_errors)
+    
+    is_warning = max_self_tmax > self_reproduce_threshold
+    
+    self_reproduction_metrics = Dict{String, Any}(
+        "mean_l2_error" => mean_self_l2,
+        "max_l2_error" => max_self_l2,
+        "mean_tmax_error" => mean_self_tmax,
+        "max_tmax_error" => max_self_tmax,
+        "is_warning" => is_warning
+    )
 
-    # 5. Generate Markdown and JSON reports
+    # 5. Generate ValidationSummary
+    base_summary = evaluate_validation_results(results; tmax_threshold=tmax_threshold)
+    
+    overall_status = base_summary.overall_status
+    if overall_status == :validated && is_warning
+        overall_status = :warning
+    end
+    
+    summary = ValidationSummary(
+        base_summary.results,
+        base_summary.mean_metrics,
+        base_summary.max_metrics,
+        overall_status,
+        Dict{String, Any}(), # Performance metrics will be implemented in Task 7.4
+        self_reproduction_metrics
+    )
+
+    # 6. Generate Markdown and JSON reports
     generate_report(summary, output_dir)
 
     return summary

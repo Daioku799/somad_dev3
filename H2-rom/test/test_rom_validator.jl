@@ -4,7 +4,7 @@ using Test
 if !isdefined(Main, :ROMValidator)
     include("../src/ROMValidator/ROMValidator.jl")
 end
-using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results, measure_dataset_size, measure_fvm_runtime
+using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, get_trained_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results, measure_dataset_size, measure_fvm_runtime
 using JLD2
 using JSON3
 
@@ -365,6 +365,7 @@ end
             basis,
             mean_field;
             tmax_threshold=30.0,
+            self_reproduce_threshold=100.0,
             save_individuals=false
         )
         
@@ -432,6 +433,7 @@ end
             basis,
             mean_field;
             tmax_threshold=30.0,
+            self_reproduce_threshold=100.0,
             save_individuals=false
         )
         
@@ -620,6 +622,114 @@ end
         rm(test_dir2, recursive=true, force=true)
     end
 end
+
+@testset "ROMValidator Task 7.2 Test" begin
+    using .ROMValidator: run_validation
+    using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
+    
+    test_dir = mktempdir()
+    try
+        raw_dir = joinpath(test_dir, "raw")
+        mkpath(raw_dir)
+        
+        # Grid parameters: 2 * 3 * 4 = 24 elements
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        
+        # Snapshot 1 (trained)
+        snap1_path = joinpath(raw_dir, "snap1.jld2")
+        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => fill(1.5, 16)))
+        
+        # Snapshot 2 (validation)
+        snap2_path = joinpath(raw_dir, "snap2.jld2")
+        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_2", "mu" => collect(range(0.0, 1.0, length=16))))
+        
+        # Test get_trained_samples
+        trained_files = get_trained_samples(raw_dir, ["snap_1"])
+        @test length(trained_files) == 1
+        @test snap1_path in trained_files
+        
+        # Create dummy trained RBFInterpolator model with weights = zeros(2, 2)
+        model_path = joinpath(test_dir, "rom_model.jld2")
+        model = RBFInterpolator(
+            zeros(2, 2), # weights (shape: N_basis x N_centers)
+            zeros(16, 2), # centers (N_dim x N_centers)
+            1.0, # epsilon
+            ScalingParams(zeros(16), ones(16)), # scaling_params
+            vcat(zeros(1, 16), ones(1, 16)), # parameter_bounds (2 x N_dim)
+            Dict{String, Any}("kernel_type" => "gaussian")
+        )
+        save_rom_model(model_path, model)
+        
+        # Dummy basis (24 x 2)
+        basis = reshape(collect(1.0:48.0), 24, 2) ./ 10.0
+        
+        # 1. Normal case: Self-reproduction error <= 0.5 K (e.g. 0.3 K)
+        # ROM prediction will be mean_field (since weights are 0).
+        # We want ROM prediction (mean_field) to be close to FVM temperature collect(1.0:24.0).
+        mean_field_normal = collect(1.0:24.0) .+ 0.3
+        output_dir = joinpath(test_dir, "output_normal")
+        summary_normal = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["snap_1"], # trained_snapshot_ids
+            grid_info,
+            basis,
+            mean_field_normal;
+            tmax_threshold=2.0,
+            save_individuals=false
+        )
+        @test summary_normal.overall_status == :validated
+        @test summary_normal.self_reproduction_metrics["max_tmax_error"] ≈ 0.3
+        @test summary_normal.self_reproduction_metrics["is_warning"] == false
+        
+        # 2. Warning case: Self-reproduction error > 0.5 K (e.g. 0.6 K) but validation is fine
+        mean_field_warning = collect(1.0:24.0) .+ 0.6
+        output_dir_warn = joinpath(test_dir, "output_warn")
+        summary_warn = run_validation(
+            model_path,
+            raw_dir,
+            output_dir_warn,
+            ["snap_1"],
+            grid_info,
+            basis,
+            mean_field_warning;
+            tmax_threshold=2.0,
+            save_individuals=false
+        )
+        # validation error is 1.0 K (FVM snap_2 [1.0:24.0 + 1.0] - ROM prediction [1.0:24.0 + 0.6] = 0.4 K)
+        # so validation is passed (< 2.0 threshold), but self-reproduction is 0.6 K > 0.5 K -> warning!
+        @test summary_warn.overall_status == :warning
+        @test summary_warn.self_reproduction_metrics["max_tmax_error"] ≈ 0.6
+        @test summary_warn.self_reproduction_metrics["is_warning"] == true
+        
+        # 3. Unfit case: Validation error > 2.0 K (even if self-reproduction error > 0.5 K, unfit takes precedence)
+        mean_field_unfit = collect(1.0:24.0) .+ 3.5
+        output_dir_unfit = joinpath(test_dir, "output_unfit")
+        summary_unfit = run_validation(
+            model_path,
+            raw_dir,
+            output_dir_unfit,
+            ["snap_1"],
+            grid_info,
+            basis,
+            mean_field_unfit;
+            tmax_threshold=2.0,
+            save_individuals=false
+        )
+        @test summary_unfit.overall_status == :unfit
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
 
 
 
