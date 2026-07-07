@@ -105,6 +105,11 @@ FVMシミュレーション格子（格子の解像度 $60 \times 60$、セル�
    * `ModelBuilder` が `config.tsv.coords` を直接参照するバグを修正し、密度モード時に `Layout.expand_coordinates` から物理座標を展開する仕様に修正。
 3. **描画ぼやけの解消**:
    * カラーバーの補間により赤色の熱源が緑色に埋もれる現象を、離散カラーマップの適用により修正。
+4. **シリコン境界マージン考慮によるTSV配置領域の適正化**:
+   * 改善前はシリコン境界部分のマージンが考慮されておらず、TSVがチップ外周の最外殻（境界線直上）まで配置されていた。
+   * シリコン境界から `0.1 mm` のマージンを設定し、TSVがマージン領域の内側に配置されるように修正した（[snapshot_1_sidebyside_xy.png](file:///home/somadwsl/somad_dev3/rom_plots/snapshot_1_sidebyside_xy.png)にて確認）。
+   * この配置制限の適用により、未知グラデーション予測時のFVM数値解とROM予測値の最高温度（Tmax）誤差は、1.215 K（改善前、[rom_fvm_comparison_xy_legacy.png](file:///home/somadwsl/somad_dev3/rom_plots/rom_fvm_comparison_xy_legacy.png)）から 1.180 K（改善後、[rom_fvm_comparison_xy.png](file:///home/somadwsl/somad_dev3/rom_plots/rom_fvm_comparison_xy.png)）に変化した。
+
 
 ### 3.2. テスト検証結果と可視化詳細
 
