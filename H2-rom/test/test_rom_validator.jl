@@ -265,29 +265,39 @@ end
     
     theta_fvm = collect(1.0:24.0)
     theta_rom = theta_fvm .+ 0.1
+    mu = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
     
+    # 1. Test defaults (save_individuals = false)
     test_dir = mktempdir()
     try
-        generate_comparison_plots(theta_fvm, theta_rom, grid_info, test_dir, "test_sample")
+        generate_comparison_plots(theta_fvm, theta_rom, grid_info, test_dir, "test_sample", mu; save_individuals=false)
         
-        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.15.png"))
-        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.35.png"))
-        @test isfile(joinpath(test_dir, "test_sample_comparison_xy_z_0.55.png"))
-        @test isfile(joinpath(test_dir, "test_sample_comparison_yz_x_0.50.png"))
+        @test isfile(joinpath(test_dir, "test_sample_rom_fvm_comparison_xy.png"))
+        @test !isfile(joinpath(test_dir, "test_sample_rom_fvm_density_xy.png"))
+        @test !isfile(joinpath(test_dir, "test_sample_rom_fvm_fvm_xy.png"))
+        @test !isfile(joinpath(test_dir, "test_sample_rom_fvm_rom_xy.png"))
+        @test !isfile(joinpath(test_dir, "test_sample_rom_fvm_diff_xy.png"))
     finally
         rm(test_dir, recursive=true, force=true)
+    end
+
+    # 2. Test save_individuals = true
+    test_dir2 = mktempdir()
+    try
+        generate_comparison_plots(theta_fvm, theta_rom, grid_info, test_dir2, "test_sample", mu; save_individuals=true)
+        
+        @test isfile(joinpath(test_dir2, "test_sample_rom_fvm_comparison_xy.png"))
+        @test isfile(joinpath(test_dir2, "test_sample_rom_fvm_density_xy.png"))
+        @test isfile(joinpath(test_dir2, "test_sample_rom_fvm_fvm_xy.png"))
+        @test isfile(joinpath(test_dir2, "test_sample_rom_fvm_rom_xy.png"))
+        @test isfile(joinpath(test_dir2, "test_sample_rom_fvm_diff_xy.png"))
+    finally
+        rm(test_dir2, recursive=true, force=true)
     end
 end
 
 @testset "ROMValidator Task 4.1 Test" begin
     using .ROMValidator: run_validation
-    
-    # We can define a dummy Interpolator for testing orchestrator without full JLD2 model save/load,
-    # or we can mock load_rom_model and evaluate_rom.
-    # To keep it simple and self-contained, we can mock:
-    # 1. JLD2 save a dummy dict as model.
-    # 2. Define custom evaluate_rom and load_rom_model if ROMInterpolator is not fully loaded,
-    # or just import ROMInterpolator.
     
     if !isdefined(Main, :ROMInterpolator)
         try
@@ -317,11 +327,11 @@ end
         
         # Snapshot 1 (trained)
         snap1_path = joinpath(raw_dir, "snap1.jld2")
-        jldsave(snap1_path; temperature=collect(1.0:24.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => [1.0, 2.0]))
+        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => [1.0, 2.0]))
         
         # Snapshot 2 (validation)
         snap2_path = joinpath(raw_dir, "snap2.jld2")
-        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, metadata=Dict("snapshot_id" => "snap_2", "mu" => [3.0, 4.0]))
+        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_2", "mu" => collect(range(0.0, 1.0, length=16))))
         
         # 2. Create dummy trained RBFInterpolator model and save it
         model_path = joinpath(test_dir, "rom_model.jld2")
@@ -340,8 +350,6 @@ end
         mean_field = zeros(24)
         
         # Run validation
-        # Since we use dummy model and basis, evaluate_rom might produce some output.
-        # Let's verify run_validation runs through.
         output_dir = joinpath(test_dir, "output")
         
         summary = run_validation(
@@ -352,7 +360,8 @@ end
             grid_info,
             basis,
             mean_field;
-            tmax_threshold=30.0
+            tmax_threshold=30.0,
+            save_individuals=false
         )
         
         @test summary.overall_status == :validated
@@ -362,7 +371,8 @@ end
         # Check files
         @test isfile(joinpath(output_dir, "validation.json"))
         @test isfile(joinpath(output_dir, "validation.md"))
-        @test isfile(joinpath(output_dir, "snap_2_comparison_xy_z_0.15.png"))
+        @test isfile(joinpath(output_dir, "snap_2_rom_fvm_comparison_xy.png"))
+        @test !isfile(joinpath(output_dir, "snap_2_rom_fvm_density_xy.png"))
     finally
         rm(test_dir, recursive=true, force=true)
     end
@@ -370,8 +380,6 @@ end
 
 @testset "ROMValidator Task 5.1 Test" begin
     # Task 5.1: E2E Verification
-    # Verify that the entire end-to-end flow executes without throwing any exceptions
-    # under simulated headless environments.
     using .ROMValidator: run_validation
     using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
     
@@ -391,9 +399,9 @@ end
         )
         
         # Write multiple snapshots
-        jldsave(joinpath(raw_dir, "snap_t1.jld2"); temperature=collect(1.0:24.0), metadata=Dict("snapshot_id" => "trained1", "mu" => [1.0, 2.0]))
-        jldsave(joinpath(raw_dir, "snap_v1.jld2"); temperature=collect(1.0:24.0) .+ 0.5, metadata=Dict("snapshot_id" => "val1", "mu" => [3.0, 4.0]))
-        jldsave(joinpath(raw_dir, "snap_v2.jld2"); temperature=collect(1.0:24.0) .+ 1.5, metadata=Dict("snapshot_id" => "val2", "mu" => [5.0, 6.0]))
+        jldsave(joinpath(raw_dir, "snap_t1.jld2"); temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "trained1", "mu" => [1.0, 2.0]))
+        jldsave(joinpath(raw_dir, "snap_v1.jld2"); temperature=collect(1.0:24.0) .+ 0.5, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "val1", "mu" => collect(range(0.0, 1.0, length=16))))
+        jldsave(joinpath(raw_dir, "snap_v2.jld2"); temperature=collect(1.0:24.0) .+ 1.5, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "val2", "mu" => collect(range(0.0, 1.0, length=16))))
         
         model_path = joinpath(test_dir, "rom_model.jld2")
         model = RBFInterpolator(
@@ -410,7 +418,7 @@ end
         mean_field = zeros(24)
         output_dir = joinpath(test_dir, "output")
         
-        # Execute run_validation in headless emulation (GKSwstype = 100 should be set internally)
+        # Execute run_validation
         summary = run_validation(
             model_path,
             raw_dir,
@@ -419,7 +427,8 @@ end
             grid_info,
             basis,
             mean_field;
-            tmax_threshold=30.0
+            tmax_threshold=30.0,
+            save_individuals=false
         )
         
         # Verify result summary structure and values
@@ -428,10 +437,8 @@ end
         
         # Verify all expected plot files are generated
         for val_id in ["val1", "val2"]
-            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.15.png"))
-            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.35.png"))
-            @test isfile(joinpath(output_dir, "$(val_id)_comparison_xy_z_0.55.png"))
-            @test isfile(joinpath(output_dir, "$(val_id)_comparison_yz_x_0.50.png"))
+            @test isfile(joinpath(output_dir, "$(val_id)_rom_fvm_comparison_xy.png"))
+            @test !isfile(joinpath(output_dir, "$(val_id)_rom_fvm_density_xy.png"))
         end
         
         # Report files validation
@@ -448,6 +455,45 @@ end
         rm(test_dir, recursive=true, force=true)
     end
 end
+
+@testset "ValidationPlot Snapshot Plots Test" begin
+    # Test plot_snapshot_xy directly
+    using Main.ValidationPlot: plot_snapshot_xy
+    
+    test_dir = mktempdir()
+    try
+        snap_path = joinpath(test_dir, "snapshot_test_case.jld2")
+        jldsave(snap_path;
+            temperature=reshape(collect(20.0:43.0), 2, 3, 4),
+            id_map=zeros(UInt8, 2, 3, 4),
+            nx=2,
+            ny=3,
+            nz=4,
+            z_faces=[0.0, 0.1, 0.2, 0.3, 0.4],
+            metadata=Dict("snapshot_id" => "test_case", "mu" => collect(range(0.0, 1.0, length=16)))
+        )
+        
+        # 1. save_individuals = false
+        plot_snapshot_xy(snap_path; zc=0.15, out_dir=test_dir, save_individuals=false)
+        @test isfile(joinpath(test_dir, "snapshot_test_case_snapshot_xy.png"))
+        @test !isfile(joinpath(test_dir, "snapshot_test_case_temp_xy.png"))
+        @test !isfile(joinpath(test_dir, "snapshot_test_case_geo_xy.png"))
+        @test !isfile(joinpath(test_dir, "snapshot_test_case_density_xy.png"))
+        
+        # Remove generated files for clean next test
+        rm(joinpath(test_dir, "snapshot_test_case_snapshot_xy.png"))
+        
+        # 2. save_individuals = true
+        plot_snapshot_xy(snap_path; zc=0.15, out_dir=test_dir, save_individuals=true)
+        @test isfile(joinpath(test_dir, "snapshot_test_case_snapshot_xy.png"))
+        @test isfile(joinpath(test_dir, "snapshot_test_case_temp_xy.png"))
+        @test isfile(joinpath(test_dir, "snapshot_test_case_geo_xy.png"))
+        @test isfile(joinpath(test_dir, "snapshot_test_case_density_xy.png"))
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
 
 
 

@@ -15,6 +15,16 @@ catch
     using Main.ROMInterpolator
 end
 
+try
+    using ValidationPlot
+catch
+    if !isdefined(Main, :ValidationPlot)
+        path = joinpath(@__DIR__, "..", "ValidationPlot", "ValidationPlot.jl")
+        Main.eval(:(include($path)))
+    end
+    using Main.ValidationPlot
+end
+
 include("types.jl")
 include("evaluator.jl")
 include("reporter.jl")

@@ -21,4 +21,7 @@ using Test
     
     println("Running test_rom_interpolator.jl...")
     include("test_rom_interpolator.jl")
+    
+    println("Running test_rom_validator.jl...")
+    include("test_rom_validator.jl")
 end

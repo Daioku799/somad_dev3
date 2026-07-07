@@ -273,7 +273,9 @@ function run_validation(
     grid_info::Dict{String, Any},
     basis::Matrix{Float64},
     mean_field::Vector{Float64};
-    tmax_threshold::Float64=2.0
+    tmax_threshold::Float64=2.0,
+    save_individuals::Bool=false,
+    normalize_plots::Bool=false
 )::ValidationSummary
     # 1. Identify validation sample files
     sample_files = get_validation_samples(snapshot_dir, trained_snapshot_ids)
@@ -303,7 +305,10 @@ function run_validation(
         push!(results, ValidationResult(snapshot_id, l2_err, tmax_err, hotspot_err, is_passed))
         
         # Generate slice comparison plots
-        generate_comparison_plots(theta_fvm, theta_rom, grid_info, output_dir, snapshot_id)
+        generate_comparison_plots(
+            theta_fvm, theta_rom, grid_info, output_dir, snapshot_id, mu;
+            save_individuals=save_individuals, normalize=normalize_plots
+        )
     end
 
     # 4. Generate ValidationSummary
