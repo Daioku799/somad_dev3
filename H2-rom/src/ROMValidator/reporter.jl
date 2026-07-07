@@ -39,11 +39,22 @@ function generate_report(summary::ValidationSummary, output_dir::String)
         println(io, "")
 
         println(io, "## Detailed Results")
-        println(io, "| Sample ID | Relative L2 Error | Tmax Error (K) | Hotspot Distance (mm) | Status |")
-        println(io, "| :--- | :---: | :---: | :---: | :---: |")
+        println(io, "| Sample ID | Relative L2 Error | Tmax Error (K) | Hotspot Distance (mm) | Status | Comparison Plot |")
+        println(io, "| :--- | :---: | :---: | :---: | :---: | :---: |")
         for r in summary.results
             status_str = r.is_passed ? "PASS" : "FAIL"
-            println(io, "| $(r.sample_id) | $(r.relative_l2_error) | $(r.tmax_error) | $(r.hotspot_dist) | $(status_str) |")
+            plot_filename = "$(r.sample_id)_rom_fvm_comparison_xy.png"
+            plot_link = "[$plot_filename]($plot_filename)"
+            println(io, "| $(r.sample_id) | $(r.relative_l2_error) | $(r.tmax_error) | $(r.hotspot_dist) | $(status_str) | $(plot_link) |")
+        end
+        println(io, "")
+
+        println(io, "## Comparison Plots")
+        for r in summary.results
+            plot_filename = "$(r.sample_id)_rom_fvm_comparison_xy.png"
+            println(io, "### $(r.sample_id)")
+            println(io, "![$(r.sample_id) Comparison Plot]($plot_filename)")
+            println(io, "")
         end
     end
 end

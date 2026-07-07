@@ -246,6 +246,10 @@ end
         @test occursin("0.02", md_content)
         @test occursin("1.5", md_content)
         @test occursin("1.8", md_content)
+        @test occursin("[sample_1_rom_fvm_comparison_xy.png](sample_1_rom_fvm_comparison_xy.png)", md_content)
+        @test occursin("![sample_1 Comparison Plot](sample_1_rom_fvm_comparison_xy.png)", md_content)
+        @test occursin("[sample_2_rom_fvm_comparison_xy.png](sample_2_rom_fvm_comparison_xy.png)", md_content)
+        @test occursin("![sample_2 Comparison Plot](sample_2_rom_fvm_comparison_xy.png)", md_content)
     finally
         rm(test_dir, recursive=true, force=true)
     end
@@ -435,11 +439,12 @@ end
         @test summary.overall_status == :validated
         @test length(summary.results) == 2
         
-        # Verify all expected plot files are generated
-        for val_id in ["val1", "val2"]
-            @test isfile(joinpath(output_dir, "$(val_id)_rom_fvm_comparison_xy.png"))
-            @test !isfile(joinpath(output_dir, "$(val_id)_rom_fvm_density_xy.png"))
-        end
+        # Verify only the expected 4-column comparison plot exists (no other plot images)
+        files = readdir(output_dir)
+        png_files = filter(f -> endswith(f, ".png"), files)
+        @test length(png_files) == 2
+        @test "val1_rom_fvm_comparison_xy.png" in png_files
+        @test "val2_rom_fvm_comparison_xy.png" in png_files
         
         # Report files validation
         @test isfile(joinpath(output_dir, "validation.json"))
@@ -451,6 +456,10 @@ end
         @test occursin("Overall Status", report_md)
         @test occursin("val1", report_md)
         @test occursin("val2", report_md)
+        @test occursin("[val1_rom_fvm_comparison_xy.png](val1_rom_fvm_comparison_xy.png)", report_md)
+        @test occursin("![val1 Comparison Plot](val1_rom_fvm_comparison_xy.png)", report_md)
+        @test occursin("[val2_rom_fvm_comparison_xy.png](val2_rom_fvm_comparison_xy.png)", report_md)
+        @test occursin("![val2 Comparison Plot](val2_rom_fvm_comparison_xy.png)", report_md)
     finally
         rm(test_dir, recursive=true, force=true)
     end
