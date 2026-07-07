@@ -311,9 +311,12 @@ function run_validation(
     mean_field::Vector{Float64};
     tmax_threshold::Float64=2.0,
     self_reproduce_threshold::Float64=0.5,
+    rom_build_time::Float64=0.0,
     save_individuals::Bool=false,
     normalize_plots::Bool=false
 )::ValidationSummary
+    start_time = time_ns()
+
     # 1. Identify validation sample files
     sample_files = get_validation_samples(snapshot_dir, trained_snapshot_ids)
     if isempty(sample_files)
@@ -324,6 +327,7 @@ function run_validation(
     model = ROMInterpolator.load_rom_model(model_path)
 
     results = ValidationResult[]
+    query_times = Float64[]
 
     # 3. Evaluate each sample
     for file in sample_files
@@ -331,7 +335,10 @@ function run_validation(
             theta_fvm, mu, snapshot_id = load_test_case(file)
             
             # ROM prediction and reconstruction
+            query_start = time_ns()
             theta_rom = ROMInterpolator.evaluate_rom(model, basis, mean_field, mu)
+            query_duration = (time_ns() - query_start) / 1e9
+            push!(query_times, query_duration)
             
             # Calculate error metrics
             l2_err = calculate_l2_error(theta_fvm, theta_rom)
@@ -387,7 +394,28 @@ function run_validation(
         "is_warning" => is_warning
     )
 
-    # 5. Generate ValidationSummary
+    # 5. Measure performance metrics
+    manifest_path = joinpath(snapshot_dir, "manifest.json")
+    if !isfile(manifest_path)
+        manifest_path = joinpath(dirname(snapshot_dir), "manifest.json")
+    end
+    fvm_total_time, fvm_avg_time = measure_fvm_runtime(manifest_path)
+    
+    dataset_disk_size_bytes = measure_dataset_size(snapshot_dir)
+    
+    rom_query_avg_time = isempty(query_times) ? 0.0 : sum(query_times) / length(query_times)
+    total_evaluation_time = (time_ns() - start_time) / 1e9
+
+    performance_metrics = Dict{String, Any}(
+        "fvm_total_time" => fvm_total_time,
+        "fvm_avg_time" => fvm_avg_time,
+        "rom_build_time" => rom_build_time,
+        "rom_query_avg_time" => rom_query_avg_time,
+        "dataset_disk_size_bytes" => dataset_disk_size_bytes,
+        "total_evaluation_time" => total_evaluation_time
+    )
+
+    # 6. Generate ValidationSummary
     base_summary = evaluate_validation_results(results; tmax_threshold=tmax_threshold)
     
     overall_status = base_summary.overall_status
@@ -400,11 +428,11 @@ function run_validation(
         base_summary.mean_metrics,
         base_summary.max_metrics,
         overall_status,
-        Dict{String, Any}(), # Performance metrics will be implemented in Task 7.4
+        performance_metrics,
         self_reproduction_metrics
     )
 
-    # 6. Generate Markdown and JSON reports
+    # 7. Generate Markdown and JSON reports
     generate_report(summary, output_dir)
 
     return summary

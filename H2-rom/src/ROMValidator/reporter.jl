@@ -38,6 +38,48 @@ function generate_report(summary::ValidationSummary, output_dir::String)
         println(io, "| Hotspot Distance (mm) | $(summary.mean_metrics["hotspot_dist"]) | $(summary.max_metrics["hotspot_dist"]) |")
         println(io, "")
 
+        if !isempty(summary.self_reproduction_metrics)
+            println(io, "## Self-Reproduction Metrics")
+            println(io, "| Metric | Mean | Max |")
+            println(io, "| :--- | :---: | :---: |")
+            
+            mean_l2 = summary.self_reproduction_metrics["mean_l2_error"]
+            max_l2 = summary.self_reproduction_metrics["max_l2_error"]
+            mean_tmax = summary.self_reproduction_metrics["mean_tmax_error"]
+            max_tmax = summary.self_reproduction_metrics["max_tmax_error"]
+            
+            println(io, "| Relative L2 Error | $mean_l2 | $max_l2 |")
+            println(io, "| Tmax Error (K) | $mean_tmax | $max_tmax |")
+            println(io, "")
+            
+            if get(summary.self_reproduction_metrics, "is_warning", false)
+                println(io, "> [!WARNING]")
+                println(io, "> Self-reproduction error exceeds the threshold of 0.5 K.")
+                println(io, "")
+            end
+        end
+
+        if !isempty(summary.performance_metrics)
+            println(io, "## Performance Metrics")
+            println(io, "| Metric | Value |")
+            println(io, "| :--- | :--- |")
+            
+            fvm_total = get(summary.performance_metrics, "fvm_total_time", 0.0)
+            fvm_avg = get(summary.performance_metrics, "fvm_avg_time", 0.0)
+            rom_build = get(summary.performance_metrics, "rom_build_time", 0.0)
+            rom_query = get(summary.performance_metrics, "rom_query_avg_time", 0.0)
+            size_bytes = get(summary.performance_metrics, "dataset_disk_size_bytes", 0)
+            total_eval = get(summary.performance_metrics, "total_evaluation_time", 0.0)
+            
+            @printf(io, "| FVM Total Time (s) | %.4f |\n", fvm_total)
+            @printf(io, "| FVM Average Time (s) | %.4f |\n", fvm_avg)
+            @printf(io, "| ROM Build Time (s) | %.4f |\n", rom_build)
+            @printf(io, "| ROM Query Average Time (s) | %.6f |\n", rom_query)
+            println(io, "| Dataset Disk Size (bytes) | $size_bytes |")
+            @printf(io, "| Total Evaluation Time (s) | %.4f |\n", total_eval)
+            println(io, "")
+        end
+
         println(io, "## Detailed Results")
         println(io, "| Sample ID | Relative L2 Error | Tmax Error (K) | Hotspot Distance (mm) | Status | Comparison Plot |")
         println(io, "| :--- | :---: | :---: | :---: | :---: | :---: |")

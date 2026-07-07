@@ -821,6 +821,130 @@ end
     end
 end
 
+@testset "ROMValidator Task 7.4 Test" begin
+    using .ROMValidator: run_validation
+    using .ROMInterpolator: RBFInterpolator, save_rom_model, ScalingParams
+    
+    test_dir = mktempdir()
+    try
+        raw_dir = joinpath(test_dir, "raw")
+        mkpath(raw_dir)
+        
+        # Grid parameters: 2 * 3 * 4 = 24 elements
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        
+        # Snapshot 1 (trained)
+        snap1_path = joinpath(raw_dir, "snap1.jld2")
+        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => fill(1.5, 16)))
+        
+        # Snapshot 2 (validation)
+        snap2_path = joinpath(raw_dir, "snap2.jld2")
+        jldsave(snap2_path; temperature=collect(1.0:24.0) .+ 1.0, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_2", "mu" => collect(range(0.0, 1.0, length=16))))
+        
+        # Manifest
+        manifest_path = joinpath(raw_dir, "manifest.json")
+        manifest_data = Dict(
+            "cases" => [
+                Dict("id" => "snap_1", "status" => "success", "runtime" => 5.0),
+                Dict("id" => "snap_2", "status" => "success", "runtime" => 10.0)
+            ]
+        )
+        open(manifest_path, "w") do io
+            JSON3.write(io, manifest_data)
+        end
+
+        # Create dummy trained RBFInterpolator model
+        model_path = joinpath(test_dir, "rom_model.jld2")
+        model = RBFInterpolator(
+            zeros(2, 2), # weights
+            zeros(16, 2), # centers
+            1.0, # epsilon
+            ScalingParams(zeros(16), ones(16)), # scaling_params
+            vcat(zeros(1, 16), ones(1, 16)), # parameter_bounds
+            Dict{String, Any}("kernel_type" => "gaussian")
+        )
+        save_rom_model(model_path, model)
+        
+        # Dummy basis (24 x 2)
+        basis = reshape(collect(1.0:48.0), 24, 2) ./ 10.0
+        mean_field = collect(1.0:24.0) .+ 0.3
+        output_dir = joinpath(test_dir, "output")
+        
+        # Run validation with rom_build_time=12.34
+        summary = run_validation(
+            model_path,
+            raw_dir,
+            output_dir,
+            ["snap_1"], # trained_snapshot_ids
+            grid_info,
+            basis,
+            mean_field;
+            tmax_threshold=2.0,
+            rom_build_time=12.34,
+            save_individuals=false
+        )
+        
+        @test summary.overall_status == :validated
+        
+        # Verify performance metrics
+        perf = summary.performance_metrics
+        @test haskey(perf, "fvm_total_time")
+        @test haskey(perf, "fvm_avg_time")
+        @test haskey(perf, "rom_build_time")
+        @test haskey(perf, "rom_query_avg_time")
+        @test haskey(perf, "dataset_disk_size_bytes")
+        @test haskey(perf, "total_evaluation_time")
+        
+        @test perf["rom_build_time"] == 12.34
+        @test perf["fvm_total_time"] ≈ 15.0
+        @test perf["fvm_avg_time"] ≈ 7.5
+        @test perf["dataset_disk_size_bytes"] > 0
+        @test perf["rom_query_avg_time"] > 0.0
+        @test perf["total_evaluation_time"] > 0.0
+
+        # Verify self-reproduction metrics
+        self_rep = summary.self_reproduction_metrics
+        @test haskey(self_rep, "mean_l2_error")
+        @test haskey(self_rep, "max_l2_error")
+        @test haskey(self_rep, "mean_tmax_error")
+        @test haskey(self_rep, "max_tmax_error")
+        @test haskey(self_rep, "is_warning")
+
+        # Verify file outputs
+        md_file = joinpath(output_dir, "validation.md")
+        json_file = joinpath(output_dir, "validation.json")
+        @test isfile(md_file)
+        @test isfile(json_file)
+        
+        # Check MD content
+        md_content = read(md_file, String)
+        @test occursin("## Performance Metrics", md_content)
+        @test occursin("FVM Total Time (s)", md_content)
+        @test occursin("15.0000", md_content)
+        @test occursin("7.5000", md_content)
+        @test occursin("12.3400", md_content)
+        @test occursin("## Self-Reproduction Metrics", md_content)
+        @test occursin("Tmax Error (K)", md_content)
+
+        # Check JSON content
+        json_content = read(json_file, String)
+        json_data = JSON3.read(json_content, Dict{String, Any})
+        @test haskey(json_data, "performance_metrics")
+        @test haskey(json_data, "self_reproduction_metrics")
+        @test json_data["performance_metrics"]["rom_build_time"] == 12.34
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
+
 
 
 

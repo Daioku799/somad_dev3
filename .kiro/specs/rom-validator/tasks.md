@@ -100,7 +100,7 @@
   - _Requirements: 2.3_
   - _Boundary: Evaluator_
 
-- [ ] 7.4 性能指標・自己再現統計のレポート出力と API 拡張
+- [x] 7.4 性能指標・自己再現統計のレポート出力と API 拡張
   - `run_validation` の引数に `rom_build_time` や可視化オプションを追加。時間計測（ROM予測クエリ時間、総評価時間など）の組み込み。
   - `types.jl` の `ValidationSummary` 構造体のフィールド拡張（`performance_metrics`, `self_reproduction_metrics` 追加）。
   - `generate_report` で出力する Markdown / JSON レポートに、測定された時間・サイズ・自己再現誤差・警告ステータスを含めて保存する処理。
