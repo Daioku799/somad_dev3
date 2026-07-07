@@ -86,22 +86,22 @@ $$\Phi(r) = \exp(-(\epsilon r)^2)$$
 *   **入力した密度マップ $\mu$（一様分布と四隅集中分布）**:
     | 一様分布 (Snapshot 1) | 四隅集中分布 (Snapshot 3) |
     | :---: | :---: |
-    | ![一様密度マップ](../rom_plots/density_map_1.png) | ![四隅集中密度マップ](../rom_plots/density_map_3.png) |
+    | ![一様密度マップ](./images/density_map_1.png) | ![四隅集中密度マップ](./images/density_map_3.png) |
 
 *   **物理配置と温度スナップショット（修正前）**:
     | 一様分布 (修正前 Snapshot 1) | 四隅集中分布 (修正前 Snapshot 3) |
     | :---: | :---: |
-    | ![修正前 Snapshot 1](../rom_plots/snapshot_1_sidebyside_xy_legacy.png) | ![修正前 Snapshot 3](../rom_plots/snapshot_3_sidebyside_xy_legacy.png) |
+    | ![修正前 Snapshot 1](./images/snapshot_1_sidebyside_xy_legacy.png) | ![修正前 Snapshot 3](./images/snapshot_3_sidebyside_xy_legacy.png) |
 
 ### 3.2. 未知のグラデーションパターンに対する予測誤差
 学習データに含まれない「左上から右下に向かうグラデーション密度パターン」を入力した際の予測性能評価です。
 
 *   **入力したテスト密度マップ（ROMへの入力）**:
-    ![テスト密度マップ](../rom_plots/density_map_test.png)
+    ![テスト密度マップ](./images/density_map_test.png)
 
 *   **FVM vs ROM 比較プロット（修正前）**:
     この修正前のROMに対し、上記のテスト密度マップを入力してFVM解（左）とROM予測（中央）を比較した結果、最高温度絶対誤差（Tmax Error）は **1.215 K** となりました。
-    ![修正前 予測比較](../rom_plots/rom_fvm_comparison_xy_legacy.png)
+    ![修正前 予測比較](./images/rom_fvm_comparison_xy_legacy.png)
 
 ---
 
@@ -115,13 +115,13 @@ $$\Phi(r) = \exp(-(\epsilon r)^2)$$
 *   **物理配置と温度スナップショット（修正後）**:
     | 一様分布 (修正後 Snapshot 1) | 四隅集中分布 (修正後 Snapshot 3) |
     | :---: | :---: |
-    | ![修正後 Snapshot 1](../rom_plots/snapshot_1_sidebyside_xy.png) | ![修正後 Snapshot 3](../rom_plots/snapshot_3_sidebyside_xy.png) |
+    | ![修正後 Snapshot 1](./images/snapshot_1_sidebyside_xy.png) | ![修正後 Snapshot 3](./images/snapshot_3_sidebyside_xy.png) |
 
 ### 4.2. 未知のグラデーションパターンに対する予測誤差の改善
 この境界適正化により、FVMの熱拡散挙動がより物理的に整合し、未知のグラデーションパターンを入力した際の最高温度絶対誤差は **1.180 K** に縮小しました。温度分布等高線の一致度も向上しています。
 
 *   **FVM vs ROM 比較プロット（修正後）**:
-    ![修正後 予測比較](../rom_plots/rom_fvm_comparison_xy.png)
+    ![修正後 予測比較](./images/rom_fvm_comparison_xy.png)
 
 ---
 
@@ -151,7 +151,7 @@ ROMのさらなる汎化性能と実用性を評価するため、スナップ�
     | **Row 4** | 0.482 | 0.209 | 0.021 | 0.820 |
 
 *   **FVM vs ROM 比較（PASSケース）**:
-    ![PASSケース 予測比較](../rom_plots/pass_case_comparison.png)
+    ![PASSケース 予測比較](./images/pass_case_comparison.png)
 
 ### 5.3. 評価に関するまとめ
 テストデータ（学習に用いられていない未知のパラメータ）を入力した際でも、最高温度の予測精度は合格基準を十分にクリアしており、ROMが実用的な予測モデルとして良好に機能していることが確認できました。今後は唯一不合格となった特異パターン（外挿領域）に対するRBFパラメータの最適化を進め、さらなる精度改善を図ります。
