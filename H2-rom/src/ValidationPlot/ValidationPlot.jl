@@ -61,7 +61,7 @@ function plot_snapshot_xy(snapshot_file::String; zc=0.33e-3, out_dir="plots", cl
     end
 
     data = load(snapshot_file)
-    θ = data["theta"]
+    θ = haskey(data, "temperature") ? data["temperature"] : data["theta"]
     ID = data["id_map"]
     Z = data["z_faces"]
     NX, NY, NZ = data["nx"], data["ny"], data["nz"]
@@ -232,7 +232,7 @@ function plot_slice_xy_nu_save(region, mode, d::Array{Float64,3}, zc, SZ, ox, Δ
     
     if normalize
         title_str="Cross-section at Z=" * @sprintf("%.3f", zc*1000) * " [mm] (k=$k) (Norm) $label"
-        p = contour(x_coords, y_coords, s, 
+        p = contour(x_coords, y_coords, s', 
                     fill=true, c=:thermal, xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                     clim=(0.0, 1.0),
                     colorbar_title="Relative Temperature [-]",
@@ -248,7 +248,7 @@ function plot_slice_xy_nu_save(region, mode, d::Array{Float64,3}, zc, SZ, ox, Δ
         auto_tick_labels = [@sprintf("%.1E", v) for v in auto_tick_values]
         title_str="Cross-section at Z=" * @sprintf("%.3f", zc*1000) * " [mm] (k=$k) $label"
         
-        p = contour(x_coords, y_coords, s, 
+        p = contour(x_coords, y_coords, s', 
                     fill=true, c=:thermal, xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                     clim=(min_val, max_val),
                     colorbar_ticks=(auto_tick_values, auto_tick_labels),
@@ -296,7 +296,7 @@ function plot_slice_xy_nu_return(region, mode, d::Array{Float64,3}, zc, SZ, ox, 
     
     if normalize
         title_str="Temp Z=" * @sprintf("%.3f", zc*1000) * "mm (Norm)\n$label"
-        p = contour(x_coords, y_coords, s, 
+        p = contour(x_coords, y_coords, s', 
                     fill=true, c=:thermal, xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                     clim=(0.0, 1.0),
                     colorbar_title="Relative Temperature [-]",
@@ -311,7 +311,7 @@ function plot_slice_xy_nu_return(region, mode, d::Array{Float64,3}, zc, SZ, ox, 
         auto_tick_labels = [@sprintf("%.1E", v) for v in auto_tick_values]
         title_str="Temp Z=" * @sprintf("%.3f", zc*1000) * "mm\n$label"
         
-        p = contour(x_coords, y_coords, s, 
+        p = contour(x_coords, y_coords, s', 
                     fill=true, c=:thermal, xlims=(0.0, 1.2), ylims=(0.0, 1.2),
                     clim=(min_val, max_val),
                     colorbar_ticks=(auto_tick_values, auto_tick_labels),

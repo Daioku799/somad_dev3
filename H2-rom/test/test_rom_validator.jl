@@ -327,7 +327,7 @@ end
         
         # Snapshot 1 (trained)
         snap1_path = joinpath(raw_dir, "snap1.jld2")
-        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => [1.0, 2.0]))
+        jldsave(snap1_path; temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "snap_1", "mu" => fill(1.5, 16)))
         
         # Snapshot 2 (validation)
         snap2_path = joinpath(raw_dir, "snap2.jld2")
@@ -336,17 +336,17 @@ end
         # 2. Create dummy trained RBFInterpolator model and save it
         model_path = joinpath(test_dir, "rom_model.jld2")
         model = RBFInterpolator(
-            zeros(2, 2), # weights (shape: N_basis x N_centers)
-            [1.0 3.0; 2.0 4.0], # centers (N_centers x N_dim, where N_centers = 2, N_dim = 2)
+            fill(1.0, (2, 2)), # weights (shape: N_basis x N_centers)
+            zeros(16, 2), # centers (N_dim x N_centers, where N_centers = 2, N_dim = 16)
             1.0, # epsilon
-            ScalingParams([1.0, 2.0], [3.0, 4.0]), # scaling_params
-            [1.0 3.0; 2.0 4.0], # parameter_bounds (2 x N_dim)
+            ScalingParams(zeros(16), ones(16)), # scaling_params
+            vcat(zeros(1, 16), ones(1, 16)), # parameter_bounds (2 x N_dim)
             Dict{String, Any}("kernel_type" => "gaussian")
         )
         save_rom_model(model_path, model)
         
         # Dummy basis (24 x 2) and mean field (24)
-        basis = ones(24, 2)
+        basis = reshape(collect(1.0:48.0), 24, 2) ./ 10.0
         mean_field = zeros(24)
         
         # Run validation
@@ -399,22 +399,22 @@ end
         )
         
         # Write multiple snapshots
-        jldsave(joinpath(raw_dir, "snap_t1.jld2"); temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "trained1", "mu" => [1.0, 2.0]))
+        jldsave(joinpath(raw_dir, "snap_t1.jld2"); temperature=collect(1.0:24.0), id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "trained1", "mu" => fill(1.5, 16)))
         jldsave(joinpath(raw_dir, "snap_v1.jld2"); temperature=collect(1.0:24.0) .+ 0.5, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "val1", "mu" => collect(range(0.0, 1.0, length=16))))
         jldsave(joinpath(raw_dir, "snap_v2.jld2"); temperature=collect(1.0:24.0) .+ 1.5, id_map=zeros(UInt8, 2, 3, 4), nx=2, ny=3, nz=4, z_faces=collect(0.0:4.0), metadata=Dict("snapshot_id" => "val2", "mu" => collect(range(0.0, 1.0, length=16))))
         
         model_path = joinpath(test_dir, "rom_model.jld2")
         model = RBFInterpolator(
-            zeros(2, 2), # weights
-            [1.0 3.0; 2.0 4.0], # centers
+            fill(1.0, (2, 2)), # weights
+            zeros(16, 2), # centers
             1.0, # epsilon
-            ScalingParams([1.0, 2.0], [3.0, 4.0]), # scaling
-            [1.0 3.0; 2.0 4.0], # parameter_bounds
+            ScalingParams(zeros(16), ones(16)), # scaling
+            vcat(zeros(1, 16), ones(1, 16)), # parameter_bounds
             Dict{String, Any}("kernel_type" => "gaussian")
         )
         save_rom_model(model_path, model)
         
-        basis = ones(24, 2)
+        basis = reshape(collect(1.0:48.0), 24, 2) ./ 10.0
         mean_field = zeros(24)
         output_dir = joinpath(test_dir, "output")
         
@@ -493,6 +493,55 @@ end
         rm(test_dir, recursive=true, force=true)
     end
 end
+
+@testset "ValidationPlot ROM Comparison Normalize Test" begin
+    using Main.ValidationPlot: plot_rom_comparison
+    
+    test_dir = mktempdir()
+    try
+        grid_info = Dict{String, Any}(
+            "nx" => 2,
+            "ny" => 3,
+            "nz" => 4,
+            "lx" => 1.2e-3,
+            "ly" => 1.2e-3,
+            "z_centers" => [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        )
+        theta_fvm = collect(100.0:123.0) # max=123.0, min=100.0
+        theta_rom = collect(101.0:124.0)
+        mu = fill(0.5, 16)
+        z_centers = [0.15e-3, 0.25e-3, 0.35e-3, 0.55e-3]
+        grid_size = (2, 3, 4)
+        
+        # Test with normalize=true
+        plot_rom_comparison(
+            theta_fvm, theta_rom, grid_size, z_centers, mu;
+            zc=0.35e-3, out_dir=test_dir, save_individuals=true, normalize=true, sample_id="norm_test"
+        )
+        
+        @test isfile(joinpath(test_dir, "norm_test_rom_fvm_comparison_xy.png"))
+        @test isfile(joinpath(test_dir, "norm_test_rom_fvm_fvm_xy.png"))
+        @test isfile(joinpath(test_dir, "norm_test_rom_fvm_rom_xy.png"))
+        
+        # Verify that normalization actually works by ensuring FVM is scaled to [0, 1]
+        T_fvm = reshape(theta_fvm, grid_size)
+        tmin_fvm = minimum(T_fvm)
+        tmax_fvm = maximum(T_fvm)
+        denom = tmax_fvm - tmin_fvm
+        
+        T_fvm_norm = (T_fvm .- tmin_fvm) ./ denom
+        @test minimum(T_fvm_norm) ≈ 0.0
+        @test maximum(T_fvm_norm) ≈ 1.0
+        
+        T_rom = reshape(theta_rom, grid_size)
+        T_rom_norm = (T_rom .- tmin_fvm) ./ denom
+        @test minimum(T_rom_norm) ≈ 1.0 / 23.0
+        @test maximum(T_rom_norm) ≈ 24.0 / 23.0
+    finally
+        rm(test_dir, recursive=true, force=true)
+    end
+end
+
 
 
 
