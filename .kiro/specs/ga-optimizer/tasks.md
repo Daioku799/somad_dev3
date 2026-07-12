@@ -3,7 +3,7 @@
 ## Tasks
 
 - [ ] 1. Foundation: 型定義と最適化設定の構築
-- [ ] 1.1 最適化エンジンで使用するデータ構造の定義
+- [x] 1.1 最適化エンジンで使用するデータ構造の定義
   - 密度マップ `mu`、個体（Individual）、および最適化状態（OptimizationState）の構造体を `Types.jl` に定義
   - 適合度（fitness）や検証ステータスを管理するフィールドの追加
   - 型安全性が確保されたデータ構造が `H2-rom/src/GaOptimizer/Types.jl` に作成されていること
