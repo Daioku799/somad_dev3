@@ -121,7 +121,8 @@ function generate_case_configs(case::SnapshotCase, config::ModelConfig, case_dir
             "n_pop" => ga.n_pop,
             "n_gen" => ga.n_gen,
             "cx_rate" => ga.cx_rate,
-            "mut_rate" => ga.mut_rate
+            "mut_rate" => ga.mut_rate,
+            "n_elite" => ga.n_elite
         )
     end
     

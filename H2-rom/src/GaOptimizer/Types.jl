@@ -27,3 +27,22 @@ end
 function OptimizationState(population::Vector{Individual})
     return OptimizationState(0, nothing, population, Float64[])
 end
+
+struct OptimizationConfig
+    n_pop::Int
+    n_gen::Int
+    cx_rate::Float64
+    mut_rate::Float64
+    n_elite::Int
+end
+
+function OptimizationConfig(ga_settings)
+    return OptimizationConfig(
+        ga_settings.n_pop,
+        ga_settings.n_gen,
+        ga_settings.cx_rate,
+        ga_settings.mut_rate,
+        ga_settings.n_elite
+    )
+end
+

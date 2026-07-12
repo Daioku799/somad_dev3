@@ -3,7 +3,15 @@ using Test
 if !isdefined(Main, :GaOptimizer)
     include("../src/GaOptimizer/GaOptimizer.jl")
 end
-using .GaOptimizer: Individual, OptimizationState
+using .GaOptimizer: Individual, OptimizationState, OptimizationConfig
+
+# Define H2MainExt wrapper to access GASettings for mapping test
+module H2MainExtTest
+    const SRC_DIR = abspath(joinpath(@__DIR__, "../../H2-main-ext/src"))
+    include(joinpath(SRC_DIR, "ConfigLoader/ConfigLoader.jl"))
+    using .ConfigLoader
+end
+using .H2MainExtTest.ConfigLoader: GASettings
 
 @testset "GaOptimizer Types Test" begin
     # 1. Test Individual construction and field types
@@ -50,4 +58,21 @@ using .GaOptimizer: Individual, OptimizationState
     @test typeof(state.best_individual) == Individual
     @test typeof(state.population) == Vector{Individual}
     @test typeof(state.history) == Vector{Float64}
+
+    # 3. Test OptimizationConfig construction and mapping
+    ga_settings = GASettings(100, 200, 0.75, 0.05, 4)
+    opt_config = OptimizationConfig(ga_settings)
+    
+    @test opt_config.n_pop == 100
+    @test opt_config.n_gen == 200
+    @test opt_config.cx_rate == 0.75
+    @test opt_config.mut_rate == 0.05
+    @test opt_config.n_elite == 4
+    
+    @test typeof(opt_config.n_pop) == Int
+    @test typeof(opt_config.n_gen) == Int
+    @test typeof(opt_config.cx_rate) == Float64
+    @test typeof(opt_config.mut_rate) == Float64
+    @test typeof(opt_config.n_elite) == Int
 end
+

@@ -8,7 +8,7 @@
   - 適合度（fitness）や検証ステータスを管理するフィールドの追加
   - 型安全性が確保されたデータ構造が `H2-rom/src/GaOptimizer/Types.jl` に作成されていること
   - _Requirements: 1.1_
-- [ ] 1.2 最適化パラメータのロード機能の拡張
+- [x] 1.2 最適化パラメータのロード機能の拡張
   - `config-loader` を介して、GAパラメータ（世代数、個体群サイズ、突然変異率、エリート数等）をJSONからロード
   - `OptimizationConfig` 構造体にパラメータが正しくマッピングされること
   - _Requirements: 1.4_

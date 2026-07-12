@@ -39,6 +39,7 @@ struct GASettings
     n_gen::Int
     cx_rate::Float64
     mut_rate::Float64
+    n_elite::Int
 end
 
 struct TSVConfig

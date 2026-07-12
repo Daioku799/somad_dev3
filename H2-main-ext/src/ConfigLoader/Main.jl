@@ -124,7 +124,8 @@ function load_config(config_path::String, tsv_config_path::String)
         n_gen = get(ga_conf, "n_gen", 100)
         cx_rate = Float64(get(ga_conf, "cx_rate", 0.8))
         mut_rate = Float64(get(ga_conf, "mut_rate", 0.01))
-        ga = GASettings(n_pop, n_gen, cx_rate, mut_rate)
+        n_elite = get(ga_conf, "n_elite", 2)
+        ga = GASettings(n_pop, n_gen, cx_rate, mut_rate, n_elite)
     end
 
     tsv = TSVConfig(mode, coords, radius, h_tsv, density, manufacturing, ga)
