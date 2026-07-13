@@ -1,27 +1,24 @@
 using Test
 
 @testset "H2-rom All Tests" begin
-    println("Running test_types.jl...")
-    include("test_types.jl")
+    tests = [
+        "test_ga_types.jl",
+        "test_types.jl",
+        "test_constraint_manager.jl",
+        "test_engine.jl",
+        "test_engine_selection.jl",
+        "test_manifest.jl",
+        "test_sampler.jl",
+        "test_runner.jl",
+        "test_snapshot_generator.jl",
+        "test_pod_engine.jl",
+        "test_rom_interpolator.jl",
+        "test_rom_validator.jl"
+    ]
     
-    println("Running test_manifest.jl...")
-    include("test_manifest.jl")
-    
-    println("Running test_sampler.jl...")
-    include("test_sampler.jl")
-    
-    println("Running test_runner.jl...")
-    include("test_runner.jl")
-    
-    println("Running test_snapshot_generator.jl...")
-    include("test_snapshot_generator.jl")
-    
-    println("Running test_pod_engine.jl...")
-    include("test_pod_engine.jl")
-    
-    println("Running test_rom_interpolator.jl...")
-    include("test_rom_interpolator.jl")
-    
-    println("Running test_rom_validator.jl...")
-    include("test_rom_validator.jl")
+    for t in tests
+        println("Running $t in a separate process...")
+        cmd = `julia --project=. test/$t`
+        @test success(cmd)
+    end
 end
