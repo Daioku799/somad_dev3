@@ -7,6 +7,7 @@ using Test
         "test_constraint_manager.jl",
         "test_engine.jl",
         "test_engine_selection.jl",
+        "test_reliability_manager.jl",
         "test_manifest.jl",
         "test_sampler.jl",
         "test_runner.jl",

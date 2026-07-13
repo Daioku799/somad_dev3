@@ -8,7 +8,7 @@ using .GaOptimizer: Individual, OptimizationConfig
 # These might not exist yet, causing a compilation or loading error (RED)
 using .GaOptimizer: crossover, mutate!
 
-using .GaOptimizer.ConstraintManager.H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, Material, Layer
+using .GaOptimizer.H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, Material, Layer
 
 # Helper to construct ModelConfig
 function make_test_model_config(; lx=1.2e-3, ly=1.2e-3, gx=2, gy=2, mu=[1.0, 1.0, 1.0, 1.0], n_max=50, p_min=0.1e-3, rho_cell_max=1.0, prohibited_cells=Tuple{Int, Int}[])

@@ -9,7 +9,7 @@ end
 
 using .GaOptimizer: Individual, OptimizationState, OptimizationConfig
 using .GaOptimizer: evaluate_population!, tournament_select, select_next_generation
-using .GaOptimizer.ConstraintManager.H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, Material, Layer
+using .GaOptimizer.H2MainExt.ConfigLoader: ModelConfig, TSVConfig, DensityMapConfig, ManufacturingConfig, Material, Layer
 using .ROMInterpolator: RBFInterpolator, fit!, evaluate_rom, get_tmax
 
 # Helper to construct ModelConfig

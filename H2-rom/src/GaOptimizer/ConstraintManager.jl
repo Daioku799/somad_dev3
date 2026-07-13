@@ -1,16 +1,7 @@
 module ConstraintManager
 
-# Load H2-main-ext modules via a wrapper module to support relative imports
-module H2MainExt
-    const SRC_DIR = abspath(joinpath(@__DIR__, "../../../H2-main-ext/src"))
-    include(joinpath(SRC_DIR, "ConfigLoader/ConfigLoader.jl"))
-    using .ConfigLoader
-    include(joinpath(SRC_DIR, "ComponentGenerator/ComponentGenerator.jl"))
-    using .ComponentGenerator
-end
-
-using .H2MainExt.ConfigLoader: ModelConfig
-using .H2MainExt.ComponentGenerator.Layout: get_cell_capacities, adjust_density_constraints
+using ..H2MainExt.ConfigLoader: ModelConfig
+using ..H2MainExt.ComponentGenerator.Layout: get_cell_capacities, adjust_density_constraints
 
 export adjust_constraints!
 

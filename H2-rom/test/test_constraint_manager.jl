@@ -6,7 +6,7 @@ end
 
 using .GaOptimizer.ConstraintManager: adjust_constraints!
 
-using .GaOptimizer.ConstraintManager.H2MainExt.ConfigLoader: ModelConfig, Material, Layer, TSVConfig, DensityMapConfig, ManufacturingConfig
+using .GaOptimizer.H2MainExt.ConfigLoader: ModelConfig, Material, Layer, TSVConfig, DensityMapConfig, ManufacturingConfig
 
 # Helper to construct ModelConfig
 function make_test_model_config(; lx=1.2e-3, ly=1.2e-3, gx=2, gy=2, mu=[1.0, 1.0, 1.0, 1.0], n_max=50, p_min=0.1e-3, rho_cell_max=1.0, prohibited_cells=Tuple{Int, Int}[])
