@@ -225,6 +225,44 @@ end
             @test state_path isa OptimizationState
             @test state_path.generation == 2
             @test isfile(path_history_file)
+
+            # Set up dummy q3d solver in Main for testing FVM validation
+            Main.eval(:(function q3d(NX::Int, NY::Int, NZ::Int,
+                     solver::String="sor", smoother::String="";
+                     epsilon::Float64=1.0e-6, par::String="thread", is_steady::Bool=false,
+                     snapshot_path::String="", mu::Vector{Float64}=Float64[])
+                if !isempty(snapshot_path)
+                    JLD2.save(snapshot_path, "theta", fill(310.5, NX*NY*NZ))
+                end
+            end))
+
+            # Since q3d loads config from current directory, copy them temporarily
+            cp(config_path, "config.json", force=true)
+            cp(tsv_config_path, "tsv_config.json", force=true)
+
+            try
+                # Test Case 4: Final Validation with Flag OFF (default)
+                report_file = joinpath(tmp_dir, "final_validation_report.txt")
+                state_default = run_optimization(config_path, tsv_config_path, rom_path, pod_path;
+                                                 save_history=false, run_final_val=false, report_file=report_file)
+                @test !isfile(report_file)
+
+                # Test Case 5: Final Validation with Default Flag ON
+                state_val = run_optimization(config_path, tsv_config_path, rom_path, pod_path;
+                                             save_history=false, report_file=report_file)
+                @test isfile(report_file)
+                if isfile(report_file)
+                    report_content = read(report_file, String)
+                    @test occursin("Final Validation Report", report_content)
+                    @test occursin("ROM Predicted Max Temperature", report_content)
+                    @test occursin("FVM Simulated Max Temperature", report_content)
+                    @test occursin("Absolute Error", report_content)
+                    @test occursin("Real TSV Coordinates", report_content)
+                end
+            finally
+                rm("config.json", force=true)
+                rm("tsv_config.json", force=true)
+            end
             
             # Cleanup
             rm(tmp_dir, recursive=true, force=true)

@@ -46,7 +46,8 @@ export run_optimization
 Orchestrate the genetic algorithm optimization loop.
 """
 function run_optimization(model_config::H2MainExt.ConfigLoader.ModelConfig, rom_model, basis::Matrix{Float64}, mean_field::Vector{Float64};
-                          save_history::Bool=true, history_file::String="opt_history.jld2")
+                          save_history::Bool=true, history_file::String="opt_history.jld2",
+                          run_final_val::Bool=true, report_file::String="final_validation_report.txt")
     # Load GA configuration
     ga_settings = model_config.tsv.ga
     if ga_settings === nothing
@@ -155,16 +156,42 @@ function run_optimization(model_config::H2MainExt.ConfigLoader.ModelConfig, rom_
         println("Saved optimization history to $(history_file)")
     end
 
+    # 5. Final Validation Flow (Requirement 4)
+    if run_final_val
+        println("Starting final validation flow...")
+        best_mu = state.best_individual.mu
+        
+        # 5.1 FVM simulation for the best individual
+        tmax_fvm = ReliabilityManager.solve_thermal_fvm(best_mu, model_config)
+        
+        # 5.2 ROM prediction for the best individual
+        theta_rom = ROMInterpolator.evaluate_rom(rom_model, basis, mean_field, best_mu)
+        tmax_rom = ROMInterpolator.get_tmax(theta_rom)
+        
+        # 5.3 Calculate comparison error
+        abs_error = abs(tmax_fvm - tmax_rom)
+        
+        # 5.4 Coordinate expansion to get real TSV coordinates
+        if model_config.tsv.density !== nothing
+            model_config.tsv.density.mu .= best_mu
+        end
+        pts = H2MainExt.ComponentGenerator.Layout.expand_coordinates(model_config.tsv, model_config.lx, model_config.ly)
+        
+        # Write report
+        write_summary_report(report_file, state.best_individual, tmax_rom, tmax_fvm, abs_error, pts)
+    end
+
     return state
 end
 
 """
-    run_optimization(config_path::String, tsv_config_path::String, rom_model_path::String, pod_model_path::String; save_history::Bool=true, history_file::String="opt_history.jld2")
+    run_optimization(config_path::String, tsv_config_path::String, rom_model_path::String, pod_model_path::String; save_history::Bool=true, history_file::String="opt_history.jld2", run_final_val::Bool=true, report_file::String="final_validation_report.txt")
 
 Orchestrate the genetic algorithm optimization loop using file paths.
 """
 function run_optimization(config_path::String, tsv_config_path::String, rom_model_path::String, pod_model_path::String;
-                          save_history::Bool=true, history_file::String="opt_history.jld2")
+                          save_history::Bool=true, history_file::String="opt_history.jld2",
+                          run_final_val::Bool=true, report_file::String="final_validation_report.txt")
     # Load configuration files
     model_config = H2MainExt.ConfigLoader.load_config(config_path, tsv_config_path)
     
@@ -177,7 +204,38 @@ function run_optimization(config_path::String, tsv_config_path::String, rom_mode
     basis = pod_model.basis
     mean_field = pod_model.mean_field
     
-    return run_optimization(model_config, rom_model, basis, mean_field; save_history=save_history, history_file=history_file)
+    return run_optimization(model_config, rom_model, basis, mean_field;
+                            save_history=save_history, history_file=history_file,
+                            run_final_val=run_final_val, report_file=report_file)
+end
+
+"""
+    write_summary_report(report_file::String, best_ind::Individual, tmax_rom::Float64, tmax_fvm::Float64, abs_error::Float64, pts::Vector)
+
+Write a validation report including max temperatures, real TSV coordinates, and ROM/FVM error.
+"""
+function write_summary_report(report_file::String, best_ind::Individual, tmax_rom::Float64, tmax_fvm::Float64, abs_error::Float64, pts::Vector)
+    dir = dirname(report_file)
+    if !isempty(dir) && !isdir(dir)
+        mkpath(dir)
+    end
+    open(report_file, "w") do io
+        println(io, "=== Final Validation Report ===")
+        println(io, "Optimization Status: COMPLETED")
+        println(io, "")
+        println(io, "Best Individual Genotype (mu):")
+        println(io, best_ind.mu)
+        println(io, "")
+        println(io, "ROM Predicted Max Temperature: ", tmax_rom)
+        println(io, "FVM Simulated Max Temperature: ", tmax_fvm)
+        println(io, "Absolute Error: ", abs_error)
+        println(io, "")
+        println(io, "Real TSV Coordinates (Count: ", length(pts), "):")
+        for (i, p) in enumerate(pts)
+            println(io, "  $i: (x=$(p.x), y=$(p.y))")
+        end
+    end
+    println("Saved final validation report to $(report_file)")
 end
 
 end # module
