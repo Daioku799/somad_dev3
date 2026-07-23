@@ -31,7 +31,7 @@
   - _Boundary: PaperEvaluation_
 
 - [ ] 3. Core: レガシー実行ラッパーの実装
-- [ ] 3.1 (P) レガシーFVMソルバー実行ラッパーの構築
+- [x] 3.1 (P) レガシーFVMソルバー実行ラッパーの構築
   - `legacy/H2-main-original/legacy_run_wrapper.jl` を作成する
   - コマンドライン引数から一時IDマップファイル（JLD2形式）のパスを受け取り、ロードする
   - レガシーの `WorkBuffers` を作成し、ロードしたIDマップおよび対応する物性配列（$\lambda, \rho, cp$）、Z座標データを直接 WorkBuffers に注入する
