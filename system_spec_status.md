@@ -15,7 +15,7 @@ graph TD
     Snap --> POD[pod-engine]:::finished
     POD --> ROM[rom-interpolator]:::finished
     ROM --> Val[rom-validator]:::finished
-    ROM --> GA[ga-optimizer]:::progress
+    ROM --> GA[ga-optimizer]:::finished
     ValPlot[validation-plot]:::finished
 ```
 
@@ -36,17 +36,26 @@ graph TD
 | **`rom-interpolator`** | POD係数と密度マップ `mu` を紐付ける RBF 補間モデルの構築・学習・予測・保存、および温度場の3D再構成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-interpolator/tasks.md) |
 | **`rom-validator`** | 未学習データに対する予測誤差（L2、Tmax、幾何位置）算出、合否判定、および統一断面比較プロット・レポート生成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/tasks.md) |
 | **`validation-plot`** | 最適化された密度マップや、実座標に展開されたTSV配置のレイアウトなどを可視化する個別プロット機能。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/tasks.md) |
-| **`ga-optimizer`** | 遺伝的アルゴリズムによる最適密度マップ探索。交叉・突然変異、制約修正、ROM高速評価、外挿検知、FVM再検証を含む。 | 🟡 開発中 | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/tasks.md) |
+| **`ga-optimizer`** | 遺伝的アルゴリズムによる最適密度マップ探索。交叉・突然変異、制約修正、ROM高速評価、外防検知、FVM再検証を含む。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/tasks.md) |
 
 ---
 
 ## 2. 開発優先度とロードマップ
 
-[実装状況と要件差分.md](file:///home/somadwsl/somad_dev3/%E5%AE%9F%E8%A3%85%E7%8A%B6%E6%B3%81%E3%81%A8%E8%A6%81%E4%BB%B6%E5%B7%AE%E5%88%86.md) に示されている推奨順序に沿うと、残りの開発ステップは以下の通りです。
+本プロジェクトにおけるすべての開発フェーズが完了しました。
 
-1. **FVM入力生成側の拡張 (前処理)**
-   * `config-loader`, `geometry-logic`, `model-builder`, `heat3ds-ext` を完成させ、密度マップ情報から動的に実TSV円柱IDマップを再構築してFVMに流し込む流れを作ります。
-2. **スナップショット自動生成の実行**
-   * `snapshot-generator` を完成させ、密度マップ `mu` をランダム生成してFVMシミュレーションをループ実行し、データセットを蓄積します。
-3. **GA最適化の実装**
-   * すでに完成した `pod-engine`, `rom-interpolator`, `rom-validator` のROM基盤を活用し、`ga-optimizer` を構築して探索エンジンを動かします。
+### 実装・テスト完了状況
+- [x] **Phase 1: FVM Model Generation**
+- [x] **Phase 2: Density Map Refactoring** (`snapshot-generator`, `heat3ds-ext`, `component-generator` 等のテストが正常終了)
+- [x] **Phase 3: Offline ROM Construction** (`pod-engine`, `rom-interpolator`, `rom-validator` のテストが正常終了)
+- [x] **Phase 4: GA Optimization** (`ga-optimizer` の実装、制約修正、ROM評価、FVM再検証のテストが正常終了)
+
+### 残存タスク
+本システム構築ロードマップにおいて、現在残っている未実装の仕様および機能タスクはありません。すべての要件が実装され、検証を完了しています。
+
+---
+
+## 3. 次のステップ
+システム全体の統合検証は完了しており、すべての仕様を満たしています。必要に応じてさらなる解析ケースを実行するか、検証プロット等のビジュアル出力をご確認ください。
+
+

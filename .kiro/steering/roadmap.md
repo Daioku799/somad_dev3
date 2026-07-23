@@ -36,7 +36,7 @@
 - [x] rom-validator -- 未知密度マップに対するROM予測精度の評価。 Dependencies: rom-interpolator
 
 ### Phase 4: GA Optimization
-- [ ] ga-optimizer -- 密度マップを個体とするGA実装、制約修正、ROM評価、および有望解のFVM再検証。 Dependencies: rom-validator
+- [x] ga-optimizer -- 密度マップを個体とするGA実装、制約修正、ROM評価、および有望解のFVM再検証。 Dependencies: rom-validator
 
 ## Phase 1: FVM Model Generation (Completed)
 - [x] config-loader (初期実装)
