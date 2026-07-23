@@ -3,6 +3,8 @@ module PaperEvaluation
 using LinearAlgebra
 using Printf
 
+using Plots
+
 try
     using ROMInterpolator
 catch
@@ -21,7 +23,27 @@ export plot_svd_decay, sweep_rbf_parameters, monitor_rom_size, measure_time, for
 SVDの特異値減衰と累積寄与率(RIC)の推移をPlots.jlで描画し、output_pathに保存する。
 """
 function plot_svd_decay(singular_values::Vector{Float64}, output_path::String)
-    # TODO: Implement in Task 2.1
+    dir = dirname(output_path)
+    if dir != "" && !isdir(dir)
+        mkpath(dir)
+    end
+    
+    n_modes = length(singular_values)
+    sq_sum = sum(singular_values .^ 2)
+    ric = cumsum(singular_values .^ 2) ./ sq_sum
+    
+    # Left Y axis: Singular values decay (log scale)
+    p = plot(1:n_modes, singular_values, yscale=:log10, marker=:circle,
+             xlabel="POD Mode Index", ylabel="Singular Value (log10)",
+             label="Singular Value", legend=:topright, grid=true,
+             title="SVD Singular Values Decay & RIC")
+             
+    # Right Y axis: Cumulative Energy Fraction (RIC)
+    plot!(twinx(p), 1:n_modes, ric, marker=:square, ylims=(0.0, 1.05),
+          ylabel="Cumulative RIC", label="Cumulative RIC",
+          legend=:bottomright, color=:red)
+          
+    savefig(p, output_path)
 end
 
 """

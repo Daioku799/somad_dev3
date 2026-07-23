@@ -55,5 +55,30 @@ using .PaperEvaluation
         @test occursin("12.3456", formatted)
         @test occursin("seconds", formatted) || occursin("秒", formatted)
     end
+
+    @testset "plot_svd_decay" begin
+        # Generate some synthetic singular values (exponential decay)
+        singular_values = [10.0^-(i-1) for i in 1:10]
+        output_path = joinpath(@__DIR__, "test_svd_decay.png")
+        
+        # Ensure file does not exist before test
+        if isfile(output_path)
+            rm(output_path)
+        end
+        
+        # Call the plot function
+        plot_svd_decay(singular_values, output_path)
+        
+        # Verify the file is generated
+        @test isfile(output_path)
+        
+        # Verify it is a valid PNG by checking magic number
+        if isfile(output_path)
+            bytes = read(output_path, 8)
+            @test bytes == UInt8[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+            # Clean up
+            rm(output_path)
+        end
+    end
 end
 
