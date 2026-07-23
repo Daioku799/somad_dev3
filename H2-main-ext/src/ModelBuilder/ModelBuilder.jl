@@ -23,7 +23,7 @@ function build_model(config::ModelConfig, nxy::Int)
     coordsys = generate_coordinate_system(zm)
     
     MX = MY = nxy + 2
-    MZ = length(coordsys.Z)
+    MZ = length(coordsys.z_centers)
     
     # Delta h (uniform in XY)
     dx = config.lx / nxy

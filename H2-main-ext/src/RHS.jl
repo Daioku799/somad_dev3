@@ -152,7 +152,7 @@ function RHS_convection!(b::Array{Float64,3},
     let i=2, h = bc.heat_transfer_coefficient, ta = bc.ambient_temperature
       @floop backend for k in 2:SZ[3]-1, j in 2:SZ[2]-1
         area = dy * ΔZ[k]
-        b[i,j,k] -= h * area * (ta - θ[i,j,k])
+        b[i,j,k] += h * area * (ta - θ[i,j,k])
       end
     end
   elseif face_type == :x_plus
@@ -166,7 +166,7 @@ function RHS_convection!(b::Array{Float64,3},
     let j = 2, h = bc.heat_transfer_coefficient, ta = bc.ambient_temperature
       @floop backend for k in 2:SZ[3]-1, i in 2:SZ[1]-1
         area = dx * ΔZ[k]
-        b[i,j,k] -= h * area * (ta - θ[i,j,k])
+        b[i,j,k] += h * area * (ta - θ[i,j,k])
       end
     end
   elseif face_type == :y_plus
@@ -179,7 +179,7 @@ function RHS_convection!(b::Array{Float64,3},
   elseif face_type == :z_minus
     let k = 2, h = bc.heat_transfer_coefficient, ta = bc.ambient_temperature, area = dx * dy
       @floop backend for j in 2:SZ[2]-1, i in 2:SZ[1]-1
-        b[i,j,k] -= h * area * (ta - θ[i,j,k])
+        b[i,j,k] += h * area * (ta - θ[i,j,k])
       end
     end
   elseif face_type == :z_plus

@@ -41,7 +41,7 @@
   - _Boundary: legacy_run_wrapper_
 
 - [ ] 4. Core & Integration: 等価性検証機能の実装
-- [ ] 4.1 新旧FVM等価性検証メインスクリプトの実装
+- [x] 4.1 新旧FVM等価性検証メインスクリプトの実装
   - `verify_legacy_fvm.jl` スクリプトを新規作成する
   - 現行の `build_model` を呼び出してIDマップおよび物性・座標データを構築し、現行のFVMソルバーを実行して温度場 `theta_new` を得る
   - 構築したIDマップ等を一時ファイルに保存し、外部プロセス（`julia`）を起動して `legacy_run_wrapper.jl` を実行させ、レガシーの温度場 `theta_legacy` を読み込む

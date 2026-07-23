@@ -62,24 +62,20 @@ function generate_coordinate_system(zm::Vector{Float64})
     Z[1] = 2*z_face[1] - z_face[2]
     Z[nk+3] = 2*z_face[nk+1] - z_face[nk]
 
-    # 2. z_centers and dz_grid MUST be the same length as Z for the solver loop
-    # Length MZ = 33
-    mz = nk + 3
-    z_centers = zeros(Float64, mz)
-    dz_grid = zeros(Float64, mz)
-
-    # Internal cells (2 to 32)
-    for k in 2:mz-1
-        z_centers[k] = (Z[k+1] + Z[k]) * 0.5
-        dz_grid[k] = Z[k+1] - Z[k]
-    end
+    # 2. z_centers and dz_grid lengths are nk+2 = 32
+    dz = diff(z_face)
     
-    # Extrapolate for ghost cells (1 and 33)
+    dz_grid = zeros(Float64, nk+2)
+    dz_grid[2:nk+1] = dz[1:nk]
     dz_grid[1] = dz_grid[2]
-    z_centers[1] = Z[2] - 0.5 * dz_grid[1]
+    dz_grid[nk+2] = dz_grid[nk+1]
     
-    dz_grid[mz] = dz_grid[mz-1]
-    z_centers[mz] = Z[mz] + 0.5 * dz_grid[mz]
+    z_centers = zeros(Float64, nk+2)
+    z_centers[1] = z_face[1]
+    z_centers[nk+2] = z_face[nk+1]
+    for k in 2:(nk+1)
+        z_centers[k] = (z_face[k] + z_face[k-1]) * 0.5
+    end
 
     return CoordinateSystem(Z, z_centers, dz_grid, nk)
 end
