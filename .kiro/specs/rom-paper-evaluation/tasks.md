@@ -22,7 +22,7 @@
   - _Requirements: 1.2_
   - _Boundary: PaperEvaluation_
 
-- [ ] 2.2 RBFパラメータスイープと誤差感度プロットの実装
+- [x] 2.2 RBFパラメータスイープと誤差感度プロットの実装
   - `PaperEvaluation.sweep_rbf_parameters` 関数を実装する
   - パラメータ $\varepsilon$ (線形スケール) と $\lambda$ (対数スケール) の各組み合わせに対して RBF モデルを構築し、検証データに対する相対L2誤差およびTmax絶対誤差を算出するロジックを実装する
   - 誤差の感度を示す2次元ヒートマップ（L2用およびTmax用）プロットを生成する処理を実装する

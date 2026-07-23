@@ -80,5 +80,64 @@ using .PaperEvaluation
             rm(output_path)
         end
     end
+
+    @testset "sweep_rbf_parameters" begin
+        # Generate dummy data
+        N_dim = 2
+        r = 3
+        N_grid = 50
+        N_train = 8
+        N_val = 4
+        
+        Mu_train = rand(N_dim, N_train)
+        coeffs_train = rand(r, N_train)
+        Mu_val = rand(N_dim, N_val)
+        
+        # Generate true temperature fields for validation
+        basis = rand(N_grid, r)
+        mean_field = fill(300.0, N_grid)
+        val_temp_fields = Matrix{Float64}(undef, N_grid, N_val)
+        for i in 1:N_val
+            val_temp_fields[:, i] = mean_field + basis * rand(r)
+        end
+        
+        # Dummy grid_info
+        grid_info = Dict{String, Any}("dummy" => true)
+        
+        epsilon_range = [0.1, 0.5, 1.0, 2.0]
+        lambda_range = [1e-8, 1e-6, 1e-4, 1e-2]
+        
+        output_dir = joinpath(@__DIR__, "test_sweep_output")
+        if isdir(output_dir)
+            rm(output_dir; recursive=true, force=true)
+        end
+        
+        # Run sweep
+        sweep_rbf_parameters(
+            Mu_train, coeffs_train,
+            Mu_val, val_temp_fields,
+            grid_info, basis, mean_field,
+            epsilon_range, lambda_range,
+            output_dir
+        )
+        
+        # Verification
+        @test isdir(output_dir)
+        l2_plot = joinpath(output_dir, "rbf_sweep_l2.png")
+        tmax_plot = joinpath(output_dir, "rbf_sweep_tmax.png")
+        @test isfile(l2_plot)
+        @test isfile(tmax_plot)
+        
+        # Validate magic number of PNG
+        for f in [l2_plot, tmax_plot]
+            if isfile(f)
+                bytes = read(f, 8)
+                @test bytes == UInt8[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+            end
+        end
+        
+        # Clean up
+        rm(output_dir; recursive=true, force=true)
+    end
 end
 

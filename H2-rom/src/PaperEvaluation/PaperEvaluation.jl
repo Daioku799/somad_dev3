@@ -61,7 +61,91 @@ function sweep_rbf_parameters(Mu_train::Matrix{Float64}, coeffs_train::Matrix{Fl
                               grid_info::Dict, basis::Matrix{Float64}, mean_field::Vector{Float64},
                               epsilon_range::Vector{Float64}, lambda_range::Vector{Float64},
                               output_dir::String)
-    # TODO: Implement in Task 2.2
+    if !isdir(output_dir)
+        mkpath(output_dir)
+    end
+
+    n_eps = length(epsilon_range)
+    n_lam = length(lambda_range)
+    n_val_samples = size(Mu_val, 2)
+
+    error_matrix_l2 = Matrix{Float64}(undef, n_lam, n_eps)
+    error_matrix_tmax = Matrix{Float64}(undef, n_lam, n_eps)
+
+    for (j, eps) in enumerate(epsilon_range)
+        for (i, lam) in enumerate(lambda_range)
+            # Build and fit the RBF model
+            interpolator = ROMInterpolator.RBFInterpolator(eps)
+            ROMInterpolator.fit!(interpolator, Mu_train, coeffs_train; lambda=lam)
+
+            sum_l2 = 0.0
+            sum_tmax = 0.0
+
+            # Evaluate on validation samples
+            for k in 1:n_val_samples
+                mu = Mu_val[:, k]
+                theta_true = val_temp_fields[:, k]
+
+                # Prediction and reconstruction
+                coeffs_pred = ROMInterpolator.predict(interpolator, mu)
+                theta_pred = ROMInterpolator.reconstruct_field(coeffs_pred, basis, mean_field)
+
+                # L2 relative error
+                norm_true = norm(theta_true)
+                l2_err = norm_true < 1e-12 ? 0.0 : norm(theta_true - theta_pred) / norm_true
+
+                # Tmax absolute error
+                tmax_err = abs(maximum(theta_true) - maximum(theta_pred))
+
+                sum_l2 += l2_err
+                sum_tmax += tmax_err
+            end
+
+            error_matrix_l2[i, j] = sum_l2 / n_val_samples
+            error_matrix_tmax[i, j] = sum_tmax / n_val_samples
+        end
+    end
+
+    # Generate plots
+    all_lam_positive = all(lambda_range .> 0)
+
+    if all_lam_positive
+        log_lambda = log10.(lambda_range)
+        ytick_labels = string.(lambda_range)
+        
+        p_l2 = heatmap(epsilon_range, log_lambda, error_matrix_l2,
+                       xlabel="Epsilon (\\epsilon)",
+                       ylabel="Lambda (\\lambda)",
+                       yticks=(log_lambda, ytick_labels),
+                       title="RBF Parameter Sweep - L2 Relative Error",
+                       colorbar_title="Mean L2 Relative Error",
+                       color=:viridis)
+
+        p_tmax = heatmap(epsilon_range, log_lambda, error_matrix_tmax,
+                         xlabel="Epsilon (\\epsilon)",
+                         ylabel="Lambda (\\lambda)",
+                         yticks=(log_lambda, ytick_labels),
+                         title="RBF Parameter Sweep - Tmax Absolute Error",
+                         colorbar_title="Mean Tmax Absolute Error (K)",
+                         color=:viridis)
+    else
+        p_l2 = heatmap(epsilon_range, lambda_range, error_matrix_l2,
+                       xlabel="Epsilon (\\epsilon)",
+                       ylabel="Lambda (\\lambda)",
+                       title="RBF Parameter Sweep - L2 Relative Error",
+                       colorbar_title="Mean L2 Relative Error",
+                       color=:viridis)
+
+        p_tmax = heatmap(epsilon_range, lambda_range, error_matrix_tmax,
+                         xlabel="Epsilon (\\epsilon)",
+                         ylabel="Lambda (\\lambda)",
+                         title="RBF Parameter Sweep - Tmax Absolute Error",
+                         colorbar_title="Mean Tmax Absolute Error (K)",
+                         color=:viridis)
+    end
+
+    savefig(p_l2, joinpath(output_dir, "rbf_sweep_l2.png"))
+    savefig(p_tmax, joinpath(output_dir, "rbf_sweep_tmax.png"))
 end
 
 """
