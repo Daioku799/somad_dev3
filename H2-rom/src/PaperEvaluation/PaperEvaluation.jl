@@ -13,7 +13,7 @@ catch
     using Main.ROMInterpolator
 end
 
-export plot_svd_decay, sweep_rbf_parameters, monitor_rom_size
+export plot_svd_decay, sweep_rbf_parameters, monitor_rom_size, measure_time, format_elapsed_time
 
 """
     plot_svd_decay(singular_values::Vector{Float64}, output_path::String)
@@ -87,4 +87,26 @@ function monitor_rom_size(basis::Matrix{Float64}, rom_model::ROMInterpolator.RBF
     return report
 end
 
+"""
+    measure_time(f::Function) -> Tuple{Any, Float64}
+
+指定された関数 `f` の実行時間を計測し、(fの結果, 経過時間(秒)) を返す。
+"""
+function measure_time(f::Function)
+    t0 = time()
+    result = f()
+    elapsed = time() - t0
+    return result, elapsed
+end
+
+"""
+    format_elapsed_time(elapsed_seconds::Float64) -> String
+
+経過時間（秒）を可読な形式にフォーマットした文字列を返す。
+"""
+function format_elapsed_time(elapsed_seconds::Float64)::String
+    return @sprintf("%.4f seconds", elapsed_seconds)
+end
+
 end # module
+
