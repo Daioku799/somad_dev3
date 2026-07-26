@@ -59,6 +59,8 @@ Skills are located in `.gemini/skills/kiro-*/SKILL.md`
 Gemini CLI supports agent-as-tool for sub-agent dispatch. Skills with "Parallel Research" sections list independent work items that benefit from sub-agent spawning.
 
 ## Development Rules
+- **Explicit Approval Requirement**: 軽微な修正（タイポ修正やドキュメント補足等）を除き、**コードの書き換え・新規構築・リファクタリング**、または**実行時間のかかるプログラム・シミュレーション・テストの実行**を行う際は、**必ず事前に具体的方針・手順・影響範囲を提示し、ユーザーからの明示的な承認を得てから実行する**。
+- **Atomic Git Commits**: 承認された方針で作業を行った後、1タスク完了ごと、または論理的単位ごとに必ず検証テストを通し、即座に Git コミットを作成する（`feat:`, `fix:`, `test:`, `docs:`, `refactor:` 等）。
 - 3-phase approval workflow: Requirements → Design → Tasks → Implementation
 - Human review required each phase; use `-y` only for intentional fast-track
 - Keep steering current and verify alignment with `/kiro-spec-status`
