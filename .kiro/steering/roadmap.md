@@ -14,7 +14,8 @@
 - **Out**: HPWL（配線長）計算、厳密なKOZ評価、信号TSV考慮、ソルバー内部アルゴリズムの抜本的変更。
 
 ## Constraints
-- パラメータ表現: `Gx x Gy` (既定 `4x4`) のTSV密度マップ。
+- パラメータ表現: `Gx x Gy` (既定 `4x4`, 比較実験にて `2x2` 〜 `16x16` を評価) のTSV密度マップ。
+- 物理計算格子: $240 \times 240$ をシステム共通の基準格子として固定。
 - 制約条件: 総TSV本数上限、各セル密度上限、TSV最小ピッチ。
 - FVM入力: 密度マップから展開された実TSV座標（円柱プリミティブ）。 **「密度マップ → 実TSV座標への展開 → FVM」のフローを必須とする。**
 
@@ -23,6 +24,10 @@
 - **Shared seams to watch**: 密度マップベクトル `mu` と、それに対応する展開後実TSV座標、およびFVM温度場のデータ連携。
 
 ## Specs (dependency order)
+
+### Phase 5: Sensitivity & Paper Evaluation
+- [x] rom-paper-evaluation -- SVD減衰プロット、RBF感度ヒートマップ、ROMモデルサイズ/構築時間計測、新旧FVM等価性アサーション検証。
+- [ ] rom-paper-sensitivity-sweeps -- 240x240物理格子を基準とした1因子比較実験（密度マップ解像度 2x2〜16x16, Nsnap, PODモード数, RBF関数）と精度・処理時間プロファイルレポート生成。
 
 ### Phase 2: Density Map Refactoring
 - [x] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none

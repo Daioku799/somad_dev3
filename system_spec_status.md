@@ -37,13 +37,13 @@ graph TD
 | **`rom-validator`** | 未学習データに対する予測誤差（L2、Tmax、幾何位置）算出、合否判定、および統一断面比較プロット・レポート生成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/tasks.md) |
 | **`validation-plot`** | 最適化された密度マップや、実座標に展開されたTSV配置のレイアウトなどを可視化する個別プロット機能。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/tasks.md) |
 | **`ga-optimizer`** | 遺伝的アルゴリズムによる最適密度マップ探索。交叉・突然変異、制約修正、ROM高速評価、外防検知、FVM再検証を含む。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/tasks.md) |
-| **`rom-paper-evaluation`** | 論文発表用評価・データ収集。SVD減衰・RIC推移プロット、RBFスイープ感度解析、ROMモデルサイズ/構築時間計測、レガシーFVM等価性検証。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-paper-evaluation/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-paper-evaluation/tasks.md) |
+| **`rom-paper-evaluation`** | 論文発表用評価・データ収集。SVD減衰・RIC推移プロット、RBFスイープ感度解析、ROMモデルサイズ/構築時間計測、レガシーFVM等価性検証。 | 🟡 **拡張進行中** (1因子比較実験定義完了) | [spec](file:///home/foo/somad_dev3/.kiro/specs/rom-paper-evaluation/requirements.md) / [tasks](file:///home/foo/somad_dev3/.kiro/specs/rom-paper-evaluation/tasks.md) |
 
 ---
 
 ## 2. 開発優先度とロードマップ
 
-本プロジェクトにおけるすべての開発フェーズが完了しました。
+コアシステムの全13モジュールの基礎実装・検証は完了しており、現在は論文用の **1因子比較実験（密度マップ解像度・Nsnap・PODモード数・RBFパラメータの評価）** フェーズに移行しています。
 
 ### 実装・テスト完了状況
 - [x] **Phase 1: FVM Model Generation**
@@ -51,13 +51,11 @@ graph TD
 - [x] **Phase 3: Offline ROM Construction** (`pod-engine`, `rom-interpolator`, `rom-validator` のテストが正常終了)
 - [x] **Phase 4: GA Optimization** (`ga-optimizer` の実装、制約修正、ROM評価、FVM再検証のテストが正常終了)
 - [x] **Phase 5: Paper Evaluation & Legacy Equivalence Verification** (`rom-paper-evaluation` の全評価プロット生成・新旧等価性アサーションパス)
-
-### 残存タスク
-本システム構築ロードマップにおいて、現在残っている未実装の仕様および機能タスクはありません。全13仕様すべての要件が実装され、論文用データ収集および検証を完了しています。
+- [ ] **Phase 5 Ext: 1-Factor Sensitivity Sweeps** (基準物理格子 240x240, 密度マップ解像度 2x2〜16x16, Nsnap, PODモード数の個別比較実験)
 
 ---
 
 ## 3. 次のステップ
-システム全体の統合検証および論文用評価データの収集は完了しています。収集されたデータ（`plots/paper_evaluation/` および `plots/legacy_verification/`）を論文執筆や発表資料にご活用ください。
+基準計算格子 $240 \times 240$ に基づく1因子比較実験（密度マップ解像度 $Gx \times Gy$ 等のスイープ）の実装・データ収集を推進します。
 
 
