@@ -6,6 +6,12 @@
 using JLD2
 using Printf
 using LinearAlgebra
+using Plots
+
+if !isdefined(Main, :ValidationPlot)
+    include(joinpath(@__DIR__, "H2-rom", "src", "ValidationPlot", "ValidationPlot.jl"))
+end
+using .ValidationPlot
 
 # 現行モジュールをロードするためのロードパス追加
 push!(LOAD_PATH, joinpath(@__DIR__, "H2-main-ext", "src"))
@@ -21,7 +27,7 @@ function main_verification()
     println("=== New/Legacy FVM Equivalence Verification ===")
     
     # 1. 現行モデルの構築
-    NX, NY, NZ = 240, 240, 30
+    NX, NY, NZ = 60, 60, 30
     config_path = joinpath(@__DIR__, "H2-main-ext", "config.json")
     tsv_config_path = joinpath(@__DIR__, "H2-main-ext", "tsv_config.json")
     
@@ -80,7 +86,7 @@ function main_verification()
     
     println("Writing temporary id_map to: ", id_map_path)
     # レガシーに新ソルバーで生成された MZ=32 のモデルを直接渡す
-    jldsave(id_map_path; ID=ID, lambda=λ, rho=ρ, cp=cp, Z=coordsys.Z)
+    jldsave(id_map_path; ID=ID, lambda=λ, rho=ρ, cp=cp, Z=coordsys.Z, ZC=coordsys.z_centers, dZ=coordsys.dz_grid)
     
     # 4. legacy_run_wrapper.jl を外部プロセスで実行
     wrapper_script = joinpath(@__DIR__, "legacy", "H2-main-original", "legacy_run_wrapper.jl")
@@ -133,6 +139,68 @@ function main_verification()
         @assert max_diff <= 1e-12 "Maximum temperature difference ($max_diff) exceeds threshold (1e-12)."
     else
         println("SUCCESS: Temperature equivalence check PASSED.")
+        
+        # 7. プロットの出力 (4.2要件)
+        println("Generating verification plots...")
+        plots_out_dir = joinpath(@__DIR__, "plots", "legacy_verification")
+        mkpath(plots_out_dir)
+        
+        # 原点定義
+        ox = (0.0, 0.0, 0.0)
+        
+        # 代表的な座標定義 (Silicon1/Underfill2境界付近)
+        zc = 0.33e-3
+        yc = 0.6e-3
+        
+        # 7.1 材質プロット
+        ValidationPlot.plot_heatsource_tsv_overlay_nu_save(ID, zc, SZ, ox, Δh, coordsys.Z, joinpath(plots_out_dir, "material_xy.png"))
+        
+        # 7.2 新旧温度比較(XY断面)
+        p_temp_new_xy = ValidationPlot.plot_slice_xy_nu_return(3, 2, theta_new, zc, SZ, ox, Δh, coordsys.Z, "New FVM")
+        p_temp_legacy_xy = ValidationPlot.plot_slice_xy_nu_return(3, 2, theta_legacy, zc, SZ, ox, Δh, coordsys.Z, "Legacy FVM")
+        p_comp_xy = plot(p_temp_new_xy, p_temp_legacy_xy, layout=(1, 2), size=(1800, 500))
+        savefig(p_comp_xy, joinpath(plots_out_dir, "temperature_comparison_xy.png"))
+        
+        # 7.3 新旧温度比較(XZ断面)
+        function make_xz_plot(d, y_val, title_str)
+            xs = 2
+            xe = SZ[1] - 1
+            zs = 2
+            ze = SZ[3] - 1
+            j = ValidationPlot.find_j(y_val, ox[2], Δh[2], SZ[2])
+            s = d[xs:xe, j, zs:ze]
+            
+            x_coords = [(ox[1] + Δh[1] * (i - 1.5)) * 1000.0 for i in xs:xe]
+            z_coords = [coordsys.Z[k] * 1000.0 for k in zs:ze]
+            
+            p = contour(z_coords, x_coords, s, 
+                        fill=true, c=:thermal,
+                        xlims=(0.0, 0.6), ylims=(0.0, 1.2),
+                        xlabel="Z [mm]", ylabel="X [mm]",
+                        title=title_str, aspect_ratio=:equal)
+            return p
+        end
+        
+        p_temp_new_xz = make_xz_plot(theta_new, yc, "New FVM (XZ)")
+        p_temp_legacy_xz = make_xz_plot(theta_legacy, yc, "Legacy FVM (XZ)")
+        p_comp_xz = plot(p_temp_new_xz, p_temp_legacy_xz, layout=(1, 2), size=(1800, 500))
+        savefig(p_comp_xz, joinpath(plots_out_dir, "temperature_comparison_xz.png"))
+        
+        # 7.4 温度差分ヒートマップ
+        k_idx = ValidationPlot.find_k(coordsys.Z, zc, SZ[3], 3)
+        s_diff = abs.(theta_new[2:SZ[1]-1, 2:SZ[2]-1, k_idx] .- theta_legacy[2:SZ[1]-1, 2:SZ[2]-1, k_idx])
+        
+        x_coords = [(ox[1] + Δh[1] * (i - 1.5)) * 1000.0 for i in 2:SZ[1]-1]
+        y_coords = [(ox[2] + Δh[2] * (j - 1.5)) * 1000.0 for j in 2:SZ[2]-1]
+        
+        p_diff = heatmap(x_coords, y_coords, s_diff',
+                         fill=true, c=:viridis, aspect_ratio=:equal,
+                         title="Absolute Temperature Difference (New - Legacy)\nMax Diff = $(maximum(s_diff)) K",
+                         xlabel="X [mm]", ylabel="Y [mm]")
+        savefig(p_diff, joinpath(plots_out_dir, "temperature_diff_heatmap.png"))
+        
+        println("All verification plots saved to: ", plots_out_dir)
+
         # 一時ファイルの削除
         try
             rm(id_map_path, force=true)

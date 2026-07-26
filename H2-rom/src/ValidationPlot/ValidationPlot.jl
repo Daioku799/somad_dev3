@@ -65,7 +65,7 @@ function plot_snapshot_xy(snapshot_file::String; zc=0.33e-3, out_dir="plots", cl
     ID = data["id_map"]
     Z = data["z_faces"]
     NX, NY, NZ = data["nx"], data["ny"], data["nz"]
-    mu = data["metadata"]["mu"]
+    mu = haskey(data, "metadata") ? (haskey(data["metadata"], "mu") ? data["metadata"]["mu"] : data["mu"]) : (haskey(data, "mu") ? data["mu"] : error("No mu parameter found in snapshot data"))
     
     lx, ly = 1.2e-3, 1.2e-3
     dx, dy = lx / NX, ly / NY
@@ -267,8 +267,8 @@ function plot_heatsource_tsv_overlay_nu_save(ID::Array{UInt8,3}, zc, SZ, ox, dh,
     ye = use_ghost ? SZ[2] - 1 : SZ[2]
     k = find_k(Z, zc, SZ[3], 3)
     s = Float64.(ID[xs:xe, ys:ye, k])
-    x_edges = [ (ox[1] + (i - 1)*dh[1]) * 1000.0 for i in xs:xe+1 ]
-    y_edges = [ (ox[2] + (j - 1)*dh[2]) * 1000.0 for j in ys:ye+1 ]
+    x_edges = [ (ox[1] + (i - 2)*dh[1]) * 1000.0 for i in xs:xe+1 ]
+    y_edges = [ (ox[2] + (j - 2)*dh[2]) * 1000.0 for j in ys:ye+1 ]
     custom_palette = [:yellow, :gray, :purple, :orange, :blue, :green, :red]
     title_str = "Material Distribution at Z=" * @sprintf("%.3f", zc*1000) * " mm"
     
@@ -329,8 +329,8 @@ function plot_heatsource_tsv_overlay_nu_return(ID::Array{UInt8,3}, zc, SZ, ox, d
     ye = use_ghost ? SZ[2] - 1 : SZ[2]
     k = find_k(Z, zc, SZ[3], 3)
     s = Float64.(ID[xs:xe, ys:ye, k])
-    x_edges = [ (ox[1] + (i - 1)*dh[1]) * 1000.0 for i in xs:xe+1 ]
-    y_edges = [ (ox[2] + (j - 1)*dh[2]) * 1000.0 for j in ys:ye+1 ]
+    x_edges = [ (ox[1] + (i - 2)*dh[1]) * 1000.0 for i in xs:xe+1 ]
+    y_edges = [ (ox[2] + (j - 2)*dh[2]) * 1000.0 for j in ys:ye+1 ]
     custom_palette = [:yellow, :gray, :purple, :orange, :blue, :green, :red]
     title_str = "ID Map Z=" * @sprintf("%.3f", zc*1000) * "mm"
     

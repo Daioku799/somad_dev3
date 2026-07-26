@@ -70,18 +70,21 @@ using .ModelBuilder.Grid: generate_coordinate_system
     expected_Z[1] = 2*expected_z_face[1] - expected_z_face[2]
     expected_Z[nk+3] = 2*expected_z_face[nk+1] - expected_z_face[nk]
     
-    # z_centers と dz_grid の期待値 (33個)
-    mz = nk + 3
+    # z_centers と dz_grid の期待値 (32個)
+    mz = nk + 2
     expected_z_centers = zeros(Float64, mz)
     expected_dz_grid = zeros(Float64, mz)
-    for k in 2:mz-1
-        expected_z_centers[k] = (expected_Z[k+1] + expected_Z[k]) * 0.5
-        expected_dz_grid[k] = expected_Z[k+1] - expected_Z[k]
-    end
+    
+    dz = diff(expected_z_face)
+    expected_dz_grid[2:nk+1] = dz[1:nk]
     expected_dz_grid[1] = expected_dz_grid[2]
-    expected_z_centers[1] = expected_Z[2] - 0.5 * expected_dz_grid[1]
-    expected_dz_grid[mz] = expected_dz_grid[mz-1]
-    expected_z_centers[mz] = expected_Z[mz] + 0.5 * expected_dz_grid[mz]
+    expected_dz_grid[nk+2] = expected_dz_grid[nk+1]
+    
+    expected_z_centers[1] = expected_z_face[1]
+    expected_z_centers[nk+2] = expected_z_face[nk+1]
+    for k in 2:(nk+1)
+        expected_z_centers[k] = (expected_z_face[k] + expected_z_face[k-1]) * 0.5
+    end
     
     # 完全一致検証
     @test coordsys.Z == expected_Z

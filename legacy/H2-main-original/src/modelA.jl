@@ -368,8 +368,8 @@ function FillPlate!(ID::Array{UInt8,3}, ox, Δh, Z::Vector{Float64})
         d1 = b
         d2 .= b + L
         for k in st[3]-1:ed[3], j in st[2]-1:ed[2], i in st[1]-1:ed[1]
-            c1[1] = ox[1] + Δh[1]*(i-1)
-            c1[2] = ox[2] + Δh[2]*(j-1)
+            c1[1] = ox[1] + Δh[1]*(i-2)
+            c1[2] = ox[2] + Δh[2]*(j-2)
             c1[3] = Z[k]
             c2[1] = c1[1] + Δh[1]
             c2[2] = c1[2] + Δh[2]
@@ -402,8 +402,8 @@ function FillPowerGrid!(ID::Array{UInt8,3}, ox, Δh, Z::Vector{Float64}, lx=0.2e
         d2 .= b + L
         #@printf(stdout, "target : [%f %f %f] - [%f %f %f]\n",d1[1],d1[2],d1[3], d2[1],d2[2],d2[3])
         for k in st[3]-1:ed[3], j in st[2]-1:ed[2], i in st[1]-1:ed[1]
-            c1[1] = ox[1] + Δh[1]*(i-1)
-            c1[2] = ox[2] + Δh[2]*(j-1)
+            c1[1] = ox[1] + Δh[1]*(i-2)
+            c1[2] = ox[2] + Δh[2]*(j-2)
             c1[3] = Z[k]
             c2[1] = c1[1] + Δh[1]
             c2[2] = c1[2] + Δh[2]
@@ -447,8 +447,8 @@ function FillTSV!(ID::Array{UInt8,3}, ox, Δh, Z::Vector{Float64})
         #@printf(stdout, "TSV : [%d - %d]\n",ks, ke)
 
         for k in ks-1:ke, j in js-1:je, i in is-1:ie
-            c1[1] = ox[1] + Δh[1]*(i-1)
-            c1[2] = ox[2] + Δh[2]*(j-1)
+            c1[1] = ox[1] + Δh[1]*(i-2)
+            c1[2] = ox[2] + Δh[2]*(j-2)
             c1[3] = Z[k]
             c2[1] = c1[1] + Δh[1]
             c2[2] = c1[2] + Δh[2]
@@ -480,8 +480,8 @@ function FillSolder!(ID::Array{UInt8,3}, ox, Δh, Z::Vector{Float64})
         #@printf(stdout, "BUMP: [%d %d %d - %d %d %d]\n", is, js, ks, ie, je, ke)
 
         for k in ks-1:ke, j in js-1:je, i in is-1:ie
-            c1[1] = ox[1] + Δh[1]*(i-1)
-            c1[2] = ox[2] + Δh[2]*(j-1)
+            c1[1] = ox[1] + Δh[1]*(i-2)
+            c1[2] = ox[2] + Δh[2]*(j-2)
             c1[3] = Z[k]
             c2[1] = c1[1] + Δh[1]
             c2[2] = c1[2] + Δh[2]

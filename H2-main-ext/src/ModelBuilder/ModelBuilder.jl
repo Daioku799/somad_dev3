@@ -84,7 +84,7 @@ function fill_power_grid!(ID, config, zm, ox, dh, Z)
         
         for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
             if ID[i,j,k] != 0 continue end
-            c1 = (ox[1] + dh[1]*(i-1), ox[2] + dh[2]*(j-1), Z[k])
+            c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
             c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
             if is_included_rect(c1, c2, bmin, bmax)
                 ID[i,j,k] = 7 # MAT_PWRSRC
@@ -106,9 +106,9 @@ function fill_cylinder!(ID, obj, ox, dh, Z)
     
     for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
         if ID[i,j,k] != 0 continue end
-        c1 = (ox[1] + dh[1]*(i-1), ox[2] + dh[2]*(j-1), Z[k])
+        c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
         c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
-        if is_included_cyl(c1, c2, ctr, r, zmin, zmax, samples=10)
+        if is_included_cyl(c1, c2, ctr, r, zmin, zmax, samples=50)
             ID[i,j,k] = obj.mat_id
         end
     end
@@ -125,9 +125,9 @@ function fill_sphere!(ID, obj, ox, dh, Z)
     
     for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
         if ID[i,j,k] != 0 continue end
-        c1 = (ox[1] + dh[1]*(i-1), ox[2] + dh[2]*(j-1), Z[k])
+        c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
         c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
-        if is_included_sph(c1, c2, ctr, r, samples=10)
+        if is_included_sph(c1, c2, ctr, r, samples=50)
             ID[i,j,k] = obj.mat_id
         end
     end
@@ -147,7 +147,7 @@ function fill_plates!(ID, config, zm, ox, dh, Z)
             
             for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
                 if ID[i,j,k] != 0 continue end
-                c1 = (ox[1] + dh[1]*(i-1), ox[2] + dh[2]*(j-1), Z[k])
+                c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
                 c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
                 if is_included_chip(c1, c2, layer, r[1], r[2], samples=3)
                     ID[i,j,k] = 2 # MAT_SILICON
@@ -167,7 +167,7 @@ function fill_rect!(ID, b1, b2, mat_id, ox, dh, Z)
     st, ed = get_index_range(b1, b2, ox, dh, SZ, Z)
     for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
         if ID[i,j,k] != 0 continue end
-        c1 = (ox[1] + dh[1]*(i-1), ox[2] + dh[2]*(j-1), Z[k])
+        c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
         c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
         if is_included_rect(c1, c2, b1, b2)
             ID[i,j,k] = mat_id
