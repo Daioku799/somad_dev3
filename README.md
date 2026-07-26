@@ -78,7 +78,14 @@ julia --project=H2-rom evaluate_rom_paper.jl
 julia --project=H2-rom verify_legacy_fvm.jl
 ```
 
-### 3. 全テストの実行
+### 3. 材料IDマップ高解像度プレビュー
+メッシュ解像度（60x60, 120x120, 240x240, 360x360, 480x480）におけるTSV断面の形状比較画像を `plots/resolution_previews/` に一括生成します。
+
+```bash
+julia --project=H2-rom preview_id_map_resolutions.jl
+```
+
+### 4. 全テストの実行
 システム全13モジュールのユニットテスト・統合テストを実行します。
 
 ```bash
