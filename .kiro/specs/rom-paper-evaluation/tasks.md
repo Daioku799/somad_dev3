@@ -75,18 +75,18 @@
   - _Boundary: Testing_
 
 - [ ] 6. Extension: 基準240x240物理格子における1因子比較実験 (Sensitivity Analysis)
-- [ ] 6.1 (P) 基準条件（240x240物理格子, Nsnap=50, 4x4密度マップ, RIC=99.99%, Multiquadric）の固定定義
-  - 統一物理計算格子 $240 \times 240$ をシステム全体および評価スイートの基準として設定する
-  - 1因子比較実験（1-Factor-at-a-Time Sweeps）の各ベースラインパラメータを定義する
+- [ ] 6.1 (P) 基準条件（240x240物理格子, Nsnap=50, 4x4密度マップ, RIC=99.99%, Multiquadric）および plots/for_paper/ 出力構造の固定定義
+  - 統一物理計算格子 $240 \times 240$ をシステム全体の基準として設定する
+  - `plots/for_paper/` 配下の実験別サブフォルダ構造 (`01_density_resolution/`, `02_snapshot_count/`, `03_pod_modes/`, `04_rbf_kernel/`, `summary_report/`) を定義する
   - _Requirements: 1.5_
   - _Boundary: PaperEvaluation_
 
-- [ ] 6.2 密度マップ解像度スイープ（2x2, 4x4, 8x8, 16x16）の実行と精度・計算時間モニタリング
-  - 密度マップの解像度 $Gx \times Gy$ を変化させた際のROM予測精度（L2誤差, Tmax誤差）およびSVD/RBF処理時間を個別に比較・プロット出力する
+- [ ] 6.2 密度マップ解像度スイープ（2x2, 4x4, 8x8, 16x16）の実行と `plots/for_paper/01_density_resolution/` への仕分け保存
+  - 密度マップ解像度 $Gx \times Gy$ を変化させた際のROM予測精度（L2誤差, Tmax誤差）およびSVD/RBF処理時間を `plots/for_paper/01_density_resolution/` に出力する
   - _Requirements: 1.5_
   - _Boundary: PaperEvaluation_
 
-- [ ] 6.3 スナップショット数・PODモード数・RBFパラメータの個別比較実験と論文統合レポート生成
-  - スナップショット数 $N_{\text{snap}}$, POD保持モード数 $k$, RBF関数/$\epsilon$ の個別影響評価グラフおよび統合要約レポートを `plots/paper_evaluation/` に出力する
+- [ ] 6.3 スナップショット数・PODモード数・RBFパラメータの個別比較実験と `plots/for_paper/` へのフォルダ別保存・統合レポート生成
+  - 各実験プロットを対応フォルダ (`02_snapshot_count/`, `03_pod_modes/`, `04_rbf_kernel/`) に保存し、統合サマリー図および数値レポートを `summary_report/` に出力する
   - _Requirements: 1.5_
   - _Boundary: PaperEvaluation_
