@@ -8,6 +8,7 @@ using JSON3
 using Printf
 using LinearAlgebra
 using Plots
+using Statistics
 
 # モジュールロードパスの設定
 push!(LOAD_PATH, abspath("H2-main-ext/src"))
@@ -41,7 +42,7 @@ function main_sweeps()
 
     # フォルダ仕分け構造の定義
     base_out_dir = "plots/for_paper"
-    dir_01_res  = joinpath(base_out_dir, "01_density_resolution")
+    dir_01_res   = joinpath(base_out_dir, "01_density_resolution")
     dir_02_nsnap = joinpath(base_out_dir, "02_snapshot_count")
     dir_03_modes = joinpath(base_out_dir, "03_pod_modes")
     dir_04_rbf   = joinpath(base_out_dir, "04_rbf_kernel")
@@ -68,6 +69,7 @@ function main_sweeps()
     # 80/20 分割
     n_total = length(cases)
     n_train = round(Int, n_total * 0.8)
+    n_val   = n_total - n_train
     train_cases = cases[1:n_train]
     val_cases   = cases[(n_train+1):end]
 
@@ -114,20 +116,18 @@ function main_sweeps()
         mu_dim = g * g
         println("  -> Evaluating Density Resolution: $(g)x$(g) ($(mu_dim) dims)")
         
-        # SVD
         t_start = time()
         pod_res = PODEngine.compute_pod(X_train; ric_threshold=0.999)
         basis, _, coeffs_tr, mean_f = pod_res
         
-        # Train ROM with dummy matching dim for concept evaluation
-        rbf_model = ROMInterpolator.train_rbf_model(Mu_train, coeffs_tr; epsilon=1.0, lambda=1e-6)
+        rbf = ROMInterpolator.RBFInterpolator(1.0)
+        ROMInterpolator.fit!(rbf, Mu_train, coeffs_tr; lambda=1e-6)
         t_build = time() - t_start
         
-        # Predict Validation
         l2_errs = Float64[]
         for i in 1:size(X_val, 2)
-            c_pred = ROMInterpolator.predict_rbf(rbf_model, Mu_val[:, i])
-            theta_pred = ROMInterpolator.reconstruct_temperature_field(c_pred, basis, mean_f)
+            c_pred = ROMInterpolator.predict(rbf, Mu_val[:, i])
+            theta_pred = ROMInterpolator.reconstruct_field(c_pred, basis, mean_f)
             err = norm(X_val[:, i] .- theta_pred) / norm(X_val[:, i])
             push!(l2_errs, err)
         end
@@ -136,15 +136,7 @@ function main_sweeps()
         push!(res_build_times, t_build)
     end
 
-    p_a1 = plot(res_list, res_l2_errors .* 100, marker=:circle, linewidth=2,
-        xlabel="Density Grid Resolution (Gx=Gy)", ylabel="Mean Relative L2 Error [%]",
-        title="Accuracy vs Density Map Resolution", legend=false, grid=true)
-    savefig(p_a1, joinpath(dir_01_res, "accuracy_vs_density_res.png"))
-
-    p_a2 = plot(res_list, res_build_times, marker=:square, linewidth=2, color=:orange,
-        xlabel="Density Grid Resolution (Gx=Gy)", ylabel="Build Time [sec]",
-        title="Build Time vs Density Map Resolution", legend=false, grid=true)
-    savefig(p_a2, joinpath(dir_01_res, "runtime_vs_density_res.png"))
+    p_a1, p_a2 = PaperEvaluation.plot_density_resolution_sweep(res_list, res_l2_errors, res_build_times, dir_01_res)
 
     open(joinpath(dir_01_res, "density_resolution_data.txt"), "w") do io
         println(io, "Gx\tDim\tL2_Error[%]\tBuildTime[s]")
@@ -152,10 +144,10 @@ function main_sweeps()
             @printf(io, "%d\t%d\t%.4f\t%.4f\n", g, g*g, res_l2_errors[idx]*100, res_build_times[idx])
         end
     end
-    println("  Saved results to ", dir_01_res)
+    println("  Saved results via PaperEvaluation to ", dir_01_res)
 
     # ----------------------------------------------------
-    # 実験 B: スナップショット数スイープ (Nsnap = 10, 20, 30, ...)
+    # 実験 B: スナップショット数スイープ
     # ----------------------------------------------------
     println("\n[Experiment B] Snapshot Count Sweeps...")
     nsnap_list = [min(n_train, k) for k in [5, 10, 15, 20, n_train]]
@@ -172,27 +164,20 @@ function main_sweeps()
         basis_sub, _, coeffs_sub, mean_sub = PODEngine.compute_pod(X_sub; ric_threshold=0.999)
         t_svd = time() - t0
         
-        rbf_sub = ROMInterpolator.train_rbf_model(Mu_sub, coeffs_sub; epsilon=1.0, lambda=1e-6)
+        rbf_sub = ROMInterpolator.RBFInterpolator(1.0)
+        ROMInterpolator.fit!(rbf_sub, Mu_sub, coeffs_sub; lambda=1e-6)
         
         l2_errs = Float64[]
         for i in 1:size(X_val, 2)
-            c_pred = ROMInterpolator.predict_rbf(rbf_sub, Mu_val[:, i])
-            theta_pred = ROMInterpolator.reconstruct_temperature_field(c_pred, basis_sub, mean_sub)
+            c_pred = ROMInterpolator.predict(rbf_sub, Mu_val[:, i])
+            theta_pred = ROMInterpolator.reconstruct_field(c_pred, basis_sub, mean_sub)
             push!(l2_errs, norm(X_val[:, i] .- theta_pred) / norm(X_val[:, i]))
         end
         push!(nsnap_l2_errors, mean(l2_errs))
         push!(nsnap_svd_times, t_svd)
     end
 
-    p_b1 = plot(nsnap_list, nsnap_l2_errors .* 100, marker=:diamond, linewidth=2, color=:green,
-        xlabel="Number of Training Snapshots Nsnap", ylabel="Mean Relative L2 Error [%]",
-        title="Accuracy vs Snapshot Count", legend=false, grid=true)
-    savefig(p_b1, joinpath(dir_02_nsnap, "accuracy_vs_nsnap.png"))
-
-    p_b2 = plot(nsnap_list, nsnap_svd_times, marker=:utriangle, linewidth=2, color=:purple,
-        xlabel="Number of Training Snapshots Nsnap", ylabel="SVD Computation Time [sec]",
-        title="SVD Compute Time vs Snapshot Count", legend=false, grid=true)
-    savefig(p_b2, joinpath(dir_02_nsnap, "runtime_vs_nsnap.png"))
+    p_b1, p_b2 = PaperEvaluation.plot_snapshot_count_sweep(nsnap_list, nsnap_l2_errors, nsnap_svd_times, dir_02_nsnap)
 
     open(joinpath(dir_02_nsnap, "snapshot_count_data.txt"), "w") do io
         println(io, "Nsnap\tL2_Error[%]\tSVD_Time[s]")
@@ -200,7 +185,7 @@ function main_sweeps()
             @printf(io, "%d\t%.4f\t%.4f\n", ns, nsnap_l2_errors[idx]*100, nsnap_svd_times[idx])
         end
     end
-    println("  Saved results to ", dir_02_nsnap)
+    println("  Saved results via PaperEvaluation to ", dir_02_nsnap)
 
     # ----------------------------------------------------
     # 実験 C: POD 保持モード数 (k) スイープ
@@ -216,22 +201,19 @@ function main_sweeps()
     for k in k_list
         basis_k = basis_full[:, 1:k]
         coeffs_k = coeffs_full[1:k, :]
-        rbf_k = ROMInterpolator.train_rbf_model(Mu_train, coeffs_k; epsilon=1.0, lambda=1e-6)
+        rbf_k = ROMInterpolator.RBFInterpolator(1.0)
+        ROMInterpolator.fit!(rbf_k, Mu_train, coeffs_k; lambda=1e-6)
         
         l2_errs = Float64[]
         for i in 1:size(X_val, 2)
-            c_pred = ROMInterpolator.predict_rbf(rbf_k, Mu_val[:, i])
-            theta_pred = ROMInterpolator.reconstruct_temperature_field(c_pred, basis_k, mean_full)
+            c_pred = ROMInterpolator.predict(rbf_k, Mu_val[:, i])
+            theta_pred = ROMInterpolator.reconstruct_field(c_pred, basis_k, mean_full)
             push!(l2_errs, norm(X_val[:, i] .- theta_pred) / norm(X_val[:, i]))
         end
         push!(mode_l2_errors, mean(l2_errs))
     end
 
-    p_c1 = plot(k_list, mode_l2_errors .* 100, marker=:circle, linewidth=2, color=:red,
-        xlabel="Number of Retained POD Modes k", ylabel="Mean Relative L2 Error [%]",
-        title="Accuracy vs Retained POD Modes", legend=false, grid=true)
-    savefig(p_c1, joinpath(dir_03_modes, "accuracy_vs_pod_modes.png"))
-
+    p_c1 = PaperEvaluation.plot_pod_modes_sweep(k_list, mode_l2_errors, dir_03_modes)
     svd_plot_path = joinpath(dir_03_modes, "svd_decay_ric.png")
     PaperEvaluation.plot_svd_decay(sv_full, svd_plot_path)
 
@@ -241,7 +223,7 @@ function main_sweeps()
             @printf(io, "%d\t%.4f\n", k, mode_l2_errors[idx]*100)
         end
     end
-    println("  Saved results to ", dir_03_modes)
+    println("  Saved results via PaperEvaluation to ", dir_03_modes)
 
     # ----------------------------------------------------
     # 実験 D: RBF パラメータスイープ
@@ -256,15 +238,14 @@ function main_sweeps()
         eps_range, lam_range,
         dir_04_rbf
     )
-    println("  Saved results to ", dir_04_rbf)
+    println("  Saved results via PaperEvaluation to ", dir_04_rbf)
 
     # ----------------------------------------------------
     # 統合サマリーレポート生成 (summary_report)
     # ----------------------------------------------------
     println("\n[Summary] Generating Combined Paper Summary Report...")
-    p_summary = plot(p_a1, p_b1, p_c1, p_a2, layout=(2, 2), size=(1200, 800),
-        plot_title="3D-IC Heat ROM - Sensitivity & Performance Summary")
-    savefig(p_summary, joinpath(dir_summary, "paper_overall_sensitivity_4panel.png"))
+    summary_plot_path = joinpath(dir_summary, "paper_overall_sensitivity_4panel.png")
+    PaperEvaluation.plot_sensitivity_summary_4panel(p_a1, p_b1, p_c1, p_a2, summary_plot_path)
 
     open(joinpath(dir_summary, "paper_summary_table.txt"), "w") do io
         println(io, "=== 3D-IC HEAT ROM - SENSITIVITY EVALUATION SUMMARY REPORT ===")
@@ -283,7 +264,7 @@ function main_sweeps()
             @printf(io, "  Modes k = %d -> L2 Error: %.4f %%\n", k, mode_l2_errors[idx]*100)
         end
     end
-    println("  Saved overall summary to ", dir_summary)
+    println("  Saved overall summary via PaperEvaluation to ", dir_summary)
 
     println("\n==========================================================")
     println("       ALL PAPER EXPERIMENTS COMPLETED SUCCESSFULLY        ")
