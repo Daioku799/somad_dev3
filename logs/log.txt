@@ -1,0 +1,7 @@
+Problem : IC on NonUniform grid (Opt. 13 layers)
+Grid  : 62 62 32
+Pitch : 2.0000e-05 2.0000e-05 1.0000e+00
+Solver: pbicgstab with smoother gs
+ItrMax : 8.000000e+03
+ε      : 1.000000e-06
+1 10000.000000 : θmin=3.006038e+02  θmax=3.450182e+02  L2 norm of θ=1.115993e+05
