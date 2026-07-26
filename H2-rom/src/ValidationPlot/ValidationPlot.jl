@@ -349,15 +349,15 @@ Saves the plot to `out_path` as a heatmap with numerical value annotations if `s
 """
 function plot_density_map(mu::Vector{Float64}, out_path::String; title::String="TSV Density Map", save::Bool=true)
     n = length(mu)
-    gx = gy = floor(Int, sqrt(n))
-    if gx * gy != n
-        error("Density map size $(n) must be a perfect square (e.g. 16 for 4x4 grid)")
-    end
+    gx = gy = max(1, floor(Int, sqrt(n)))
     
     grid_data = reshape(mu, (gy, gx)) # gy rows, gx cols
     
     lx = 1.2 # mm
     dx = lx / gx
+    n_edges = max(2, gx + 1)
+    x_edges = collect(range(0.0, lx, length=n_edges))
+    y_edges = collect(range(0.0, lx, length=n_edges))
     x_centers = [dx * (i - 0.5) for i in 1:gx]
     y_centers = [dx * (j - 0.5) for j in 1:gy]
     
@@ -369,7 +369,7 @@ function plot_density_map(mu::Vector{Float64}, out_path::String; title::String="
         end
     end
     
-    p = heatmap(x_centers, y_centers, grid_data,
+    p = heatmap(x_edges, y_edges, grid_data,
                 c=:YlGnBu, clims=(0.0, 1.0),
                 xlims=(0.0, lx), ylims=(0.0, lx),
                 xlabel="X Position [mm]", ylabel="Y Position [mm]", title=title,
