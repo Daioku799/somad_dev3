@@ -37,6 +37,7 @@ graph TD
 | **`rom-validator`** | 未学習データに対する予測誤差（L2、Tmax、幾何位置）算出、合否判定、および統一断面比較プロット・レポート生成。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-validator/tasks.md) |
 | **`validation-plot`** | 最適化された密度マップや、実座標に展開されたTSV配置のレイアウトなどを可視化する個別プロット機能。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/validation-plot/tasks.md) |
 | **`ga-optimizer`** | 遺伝的アルゴリズムによる最適密度マップ探索。交叉・突然変異、制約修正、ROM高速評価、外防検知、FVM再検証を含む。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/ga-optimizer/tasks.md) |
+| **`rom-paper-evaluation`** | 論文発表用評価・データ収集。SVD減衰・RIC推移プロット、RBFスイープ感度解析、ROMモデルサイズ/構築時間計測、レガシーFVM等価性検証。 | 🟢 **実装完了** | [spec](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-paper-evaluation/requirements.md) / [tasks](file:///home/somadwsl/somad_dev3/.kiro/specs/rom-paper-evaluation/tasks.md) |
 
 ---
 
@@ -49,13 +50,14 @@ graph TD
 - [x] **Phase 2: Density Map Refactoring** (`snapshot-generator`, `heat3ds-ext`, `component-generator` 等のテストが正常終了)
 - [x] **Phase 3: Offline ROM Construction** (`pod-engine`, `rom-interpolator`, `rom-validator` のテストが正常終了)
 - [x] **Phase 4: GA Optimization** (`ga-optimizer` の実装、制約修正、ROM評価、FVM再検証のテストが正常終了)
+- [x] **Phase 5: Paper Evaluation & Legacy Equivalence Verification** (`rom-paper-evaluation` の全評価プロット生成・新旧等価性アサーションパス)
 
 ### 残存タスク
-本システム構築ロードマップにおいて、現在残っている未実装の仕様および機能タスクはありません。すべての要件が実装され、検証を完了しています。
+本システム構築ロードマップにおいて、現在残っている未実装の仕様および機能タスクはありません。全13仕様すべての要件が実装され、論文用データ収集および検証を完了しています。
 
 ---
 
 ## 3. 次のステップ
-システム全体の統合検証は完了しており、すべての仕様を満たしています。必要に応じてさらなる解析ケースを実行するか、検証プロット等のビジュアル出力をご確認ください。
+システム全体の統合検証および論文用評価データの収集は完了しています。収集されたデータ（`plots/paper_evaluation/` および `plots/legacy_verification/`）を論文執筆や発表資料にご活用ください。
 
 

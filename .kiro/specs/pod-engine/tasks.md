@@ -9,7 +9,7 @@
   - 必要な依存パッケージ（LinearAlgebra, JLD2, Statistics）のインポート設定。
   - _Requirements: 4.1, 4.2_
 
-- [ ] 2. Snapshot Loading and Grid Validation
+- [x] 2. Snapshot Loading and Grid Validation
 - [x] 2.1 (P) Snapshot Loader Implementation
   - `loader.jl` の実装。`JLD2` を用いて指定ディレクトリ内のスナップショットファイルを走査・ロード。
   - `snapshot_ids`（ファイル名等）および `mu` ベクトルの抽出ロジック追加。
@@ -25,7 +25,7 @@
   - _Requirements: 1.2_
   - _Boundary: SnapshotLoader_
 
-- [ ] 3. Core POD Computation Engine
+- [x] 3. Core POD Computation Engine
 - [x] 3.1 (P) SVD Solver Implementation
   - `solver.jl` の実装。スナップショット行列からの平均場計算および減算処理。
   - `LinearAlgebra.svd` を用いた特異値分解の実行。
@@ -40,7 +40,7 @@
   - _Requirements: 2.2, 2.3_
   - _Boundary: SVDSolver_
 
-- [ ] 4. Integration and Result Persistence
+- [x] 4. Integration and Result Persistence
 - [x] 4.1 POD Projection and Model Storage
   - 抽出された基底 $U_r$ への射影による POD 係数 $A = U_r^T X$ の算出。
   - `data/models/pod_model.jld2` への一括保存処理の実装。

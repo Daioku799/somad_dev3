@@ -28,8 +28,13 @@ function main_verification()
     
     # 1. 現行モデルの構築
     NX, NY, NZ = 60, 60, 30
-    config_path = joinpath(@__DIR__, "H2-main-ext", "config.json")
-    tsv_config_path = joinpath(@__DIR__, "H2-main-ext", "tsv_config.json")
+    default_config = joinpath(@__DIR__, "H2-main-ext", "config.json")
+    fallback_config = joinpath(@__DIR__, "legacy", "H2-main_TSV_Opt", "config.json")
+    config_path = isfile(default_config) ? default_config : fallback_config
+
+    default_tsv = joinpath(@__DIR__, "H2-main-ext", "tsv_config.json")
+    fallback_tsv = joinpath(@__DIR__, "legacy", "H2-main_TSV_Opt", "tsv_config.json")
+    tsv_config_path = isfile(default_tsv) ? default_tsv : fallback_tsv
     
     println("Loading configuration from:")
     println("  config: ", config_path)

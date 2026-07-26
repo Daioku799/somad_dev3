@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Foundation: 評価モジュールの雛形作成
+- [x] 1. Foundation: 評価モジュールの雛形作成
 - [x] 1.1 PaperEvaluation モジュールの骨組みとデータサイズモニター関数の実装
   - `H2-rom/src/PaperEvaluation/` ディレクトリを作成し、`PaperEvaluation.jl` ファイルを配置する
   - モジュール構造を定義し、基底行列 $U$ と RBF重み行列 $W$ の要素数およびメモリサイズを算出する `monitor_rom_size` 関数を実装する
@@ -14,7 +14,7 @@
   - _Requirements: 1.4_
   - _Boundary: PaperEvaluation_
 
-- [ ] 2. Core: 論文用可視化機能の実装
+- [x] 2. Core: 論文用可視化機能の実装
 - [x] 2.1 SVD特異値減衰・RIC推移プロットの実装
   - `PaperEvaluation.plot_svd_decay` 関数を実装する
   - Plots.jl を使用し、特異値の減衰を対数軸で、累積寄与率（RIC）の推移を折れ線グラフで、同一のモード数（X軸）に対して描画する2軸プロットを作成する
@@ -30,7 +30,7 @@
   - _Requirements: 1.3_
   - _Boundary: PaperEvaluation_
 
-- [ ] 3. Core: レガシー実行ラッパーの実装
+- [x] 3. Core: レガシー実行ラッパーの実装
 - [x] 3.1 (P) レガシーFVMソルバー実行ラッパーの構築
   - `legacy/H2-main-original/legacy_run_wrapper.jl` を作成する
   - コマンドライン引数から一時IDマップファイル（JLD2形式）のパスを受け取り、ロードする
@@ -40,7 +40,7 @@
   - _Requirements: 2.1_
   - _Boundary: legacy_run_wrapper_
 
-- [ ] 4. Core & Integration: 等価性検証機能の実装
+- [x] 4. Core & Integration: 等価性検証機能の実装
 - [x] 4.1 新旧FVM等価性検証メインスクリプトの実装
   - `verify_legacy_fvm.jl` スクリプトを新規作成する
   - 現行の `build_model` を呼び出してIDマップおよび物性・座標データを構築し、現行のFVMソルバーを実行して温度場 `theta_new` を得る
@@ -51,15 +51,15 @@
   - _Boundary: verify_legacy_fvm_
   - _Depends: 3.1_
 
-- [ ] 4.2 検証用プロット出力ロジックの実装
+- [x] 4.2 検証用プロット出力ロジックの実装
   - `verify_legacy_fvm.jl` 内に、新旧FVMの物理量を可視化するプロット関数を実装する
   - 新旧それぞれの材質プロット、温度場断面（XY, XZ）プロット、および新旧の温度場の差分（絶対誤差）を示すヒートマップを生成するロジックを記述する
   - 検証スクリプト実行完了時に、`plots/legacy_verification/` 配下に材質プロット、新旧温度比較プロット、温度差分ヒートマップの画像（PNG）が正しく出力されることを確認する
   - _Requirements: 2.4_
   - _Boundary: verify_legacy_fvm_
 
-- [ ] 5. Integration & Validation: メインスクリプト構築と統合テスト
-- [ ] 5.1 論文用ROM評価ワークフローの作成
+- [x] 5. Integration & Validation: メインスクリプト構築と統合テスト
+- [x] 5.1 論文用ROM評価ワークフローの作成
   - ルートディレクトリに `evaluate_rom_paper.jl` スクリプトを新規作成する
   - `PaperEvaluation` モジュールをロードし、スナップショットデータに対してSVDプロット、RBFスイーププロット、ROMサイズおよび構築時間のモニター出力を統合実行するワークフローを定義する
   - スクリプトを実行した際、すべての論文用プロット画像が `plots/paper_evaluation/` に正常に出力され、ログテキストに構築時間とデータサイズ情報が記録されることを確認する
@@ -67,7 +67,7 @@
   - _Boundary: evaluate_rom_paper_
   - _Depends: 1.1, 1.2, 2.1, 2.2_
 
-- [ ] 5.2 統合テストスイートの構築
+- [x] 5.2 統合テストスイートの構築
   - `test/` ディレクトリに本追加要件のテストケースを追加、または専用のテストスクリプトを作成する
   - `monitor_rom_size` および `verify_legacy_fvm.jl` の各機能に対するユニットテスト・統合テストを実装する
   - テストランナーを実行した際に、新規追加されたテストケースがすべてパスすることを確認する
