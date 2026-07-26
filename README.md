@@ -71,6 +71,13 @@ julia --project=H2-rom -e 'using Pkg; Pkg.instantiate()'
 julia --project=H2-rom evaluate_rom_paper.jl
 ```
 
+### 2. 1因子比較実験 & フォルダ別仕分け出力 (`plots/for_paper/`)
+密度マップ解像度、スナップショット数、PODモード数、RBFパラメータの個別比較実験を一括実行し、`plots/for_paper/` 内の各実験別サブフォルダへ整理保存します。
+
+```bash
+julia --project=H2-rom evaluate_rom_paper_sweeps.jl
+```
+
 ### 2. 新旧FVMシミュレータ等価性検証
 レガシーFVMと拡張FVM (`heat3ds-ext`) の熱計算結果およびアサーション検証を行います。
 
