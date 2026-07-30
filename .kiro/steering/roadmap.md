@@ -27,7 +27,7 @@
 
 ### Phase 5: Sensitivity & Paper Evaluation
 - [x] rom-paper-evaluation -- SVD減衰プロット、RBF感度ヒートマップ、ROMモデルサイズ/構築時間計測、新旧FVM等価性アサーション検証。
-- [ ] rom-paper-sensitivity-sweeps -- 240x240物理格子を基準とした1因子比較実験（密度マップ解像度 2x2〜16x16, Nsnap, PODモード数, RBF関数）と精度・処理時間プロファイルレポート生成。
+- [x] rom-paper-sensitivity-sweeps -- 240x240物理格子を基準とした1因子比較実験（密度マップ解像度 2x2〜16x16, Nsnap, PODモード数, RBF関数）と精度・処理時間プロファイルレポート生成。
 
 ### Phase 2: Density Map Refactoring
 - [x] config-loader -- JSON設定から `tsv_mode="density"` と密度マップ関連制約を読み込む機能の追加。 Dependencies: none
