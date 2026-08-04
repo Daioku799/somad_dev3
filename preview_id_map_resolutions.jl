@@ -16,7 +16,7 @@ using .modelA
 using .ValidationPlot
 
 function main()
-    resolutions = [60, 120, 240, 360, 480, 600]
+    resolutions = [60, 120, 240, 360, 480, 600, 1200, 2400]
     output_dir = "plots/resolution_previews"
     mkpath(output_dir)
 
