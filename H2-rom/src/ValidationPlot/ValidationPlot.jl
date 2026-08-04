@@ -337,7 +337,7 @@ function plot_heatsource_tsv_overlay_nu_return(ID::Array{UInt8,3}, zc, SZ, ox, d
     p = heatmap(x_edges, y_edges, s',
                 c=cgrad(custom_palette, 7, categorical=true), clims=(0.5, 7.5), colorbar=false,
                 xlims=(0.0, 1.2), ylims=(0.0, 1.2),
-                xlabel="X [mm]", ylabel="Y [mm]", title=title_str, aspect_ratio=:equal)
+                xlabel="X [mm]", ylabel="Y [mm]", title=title_str, aspect_ratio=:equal, interpolate=false)
     return p
 end
 
