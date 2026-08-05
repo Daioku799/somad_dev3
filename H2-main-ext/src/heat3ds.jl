@@ -131,6 +131,17 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     
     config = modelA.ModelBuilder.ConfigLoader.load_config("config.json", "tsv_config.json")
     ID, λ, ρ, cp, coordsys = modelA.ModelBuilder.build_model(config, NX)
+
+    # H2-main's Zcase2 grid has 30 physical cells. ModelBuilder follows that
+    # reference grid, so accepting another CLI value would only corrupt the
+    # snapshot metadata while leaving the actual array unchanged.
+    actual_nz = coordsys.nk
+    if NZ != actual_nz
+        throw(ArgumentError(
+            "NZ=$(NZ) does not match the H2-main Zcase2 grid ($(actual_nz) physical cells). " *
+            "Use NZ=$(actual_nz)."
+        ))
+    end
     
     SZ = size(ID)
     MX, MY, MZ = SZ
@@ -210,7 +221,7 @@ function q3d(NX::Int, NY::Int, NZ::Int,
                 "lambda" => wk.λ,
                 "z_centers" => ZC,
                 "z_faces" => Z,
-                "nx" => NX, "ny" => NY, "nz" => NZ,
+                "nx" => NX, "ny" => NY, "nz" => actual_nz,
                 "mu" => mu,
                 "config_summary" => Dict(
                     "tsv_count" => length(config.tsv.coords),

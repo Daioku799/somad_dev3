@@ -139,7 +139,7 @@ function run_authentic_experiment()
                 case_dir = SnapshotGenerator.Runner.prepare_work_dir(c, work_base)
                 SnapshotGenerator.Runner.generate_case_configs(c, config, case_dir)
                 abs_run_jl = abspath(joinpath(solver_dir, "run.jl"))
-                cmd = `julia --project=$(solver_dir) $(abs_run_jl) $(nxy_fvm) $(nxy_fvm) 13 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
+                cmd = `julia --project=$(solver_dir) $(abs_run_jl) $(nxy_fvm) $(nxy_fvm) 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
                 log_file = joinpath(case_dir, "output.log")
                 open(log_file, "w") do out
                     run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out))
@@ -182,7 +182,7 @@ function run_authentic_experiment()
                 case_dir = SnapshotGenerator.Runner.prepare_work_dir(c, work_base)
                 SnapshotGenerator.Runner.generate_case_configs(c, config, case_dir)
                 abs_run_jl = abspath(joinpath(solver_dir, "run.jl"))
-                cmd = `julia --project=$(solver_dir) $(abs_run_jl) $(nxy_fvm) $(nxy_fvm) 13 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
+                cmd = `julia --project=$(solver_dir) $(abs_run_jl) $(nxy_fvm) $(nxy_fvm) 30 pbicgstab gs 1e-4 sequential true --snapshot $(snapshot_file)`
                 log_file = joinpath(case_dir, "output.log")
                 open(log_file, "w") do out
                     run(pipeline(setenv(cmd, dir=case_dir), stdout=out, stderr=out))
