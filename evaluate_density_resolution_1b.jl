@@ -151,6 +151,8 @@ function physical_sensitivity(manifest, master_ids, masters, base_config, output
                 resolution=g,
                 geometry_chamfer_um=symmetric_chamfer_um(layout, reference_layout),
                 field_l2_difference_percent=100norm(temperature - reference_temperature) / norm(reference_temperature),
+                field_rise_l2_difference_percent=100norm(temperature - reference_temperature) /
+                    norm(reference_temperature .- 300.0),
                 tmax_difference_K=abs(maximum(temperature) - maximum(reference_temperature)),
                 temperature_max_K=maximum(temperature),
             ))
@@ -163,21 +165,33 @@ function physical_sensitivity(manifest, master_ids, masters, base_config, output
         selected = filter(row -> row.resolution == g, rows)
         geometry = getfield.(selected, :geometry_chamfer_um)
         l2 = getfield.(selected, :field_l2_difference_percent)
+        rise_l2 = getfield.(selected, :field_rise_l2_difference_percent)
         tmax = getfield.(selected, :tmax_difference_K)
         push!(summary_rows, (
             resolution=g,
             n_masters=length(selected),
             mean_geometry_chamfer_um=mean(geometry),
+            median_geometry_chamfer_um=median(geometry),
+            std_geometry_chamfer_um=std(geometry),
             max_geometry_chamfer_um=maximum(geometry),
             mean_field_l2_difference_percent=mean(l2),
+            median_field_l2_difference_percent=median(l2),
+            std_field_l2_difference_percent=std(l2),
             max_field_l2_difference_percent=maximum(l2),
+            mean_field_rise_l2_difference_percent=mean(rise_l2),
+            median_field_rise_l2_difference_percent=median(rise_l2),
+            std_field_rise_l2_difference_percent=std(rise_l2),
+            max_field_rise_l2_difference_percent=maximum(rise_l2),
             mean_tmax_difference_K=mean(tmax),
+            median_tmax_difference_K=median(tmax),
+            std_tmax_difference_K=std(tmax),
             max_tmax_difference_K=maximum(tmax),
         ))
     end
     write_namedtuple_tsv(joinpath(output_dir, "experiment_1b_physical_summary.tsv"), summary_rows)
 
     lower_resolutions = [2, 4, 8]
+    jitter = collect(range(-0.13, 0.13; length=length(master_ids)))
     p_geometry = plot(
         lower_resolutions,
         [only(filter(row -> row.resolution == g, summary_rows)).mean_geometry_chamfer_um for g in lower_resolutions];
@@ -189,6 +203,11 @@ function physical_sensitivity(manifest, master_ids, masters, base_config, output
         legend=false,
         xticks=RESOLUTIONS_1B,
     )
+    for g in lower_resolutions
+        selected = filter(row -> row.resolution == g, rows)
+        scatter!(p_geometry, g .+ jitter, getfield.(selected, :geometry_chamfer_um);
+            color=:steelblue, alpha=0.55, markersize=3, markerstrokewidth=0, label=false)
+    end
     p_temperature = plot(
         lower_resolutions,
         [only(filter(row -> row.resolution == g, summary_rows)).mean_field_l2_difference_percent for g in lower_resolutions];
@@ -200,25 +219,68 @@ function physical_sensitivity(manifest, master_ids, masters, base_config, output
         label="mean L2",
         xticks=RESOLUTIONS_1B,
     )
+    for g in lower_resolutions
+        selected = filter(row -> row.resolution == g, rows)
+        scatter!(p_temperature, g .+ jitter, getfield.(selected, :field_l2_difference_percent);
+            color=:darkorange, alpha=0.55, markersize=3, markerstrokewidth=0, label=false)
+    end
+    p_temperature_rise = plot(
+        lower_resolutions,
+        [only(filter(row -> row.resolution == g, summary_rows)).mean_field_rise_l2_difference_percent for g in lower_resolutions];
+        marker=:diamond,
+        linewidth=2,
+        color=:seagreen,
+        xlabel="Placement generation resolution G×G",
+        ylabel="Rise-relative field difference [%]",
+        title="Relative to T - 300 K",
+        label="mean",
+        xticks=RESOLUTIONS_1B,
+    )
+    p_tmax = plot(
+        lower_resolutions,
+        [only(filter(row -> row.resolution == g, summary_rows)).mean_tmax_difference_K for g in lower_resolutions];
+        marker=:circle,
+        linewidth=2,
+        color=:firebrick,
+        xlabel="Placement generation resolution G×G",
+        ylabel="|ΔTmax| [K]",
+        title="Maximum-temperature change",
+        label="mean",
+        xticks=RESOLUTIONS_1B,
+    )
+    for g in lower_resolutions
+        selected = filter(row -> row.resolution == g, rows)
+        scatter!(p_temperature_rise, g .+ jitter, getfield.(selected, :field_rise_l2_difference_percent);
+            color=:seagreen, alpha=0.55, markersize=3, markerstrokewidth=0, label=false)
+        scatter!(p_tmax, g .+ jitter, getfield.(selected, :tmax_difference_K);
+            color=:firebrick, alpha=0.55, markersize=3, markerstrokewidth=0, label=false)
+    end
     combined = plot(
         p_geometry,
-        p_temperature;
-        layout=(1, 2),
-        size=(1100, 430),
+        p_temperature,
+        p_temperature_rise,
+        p_tmax;
+        layout=(2, 2),
+        size=(1200, 850),
         plot_title="Experiment 1B: physical sensitivity to placement-generation resolution",
     )
     savefig(combined, joinpath(output_dir, "physical_sensitivity_vs_resolution.png"))
 
     scatter_rows = filter(row -> row.resolution < 16, rows)
+    geometry_values = getfield.(scatter_rows, :geometry_chamfer_um)
+    field_values = getfield.(scatter_rows, :field_l2_difference_percent)
+    correlation = cor(geometry_values, field_values)
     correlation_plot = scatter(
-        getfield.(scatter_rows, :geometry_chamfer_um),
-        getfield.(scatter_rows, :field_l2_difference_percent);
+        geometry_values,
+        field_values;
         group=string.(getfield.(scatter_rows, :resolution)) .* "×" .* string.(getfield.(scatter_rows, :resolution)),
         xlabel="Symmetric layout distance from 16×16 [μm]",
         ylabel="FVM field difference [%]",
         title="Geometry displacement vs thermal-field change",
         legend_title="resolution",
     )
+    annotate!(correlation_plot, maximum(geometry_values) * 0.72, minimum(field_values) * 1.12,
+        text(@sprintf("Pearson r = %.3f (n=%d)", correlation, length(scatter_rows)), 10, :black))
     savefig(correlation_plot, joinpath(output_dir, "geometry_vs_temperature_change.png"))
 
     representative_id = first(master_ids)
@@ -270,7 +332,10 @@ function rom_sensitivity(manifest, master_ids, temperatures, output_dir::String)
         ROMInterpolator.fit!(interpolator, Mu_train, coefficients; lambda=RBF_LAMBDA_EVAL_1B)
 
         l2_errors = Float64[]
+        rise_l2_errors = Float64[]
         tmax_errors = Float64[]
+        reliable_flags = Bool[]
+        duplicate_flags = Bool[]
         for (local_index, master_id) in enumerate(holdout_ids)
             source_index = n_train + local_index
             prediction = ROMInterpolator.reconstruct_field(
@@ -280,16 +345,27 @@ function rom_sensitivity(manifest, master_ids, temperatures, output_dir::String)
             )
             truth = X[:, source_index]
             l2_percent = 100norm(prediction - truth) / norm(truth)
+            rise_l2_percent = 100norm(prediction - truth) / norm(truth .- 300.0)
             tmax_error = abs(maximum(prediction) - maximum(truth))
             push!(l2_errors, l2_percent)
+            push!(rise_l2_errors, rise_l2_percent)
             push!(tmax_errors, tmax_error)
+            reliable = ROMInterpolator.is_reliable(interpolator, Mu[:, source_index])
+            duplicate_train_input = any(
+                isapprox(Mu[:, source_index], Mu_train[:, train_index]; atol=1e-12, rtol=0.0)
+                for train_index in axes(Mu_train, 2)
+            )
+            push!(reliable_flags, reliable)
+            push!(duplicate_flags, duplicate_train_input)
             push!(case_rows, (
                 resolution=g,
                 master_id=master_id,
                 split="holdout",
                 l2_percent=l2_percent,
+                rise_l2_percent=rise_l2_percent,
                 tmax_error_K=tmax_error,
-                within_train_bounds=ROMInterpolator.is_reliable(interpolator, Mu[:, source_index]),
+                within_train_bounds=reliable,
+                duplicates_train_input=duplicate_train_input,
             ))
         end
         push!(summary_rows, (
@@ -299,10 +375,18 @@ function rom_sensitivity(manifest, master_ids, temperatures, output_dir::String)
             retained_modes=size(basis, 2),
             mean_l2_percent=mean(l2_errors),
             median_l2_percent=median(l2_errors),
+            std_l2_percent=std(l2_errors),
             max_l2_percent=maximum(l2_errors),
+            mean_rise_l2_percent=mean(rise_l2_errors),
+            median_rise_l2_percent=median(rise_l2_errors),
+            std_rise_l2_percent=std(rise_l2_errors),
+            max_rise_l2_percent=maximum(rise_l2_errors),
             mean_tmax_error_K=mean(tmax_errors),
             median_tmax_error_K=median(tmax_errors),
+            std_tmax_error_K=std(tmax_errors),
             max_tmax_error_K=maximum(tmax_errors),
+            in_bounds_holdout_count=count(reliable_flags),
+            duplicate_train_input_count=count(duplicate_flags),
         ))
     end
     write_namedtuple_tsv(joinpath(output_dir, "experiment_1b_rom_cases.tsv"), case_rows)
@@ -321,6 +405,20 @@ function rom_sensitivity(manifest, master_ids, temperatures, output_dir::String)
         xticks=resolutions,
     )
     plot!(p_l2, resolutions, getfield.(summary_rows, :median_l2_percent); marker=:diamond, color=:black, label="median")
+    p_rise_l2 = plot(
+        resolutions,
+        getfield.(summary_rows, :mean_rise_l2_percent);
+        marker=:circle,
+        linewidth=2,
+        color=:seagreen,
+        xlabel="Placement generation resolution G×G",
+        ylabel="ROM rise-relative L2 [%]",
+        title="ROM temperature-rise error",
+        label="mean",
+        xticks=resolutions,
+    )
+    plot!(p_rise_l2, resolutions, getfield.(summary_rows, :median_rise_l2_percent);
+        marker=:diamond, color=:black, label="median")
     p_tmax = plot(
         resolutions,
         getfield.(summary_rows, :mean_tmax_error_K);
@@ -334,11 +432,28 @@ function rom_sensitivity(manifest, master_ids, temperatures, output_dir::String)
         xticks=resolutions,
     )
     plot!(p_tmax, resolutions, getfield.(summary_rows, :median_tmax_error_K); marker=:diamond, color=:black, label="median")
+    jitter = [-0.12, -0.04, 0.04, 0.12]
+    for g in RESOLUTIONS_1B
+        selected = filter(row -> row.resolution == g, case_rows)
+        for (index, row) in enumerate(selected)
+            marker = row.duplicates_train_input ? :star5 : (row.within_train_bounds ? :circle : :xcross)
+            point_color_l2 = row.duplicates_train_input ? :black : :steelblue
+            point_color_tmax = row.duplicates_train_input ? :black : :darkorange
+            scatter!(p_l2, [g + jitter[index]], [row.l2_percent]; marker=marker,
+                color=point_color_l2, markersize=5, label=false)
+            point_color_rise = row.duplicates_train_input ? :black : :seagreen
+            scatter!(p_rise_l2, [g + jitter[index]], [row.rise_l2_percent]; marker=marker,
+                color=point_color_rise, markersize=5, label=false)
+            scatter!(p_tmax, [g + jitter[index]], [row.tmax_error_K]; marker=marker,
+                color=point_color_tmax, markersize=5, label=false)
+        end
+    end
     combined = plot(
         p_l2,
+        p_rise_l2,
         p_tmax;
-        layout=(1, 2),
-        size=(1100, 430),
+        layout=(1, 3),
+        size=(1500, 450),
         plot_title="Experiment 1B: ROM performance after resolution-dependent FVM regeneration",
     )
     savefig(combined, joinpath(output_dir, "rom_accuracy_vs_placement_resolution.png"))
@@ -380,6 +495,12 @@ function evaluate_experiment_1b(
             println(io, "- ROM evaluation is deferred until at least 10 complete masters exist.")
         else
             println(io, "- ROM split is identical across resolutions: first $(rom_summary[1].n_train) masters train, remaining $(rom_summary[1].n_holdout) holdout.")
+            println(io, "- ROM holdout points within the per-feature training bounds: " *
+                join(["$(row.resolution)×$(row.resolution): $(row.in_bounds_holdout_count)/$(row.n_holdout)" for row in rom_summary], ", ") * ".")
+            println(io, "- The ROM comparison is preliminary (only $(rom_summary[1].n_holdout) holdout masters); crosses in the plot denote points outside the training bounds.")
+            println(io, "- Holdout inputs duplicated in training after resolution-specific coarsening: " *
+                join(["$(row.resolution)×$(row.resolution): $(row.duplicate_train_input_count)/$(row.n_holdout)" for row in rom_summary], ", ") * "; stars mark these points.")
+            println(io, "- Do not interpret the apparent advantage of coarse resolution as a causal accuracy result: extrapolation frequency and input dimension differ by resolution.")
         end
     end
 

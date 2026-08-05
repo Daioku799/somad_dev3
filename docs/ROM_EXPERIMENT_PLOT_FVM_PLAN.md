@@ -2,6 +2,13 @@
 
 最終更新: 2026-08-05
 
+> 2026-08-06監査更新: 旧 `01a_rom_input_resolution/` は、保存FVMとは異なる
+> `p_min`・`n_max`で入力配置を再生成していたため採用しない。保存case configから
+> 配置を再構成した修正版は `01a_rom_input_resolution_reconstructed/` にある。
+> 実験1–4の最新結果・図・制約は
+> [ROM_EXPERIMENTS_1_TO_4_REPORT_2026-08-06.md](ROM_EXPERIMENTS_1_TO_4_REPORT_2026-08-06.md)
+> を優先する。
+
 ## 1. この文書の役割
 
 この文書を、TSV密度マップを用いたROM性能評価についての当面の正本とする。

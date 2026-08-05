@@ -27,7 +27,8 @@ const TRAIN_FRACTION_1A = 0.8
 const RIC_THRESHOLD_1A = 0.9999
 const RBF_EPSILON_1A = 1.0
 const RBF_LAMBDA_1A = 1e-6
-const OUTPUT_DIR_1A = "plots/for_paper/01a_rom_input_resolution"
+const AMBIENT_TEMPERATURE_1A_K = 300.0
+const OUTPUT_DIR_1A = "plots/for_paper/01a_rom_input_resolution_reconstructed"
 
 function snapshot_temperature(snapshot_path::String)
     return JLD2.jldopen(snapshot_path, "r") do file
@@ -41,23 +42,19 @@ function snapshot_temperature(snapshot_path::String)
     end
 end
 
-function density_layout(mu::Vector{Float64}, base_config)
-    density = ConfigLoader.Types.DensityMapConfig(
-        4, 4, mu, 0, 16, 1.0, Tuple{Int, Int}[]
-    )
-    manufacturing = ConfigLoader.Types.ManufacturingConfig(
-        2base_config.tsv.radius, 50e-6, 0.0, 0.0
-    )
-    tsv = ConfigLoader.Types.TSVConfig(
-        :density,
-        Tuple{Float64, Float64}[],
-        base_config.tsv.radius,
-        base_config.tsv.height,
-        density,
-        manufacturing,
-        nothing,
-    )
-    return ComponentGenerator.Layout.expand_coordinates(tsv, base_config.lx, base_config.ly)
+function saved_case_layout(case_id::Int, manifest_mu::Vector{Float64})
+    case_dir = joinpath("data", "work", "case_$case_id")
+    config_path = joinpath(case_dir, "config.json")
+    tsv_config_path = joinpath(case_dir, "tsv_config.json")
+    isfile(config_path) || error("saved case config is missing: $config_path")
+    isfile(tsv_config_path) || error("saved case TSV config is missing: $tsv_config_path")
+    config = ConfigLoader.load_config(config_path, tsv_config_path)
+    config.tsv.density === nothing && error("saved case $case_id has no density-map config")
+    saved_mu = config.tsv.density.mu
+    isapprox(saved_mu, manifest_mu; atol=1e-12, rtol=0.0) ||
+        error("manifest/config mu mismatch for case $case_id")
+    layout = ComponentGenerator.Layout.expand_coordinates(config.tsv, config.lx, config.ly)
+    return layout, config
 end
 
 function load_experiment_1a_data(manifest_path::String)
@@ -65,13 +62,14 @@ function load_experiment_1a_data(manifest_path::String)
     cases = filter(case -> case.status == "success", manifest.cases)
     length(cases) >= 10 || error("Experiment 1A needs at least 10 successful snapshots")
 
-    base_config = ConfigLoader.generate_test_config()
     temperatures = Vector{Vector{Float64}}()
     shapes = Tuple{Int, Int, Int}[]
     case_ids = Int[]
     snapshot_ids = String[]
     encodings = Dict(g => Vector{Vector{Float64}}() for g in RESOLUTIONS_1A)
     layout_counts = Int[]
+    n_limits = Int[]
+    physical_domains = Tuple{Float64, Float64}[]
     selected_layout = nothing
     selected_encodings = Dict{Int, Vector{Float64}}()
     selected_counts = Dict{Int, Matrix{Int}}()
@@ -90,17 +88,23 @@ function load_experiment_1a_data(manifest_path::String)
         push!(snapshot_ids, haskey(metadata, "snapshot_id") ? string(metadata["snapshot_id"]) : "")
 
         mu = Float64.(case.mu)
-        layout = density_layout(mu, base_config)
+        layout, case_config = saved_case_layout(Int(case.id), mu)
         push!(layout_counts, length(layout))
-        length(layout) == 16 || error("case $(case.id) expands to $(length(layout)) TSVs, expected 16")
+        n_limit = case_config.tsv.density.n_max
+        n_limit > 0 || error("case $(case.id) has no positive global TSV limit")
+        push!(n_limits, n_limit)
+        push!(physical_domains, (case_config.lx, case_config.ly))
 
         for g in RESOLUTIONS_1A
-            encoded_mu, counts = encode_layout_fraction(
+            counts = count_layout(
                 layout,
                 g;
-                lx=base_config.lx,
-                ly=base_config.ly,
+                lx=case_config.lx,
+                ly=case_config.ly,
             )
+            # Divide by one resolution-independent global limit. Unlike a
+            # unit-sum histogram, this preserves the case-to-case TSV count.
+            encoded_mu = vec(counts ./ n_limit)
             push!(encodings[g], encoded_mu)
             if index == 1
                 selected_encodings[g] = encoded_mu
@@ -112,6 +116,8 @@ function load_experiment_1a_data(manifest_path::String)
 
     length(unique(shapes)) == 1 || error("snapshot shapes are inconsistent: $(unique(shapes))")
     length(unique(snapshot_ids)) == length(snapshot_ids) || error("snapshot IDs are not unique")
+    length(unique(n_limits)) == 1 || error("saved cases have inconsistent TSV limits: $(unique(n_limits))")
+    length(unique(physical_domains)) == 1 || error("saved cases have inconsistent XY domains")
 
     X = reduce(hcat, temperatures)
     Mu = Dict(g => reduce(hcat, encodings[g]) for g in RESOLUTIONS_1A)
@@ -125,6 +131,8 @@ function load_experiment_1a_data(manifest_path::String)
         selected_layout=selected_layout,
         selected_encodings=selected_encodings,
         selected_counts=selected_counts,
+        n_limit=only(unique(n_limits)),
+        physical_domain=only(unique(physical_domains)),
     )
 end
 
@@ -143,28 +151,30 @@ function plot_input_encodings(data, output_dir::String)
         markerstrokecolor=:black,
         xlabel="X [mm]",
         ylabel="Y [mm]",
-        title="Fixed physical layout\n(16 TSVs)",
+        title="Saved physical layout\n($(length(layout)) TSVs)",
         legend=false,
     )
 
     encoding_plots = Any[p_layout]
+    common_encoding_max = maximum(maximum(encoded) for encoded in Base.values(data.selected_encodings))
     for g in RESOLUTIONS_1A
         mu_matrix = reshape(data.selected_encodings[g], g, g)
+        annotation_size = g >= 16 ? 5 : (g >= 8 ? 7 : 9)
         annotations = [
-            (i, j, text(string(data.selected_counts[g][i, j]), min(9, 18 - g ÷ 2), :black))
+            (i, j, text(string(data.selected_counts[g][i, j]), annotation_size, :black))
             for i in 1:g for j in 1:g if data.selected_counts[g][i, j] > 0
         ]
         p = heatmap(
             1:g,
             1:g,
             mu_matrix';
-            clims=(0.0, 1.0),
+            clims=(0.0, common_encoding_max),
             color=:YlGnBu,
             aspect_ratio=:equal,
             xlabel="cell i",
             ylabel="cell j",
-            title="ROM input $(g)×$(g)\n(numbers: TSV count)",
-            colorbar=g == 16,
+            title="ROM input $(g)×$(g)\ncount / $(data.n_limit)",
+            colorbar=false,
         )
         annotate!(p, annotations)
         push!(encoding_plots, p)
@@ -174,7 +184,7 @@ function plot_input_encodings(data, output_dir::String)
         encoding_plots...;
         layout=(2, 3),
         size=(1350, 850),
-        plot_title="Experiment 1A: same geometry represented at four input resolutions",
+        plot_title="Experiment 1A: saved geometry represented at four input resolutions",
     )
     savefig(combined, joinpath(output_dir, "same_geometry_input_encodings.png"))
 end
@@ -209,29 +219,40 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
 
         predicted_fields = Matrix{Float64}(undef, size(X_holdout))
         l2_errors = Float64[]
+        rise_l2_errors = Float64[]
         tmax_errors = Float64[]
         reliable_flags = Bool[]
+        duplicate_flags = Bool[]
         reliable_count = 0
         for (local_index, source_index) in enumerate(holdout_indices)
             mu = Mu_holdout[:, local_index]
             reliable = ROMInterpolator.is_reliable(interpolator, mu)
+            duplicates_train_input = any(
+                isapprox(mu, Mu_train[:, train_index]; atol=1e-12, rtol=0.0)
+                for train_index in axes(Mu_train, 2)
+            )
             reliable_count += reliable
             push!(reliable_flags, reliable)
+            push!(duplicate_flags, duplicates_train_input)
             predicted_coefficients = ROMInterpolator.predict(interpolator, mu)
             prediction = ROMInterpolator.reconstruct_field(predicted_coefficients, basis, mean_field)
             predicted_fields[:, local_index] = prediction
             truth = X_holdout[:, local_index]
             l2_percent = 100norm(prediction - truth) / norm(truth)
+            rise_l2_percent = 100norm(prediction - truth) / norm(truth .- AMBIENT_TEMPERATURE_1A_K)
             tmax_error = abs(maximum(prediction) - maximum(truth))
             push!(l2_errors, l2_percent)
+            push!(rise_l2_errors, rise_l2_percent)
             push!(tmax_errors, tmax_error)
             push!(case_rows, (
                 resolution=g,
                 case_id=data.case_ids[source_index],
                 snapshot_id=data.snapshot_ids[source_index],
                 l2_percent=l2_percent,
+                rise_l2_percent=rise_l2_percent,
                 tmax_error_K=tmax_error,
                 within_train_bounds=reliable,
+                duplicates_train_input=duplicates_train_input,
             ))
         end
         predictions[g] = predicted_fields
@@ -242,6 +263,10 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
             median_l2_percent=median(l2_errors),
             std_l2_percent=std(l2_errors),
             max_l2_percent=maximum(l2_errors),
+            mean_rise_l2_percent=mean(rise_l2_errors),
+            median_rise_l2_percent=median(rise_l2_errors),
+            std_rise_l2_percent=std(rise_l2_errors),
+            max_rise_l2_percent=maximum(rise_l2_errors),
             mean_tmax_error_K=mean(tmax_errors),
             median_tmax_error_K=median(tmax_errors),
             std_tmax_error_K=std(tmax_errors),
@@ -249,6 +274,8 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
             in_bounds_mean_l2_percent=mean(l2_errors[reliable_flags]),
             in_bounds_mean_tmax_error_K=mean(tmax_errors[reliable_flags]),
             reliable_holdout_count=reliable_count,
+            unique_train_input_count=length(unique([Tuple(Mu_train[:, index]) for index in axes(Mu_train, 2)])),
+            duplicate_train_input_count=count(duplicate_flags),
         ))
         @printf(
             "  %2d×%-2d: mean L2 = %.5f%%, mean Tmax = %.5f K, in-bounds = %d/%d\n",
@@ -284,6 +311,8 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
     resolutions = getfield.(summary_rows, :resolution)
     mean_l2 = getfield.(summary_rows, :mean_l2_percent)
     median_l2 = getfield.(summary_rows, :median_l2_percent)
+    mean_rise_l2 = getfield.(summary_rows, :mean_rise_l2_percent)
+    median_rise_l2 = getfield.(summary_rows, :median_rise_l2_percent)
     mean_tmax = getfield.(summary_rows, :mean_tmax_error_K)
     median_tmax = getfield.(summary_rows, :median_tmax_error_K)
     n_holdout = length(holdout_indices)
@@ -315,35 +344,41 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
         xticks=resolutions,
     )
     plot!(p_tmax, resolutions, median_tmax; marker=:diamond, linewidth=2, color=:black, label="median")
+    p_rise_l2 = plot(
+        resolutions,
+        mean_rise_l2;
+        marker=:circle,
+        linewidth=2,
+        color=:seagreen,
+        xlabel="ROM input resolution G×G",
+        ylabel="Rise-relative L2 error [%]",
+        title="Relative to T - 300 K",
+        label="mean",
+        xticks=resolutions,
+    )
+    plot!(p_rise_l2, resolutions, median_rise_l2; marker=:diamond, linewidth=2, color=:black, label="median")
     for g in RESOLUTIONS_1A
         rows = filter(row -> row.resolution == g, case_rows)
-        scatter!(
-            p_l2,
-            g .+ jitter,
-            getfield.(rows, :l2_percent);
-            markersize=3,
-            markerstrokewidth=0,
-            color=:steelblue,
-            alpha=0.65,
-            label=false,
-        )
-        scatter!(
-            p_tmax,
-            g .+ jitter,
-            getfield.(rows, :tmax_error_K);
-            markersize=3,
-            markerstrokewidth=0,
-            color=:darkorange,
-            alpha=0.65,
-            label=false,
-        )
+        for (index, row) in enumerate(rows)
+            marker = row.duplicates_train_input ? :star5 : (row.within_train_bounds ? :circle : :xcross)
+            l2_color = row.duplicates_train_input ? :black : :steelblue
+            rise_color = row.duplicates_train_input ? :black : :seagreen
+            tmax_color = row.duplicates_train_input ? :black : :darkorange
+            scatter!(p_l2, [g + jitter[index]], [row.l2_percent]; marker=marker,
+                markersize=4, color=l2_color, alpha=0.7, label=false)
+            scatter!(p_rise_l2, [g + jitter[index]], [row.rise_l2_percent]; marker=marker,
+                markersize=4, color=rise_color, alpha=0.7, label=false)
+            scatter!(p_tmax, [g + jitter[index]], [row.tmax_error_K]; marker=marker,
+                markersize=4, color=tmax_color, alpha=0.7, label=false)
+        end
     end
     summary_plot = plot(
         p_l2,
+        p_rise_l2,
         p_tmax;
-        layout=(1, 2),
-        size=(1100, 430),
-        plot_title="Experiment 1A: only ROM input resolution changes",
+        layout=(1, 3),
+        size=(1500, 450),
+        plot_title="Experiment 1A: fixed saved geometry; only ROM encoding changes",
     )
     savefig(summary_plot, joinpath(output_dir, "accuracy_vs_input_resolution.png"))
 
@@ -388,7 +423,11 @@ function run_experiment_1a(; manifest_path::String="data/manifest.json", output_
         println(io, "- Split: first $n_train successful manifest cases for training; remaining $(n_cases - n_train) cases for fixed holdout evaluation.")
         println(io, "- POD RIC threshold: $RIC_THRESHOLD_1A ($(size(basis, 2)) retained modes).")
         println(io, "- Gaussian RBF: epsilon=$RBF_EPSILON_1A, lambda=$RBF_LAMBDA_1A.")
-        println(io, "- Input features are a spatial histogram: each cell's TSV count divided by the fixed total of 16 TSVs.")
+        println(io, "- Physical layouts are reconstructed from each saved `data/work/case_<id>/` config, not from current defaults.")
+        println(io, "- Saved layouts contain $(minimum(data.layout_counts))--$(maximum(data.layout_counts)) TSVs; the fixed global limit is $(data.n_limit).")
+        println(io, "- Input features are each cell's TSV count divided by the resolution-independent global limit $(data.n_limit), preserving total-count information.")
+        println(io, "- Crosses in the accuracy plot denote validation points outside the per-feature training bounds.")
+        println(io, "- Stars denote validation inputs that exactly duplicate a training input after resolution-specific aggregation.")
         println(io, "- No FVM simulation was rerun for this experiment.")
     end
 
