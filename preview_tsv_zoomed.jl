@@ -42,13 +42,10 @@ function main()
         ox = (0.0, 0.0, 0.0)
         dh = (dx, dy, 1.0)
         
-        zm = modelA.ModelBuilder.ConfigLoader.calculate_zm(config)
-        z_faces = vcat(0.0, cumsum(zm))
-        
-        # Select z height in the middle of TSV/Silicon region
-        nz = length(z_faces) - 1
-        zc = z_faces[min(8, nz)]
-        SZ_plot = (SZ[1], SZ[2], nz)
+        # H2-main Zcase2 coordinates; 0.15 mm is inside Silicon1/TSV1.
+        z_faces = coordsys.Z
+        zc = 0.15e-3
+        SZ_plot = SZ
         
         # Call official ValidationPlot function & apply zoom to TSV spot around (0.3mm, 0.3mm)
         p_sub = ValidationPlot.plot_heatsource_tsv_overlay_nu_return(ID, zc, SZ_plot, ox, dh, z_faces)

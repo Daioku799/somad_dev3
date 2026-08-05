@@ -44,10 +44,8 @@ function main()
         j_st = clamp(round(Int, y_min / dy) + 2, 2, NY + 1)
         j_ed = clamp(round(Int, y_max / dy) + 2, 2, NY + 1)
 
-        zm = modelA.ModelBuilder.ConfigLoader.calculate_zm(config)
-        z_faces = vcat(0.0, cumsum(zm))
-        nz = length(z_faces) - 1
-        k_tsv = min(8, nz)
+        # Select the stored cell center nearest the middle of Silicon1/TSV1.
+        k_tsv = argmin(abs.(coordsys.z_centers .- 0.15e-3))
 
         # Extract raw submatrix (no coordinates, pure integer matrix)
         sub_mat = ID[i_st:i_ed, j_st:j_ed, k_tsv]
