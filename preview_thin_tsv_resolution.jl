@@ -8,6 +8,7 @@
 #
 # Usage:
 #   julia --project=H2-main-ext preview_thin_tsv_resolution.jl [diameter_um ...]
+#   julia --project=H2-main-ext preview_thin_tsv_resolution.jl 10 --compare-diameters
 
 using Plots
 using Plots.PlotMeasures
@@ -20,7 +21,9 @@ const TSV_COORDS_M = [(x, y) for y in (0.3e-3, 0.5e-3, 0.7e-3, 0.9e-3)
                             for x in (0.3e-3, 0.5e-3, 0.7e-3, 0.9e-3)]
 const REQUESTED_RESOLUTIONS = [240, 480, 600]
 const FINE_RESOLUTIONS = [1200, 2400]
-const FINE_DIAMETER_UM = 5.0
+const FINE_DIAMETERS_UM = [5.0, 10.0]
+const COMPARISON_DIAMETERS_UM = [40.0, 20.0, 10.0, 5.0]
+const DIAMETER_COMPARISON_RESOLUTIONS = [600, 2400]
 const SUBCELL_SAMPLES = 50
 
 """Return true when at least half of a square FVM cell lies in the circle."""
@@ -106,6 +109,23 @@ function id_plot(id, nxy, diameter_um; zoom=false)
     )
 end
 
+function calculate_resolution_metrics(id, dx, radius, diameter_um, nxy)
+    copper_total = count(==(UInt8(1)), id)
+    copper_per_tsv = copper_total / length(TSV_COORDS_M)
+    effective_area = copper_per_tsv * dx^2
+    exact_area = pi * radius^2
+    equivalent_diameter = 2sqrt(effective_area / pi)
+    return (
+        nxy=nxy,
+        diameter_um=diameter_um,
+        dx_um=dx * 1e6,
+        cells_across=diameter_um / (dx * 1e6),
+        copper_cells_per_tsv=copper_per_tsv,
+        effective_diameter_um=equivalent_diameter * 1e6,
+        area_error_pct=100 * (effective_area / exact_area - 1),
+    )
+end
+
 function generate_for_diameter(diameter_um::Float64)
     diameter_um > 0 || error("diameter_um must be positive")
     radius = diameter_um * 0.5e-6
@@ -118,27 +138,13 @@ function generate_for_diameter(diameter_um::Float64)
     zoom_plots = Any[]
     fine_zoom_plots = Any[]
     rows = NamedTuple[]
-    include_fine = isapprox(diameter_um, FINE_DIAMETER_UM; atol=1e-12)
+    include_fine = any(d -> isapprox(diameter_um, d; atol=1e-12), FINE_DIAMETERS_UM)
     resolutions = include_fine ? vcat(REQUESTED_RESOLUTIONS, FINE_RESOLUTIONS) : REQUESTED_RESOLUTIONS
 
     for nxy in resolutions
         @printf("Building thin-TSV ID slice for %d×%d ... ", nxy, nxy)
         id, dx = build_id_slice(nxy, radius)
-        copper_total = count(==(UInt8(1)), id)
-        copper_per_tsv = copper_total / length(TSV_COORDS_M)
-        effective_area = copper_per_tsv * dx^2
-        exact_area = pi * radius^2
-        equivalent_diameter = 2sqrt(effective_area / pi)
-        area_error_pct = 100 * (effective_area / exact_area - 1)
-
-        push!(rows, (
-            nxy=nxy,
-            dx_um=dx * 1e6,
-            cells_across=diameter_um / (dx * 1e6),
-            copper_cells_per_tsv=copper_per_tsv,
-            effective_diameter_um=equivalent_diameter * 1e6,
-            area_error_pct=area_error_pct,
-        ))
+        push!(rows, calculate_resolution_metrics(id, dx, radius, diameter_um, nxy))
 
         p_zoom = id_plot(id, nxy, diameter_um; zoom=true)
         savefig(p_zoom, joinpath(output_dir, "zoom_$(nxy)x$(nxy).png"))
@@ -202,10 +208,60 @@ function generate_for_diameter(diameter_um::Float64)
     println("Saved results to $(output_dir)")
 end
 
+function generate_diameter_comparisons()
+    output_dir = joinpath("plots", "resolution_previews", "diameter_comparisons")
+    mkpath(output_dir)
+    rows = NamedTuple[]
+
+    for nxy in DIAMETER_COMPARISON_RESOLUTIONS
+        full_plots = Any[]
+        zoom_plots = Any[]
+        for diameter_um in COMPARISON_DIAMETERS_UM
+            radius = diameter_um * 0.5e-6
+            @printf("Building diameter comparison: %d×%d, d=%.1f µm ... ", nxy, nxy, diameter_um)
+            id, dx = build_id_slice(nxy, radius)
+            push!(rows, calculate_resolution_metrics(id, dx, radius, diameter_um, nxy))
+            push!(full_plots, id_plot(id, nxy, diameter_um; zoom=false))
+            push!(zoom_plots, id_plot(id, nxy, diameter_um; zoom=true))
+            println("done")
+        end
+
+        p_full = plot(
+            full_plots..., layout=(2, 2), size=(1600, 1500),
+            plot_title="TSV diameter comparison at $(nxy)×$(nxy)",
+            margin=5mm, left_margin=8mm, bottom_margin=7mm,
+        )
+        savefig(p_full, joinpath(output_dir, "full_diameter_comparison_$(nxy)x$(nxy).png"))
+
+        p_zoom = plot(
+            zoom_plots..., layout=(2, 2), size=(1400, 1300),
+            plot_title="TSV boundary comparison at $(nxy)×$(nxy)",
+            margin=5mm,
+        )
+        savefig(p_zoom, joinpath(output_dir, "zoom_diameter_comparison_$(nxy)x$(nxy).png"))
+    end
+
+    open(joinpath(output_dir, "diameter_comparison_metrics.tsv"), "w") do io
+        println(io, "Nxy\tdiameter_um\tdx_um\tcells_across_diameter\tcopper_cells_per_tsv\teffective_diameter_um\tarea_error_pct")
+        for row in rows
+            @printf(io, "%d\t%.3f\t%.6f\t%.6f\t%.3f\t%.6f\t%.6f\n",
+                row.nxy, row.diameter_um, row.dx_um, row.cells_across,
+                row.copper_cells_per_tsv, row.effective_diameter_um,
+                row.area_error_pct)
+        end
+    end
+    println("Saved diameter comparisons to $(output_dir)")
+end
+
 function main()
-    diameters_um = isempty(ARGS) ? [10.0] : parse.(Float64, ARGS)
+    compare_diameters = "--compare-diameters" in ARGS
+    diameter_args = filter(!=("--compare-diameters"), ARGS)
+    diameters_um = isempty(diameter_args) ? (compare_diameters ? Float64[] : [10.0]) : parse.(Float64, diameter_args)
     for diameter_um in diameters_um
         generate_for_diameter(diameter_um)
+    end
+    if compare_diameters
+        generate_diameter_comparisons()
     end
 end
 
