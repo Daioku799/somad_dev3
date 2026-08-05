@@ -5,6 +5,9 @@ using Printf
 using Statistics
 using Plots
 
+include("PairedDensityResolution.jl")
+using .PairedDensityResolution
+
 try
     using ROMInterpolator
 catch
@@ -17,6 +20,8 @@ end
 
 export plot_svd_decay, sweep_rbf_parameters, monitor_rom_size, measure_time, format_elapsed_time
 export plot_density_resolution_sweep, plot_snapshot_count_sweep, plot_pod_modes_sweep, plot_sensitivity_summary_4panel
+export MASTER_GRID_SIZE, TSV_COUNT, RESOLUTIONS
+export generate_master_occupancy, aggregate_counts, counts_to_density
 
 """
     plot_svd_decay(singular_values::Vector{Float64}, output_path::String)
