@@ -340,8 +340,10 @@ function validate_snapshot(snapshot_path::String, log_path::String, nxy::Int)
             all(isfinite, file["theta"]) && all(isfinite, file["lambda"]) ||
                 return (valid=false, reason="non-finite field")
             zfaces = file["z_faces"]
-            length(zfaces) == length(EXPECTED_Z_FACES) &&
-                maximum(abs.(zfaces .- EXPECTED_Z_FACES)) <= 1e-12 ||
+            length(zfaces) == length(EXPECTED_Z_FACES) + 2 &&
+                maximum(abs.(zfaces[2:(end - 1)] .- EXPECTED_Z_FACES)) <= 1e-12 &&
+                abs(zfaces[1] - (2zfaces[2] - zfaces[3])) <= 1e-12 &&
+                abs(zfaces[end] - (2zfaces[end - 1] - zfaces[end - 2])) <= 1e-12 ||
                 return (valid=false, reason="z-face coordinates differ from H2-main Zcase2")
             (
                 valid=true,
@@ -465,7 +467,7 @@ function load_interior(path::String)
         nxy = Int(file["nx"])
         theta = Array{Float64, 3}(file["theta"])[2:(nxy + 1), 2:(nxy + 1), 2:(NZ + 1)]
         id_map = Array(file["id_map"])[2:(nxy + 1), 2:(nxy + 1), 2:(NZ + 1)]
-        zfaces = Float64.(file["z_faces"])
+        zfaces = Float64.(file["z_faces"])[2:(end - 1)]
         return (nxy=nxy, theta=theta, id_map=id_map, zfaces=zfaces)
     end
 end

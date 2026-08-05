@@ -45,7 +45,11 @@ end
             "z_centers" => vcat(EXPECTED_Z_FACES[1],
                 (EXPECTED_Z_FACES[1:(end - 1)] .+ EXPECTED_Z_FACES[2:end]) ./ 2,
                 EXPECTED_Z_FACES[end]),
-            "z_faces" => EXPECTED_Z_FACES,
+            "z_faces" => vcat(
+                2EXPECTED_Z_FACES[1] - EXPECTED_Z_FACES[2],
+                EXPECTED_Z_FACES,
+                2EXPECTED_Z_FACES[end] - EXPECTED_Z_FACES[end - 1],
+            ),
             "nx" => nxy,
             "ny" => nxy,
             "nz" => NZ,
