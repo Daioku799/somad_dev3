@@ -18,8 +18,9 @@ const SILICON_MIN_M = 0.1e-3
 const SILICON_MAX_M = 1.1e-3
 const TSV_COORDS_M = [(x, y) for y in (0.3e-3, 0.5e-3, 0.7e-3, 0.9e-3)
                             for x in (0.3e-3, 0.5e-3, 0.7e-3, 0.9e-3)]
-const RESOLUTIONS = [60, 120, 240, 480, 600, 1200, 2400]
-const FULL_PLOT_RESOLUTIONS = Set([240, 480, 600])
+const REQUESTED_RESOLUTIONS = [240, 480, 600]
+const FINE_RESOLUTIONS = [1200, 2400]
+const FINE_DIAMETER_UM = 5.0
 const SUBCELL_SAMPLES = 50
 
 """Return true when at least half of a square FVM cell lies in the circle."""
@@ -99,7 +100,7 @@ function id_plot(id, nxy, diameter_um; zoom=false)
         c=palette, clims=(0.5, 6.5), colorbar=false, interpolate=false,
         xlims=(plot_min_mm, plot_max_mm), ylims=(plot_min_mm, plot_max_mm),
         aspect_ratio=:equal,
-        size=zoom ? (600, 600) : (1200, 1200),
+        size=zoom ? (600, 600) : (nxy >= 2400 ? (2400, 2400) : (1200, 1200)),
         xlabel="X [mm]", ylabel="Y [mm]",
         title="$(nxy)×$(nxy), d=$(diameter_um) µm",
     )
@@ -112,11 +113,15 @@ function generate_for_diameter(diameter_um::Float64)
     output_dir = joinpath("plots", "resolution_previews", "thin_tsv_d$(diameter_label)um")
     mkpath(output_dir)
 
-    full_plots = Any[]
+    requested_full_plots = Any[]
+    fine_full_plots = Any[]
     zoom_plots = Any[]
+    fine_zoom_plots = Any[]
     rows = NamedTuple[]
+    include_fine = isapprox(diameter_um, FINE_DIAMETER_UM; atol=1e-12)
+    resolutions = include_fine ? vcat(REQUESTED_RESOLUTIONS, FINE_RESOLUTIONS) : REQUESTED_RESOLUTIONS
 
-    for nxy in RESOLUTIONS
+    for nxy in resolutions
         @printf("Building thin-TSV ID slice for %d×%d ... ", nxy, nxy)
         id, dx = build_id_slice(nxy, radius)
         copper_total = count(==(UInt8(1)), id)
@@ -138,24 +143,47 @@ function generate_for_diameter(diameter_um::Float64)
         p_zoom = id_plot(id, nxy, diameter_um; zoom=true)
         savefig(p_zoom, joinpath(output_dir, "zoom_$(nxy)x$(nxy).png"))
         push!(zoom_plots, p_zoom)
+        if nxy in FINE_RESOLUTIONS
+            push!(fine_zoom_plots, p_zoom)
+        end
 
-        if nxy in FULL_PLOT_RESOLUTIONS
-            p_full = id_plot(id, nxy, diameter_um; zoom=false)
-            savefig(p_full, joinpath(output_dir, "full_$(nxy)x$(nxy).png"))
-            push!(full_plots, p_full)
+        p_full = id_plot(id, nxy, diameter_um; zoom=false)
+        savefig(p_full, joinpath(output_dir, "full_$(nxy)x$(nxy).png"))
+        if nxy in REQUESTED_RESOLUTIONS
+            push!(requested_full_plots, p_full)
+        else
+            push!(fine_full_plots, p_full)
         end
         println("done")
     end
 
     p_full_all = plot(
-        full_plots..., layout=(1, 3), size=(1800, 700),
+        requested_full_plots..., layout=(1, 3), size=(1800, 700),
         plot_title="TSV full-chip material map comparison, d=$(diameter_um) µm",
         margin=5mm, left_margin=10mm, bottom_margin=7mm,
     )
     savefig(p_full_all, joinpath(output_dir, "full_comparison.png"))
 
+    if include_fine
+        p_fine_all = plot(
+            fine_full_plots..., layout=(1, 2), size=(1600, 800),
+            plot_title="Fine-grid TSV material map comparison, d=$(diameter_um) µm",
+            margin=5mm, left_margin=10mm, bottom_margin=7mm,
+        )
+        savefig(p_fine_all, joinpath(output_dir, "fine_full_comparison_1200_2400.png"))
+
+        p_fine_zoom = plot(
+            fine_zoom_plots..., layout=(1, 2), size=(1200, 600),
+            plot_title="Fine-grid TSV boundary comparison, d=$(diameter_um) µm",
+            margin=5mm,
+        )
+        savefig(p_fine_zoom, joinpath(output_dir, "fine_zoom_comparison_1200_2400.png"))
+    end
+
+    zoom_layout = include_fine ? (2, 3) : (1, 3)
+    zoom_size = include_fine ? (1800, 1100) : (1800, 600)
     p_zoom_all = plot(
-        zoom_plots..., layout=(2, 4), size=(2000, 1100),
+        zoom_plots..., layout=zoom_layout, size=zoom_size,
         plot_title="Thin TSV boundary resolution comparison",
         margin=4mm,
     )
