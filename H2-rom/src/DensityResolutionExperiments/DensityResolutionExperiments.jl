@@ -5,6 +5,7 @@ using Random
 export cell_capacity,
        count_layout,
        encode_layout_density,
+       encode_layout_fraction,
        coarsen_master_occupancy,
        generate_master_occupancies,
        master_signature
@@ -80,6 +81,21 @@ function encode_layout_density(coordinates, g::Int; kwargs...)
     maximum(counts) <= capacity ||
         throw(ArgumentError("layout occupancy exceeds the g=$g cell capacity"))
     return vec(counts ./ capacity), counts, fill(capacity, g, g)
+end
+
+"""
+Encode a fixed, arbitrary physical layout as a spatial TSV-fraction histogram.
+
+Unlike `encode_layout_density`, this representation does not assume that the
+coordinates were generated on the candidate lattice of the requested
+resolution. Its features sum to one at every resolution, so it is suitable for
+Experiment 1A where geometry must remain unchanged.
+"""
+function encode_layout_fraction(coordinates, g::Int; kwargs...)
+    counts = count_layout(coordinates, g; kwargs...)
+    total = sum(counts)
+    total > 0 || throw(ArgumentError("layout must contain at least one TSV"))
+    return vec(counts ./ total), counts
 end
 
 """

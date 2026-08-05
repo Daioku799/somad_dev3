@@ -31,5 +31,9 @@ using .DensityResolutionExperiments
         mu, counts, capacities = encode_layout_density(coordinates, g)
         @test sum(counts) == 16
         @test round.(Int, reshape(mu, g, g) .* capacities) == counts
+
+        fractions, fraction_counts = encode_layout_fraction(coordinates, g)
+        @test fraction_counts == counts
+        @test sum(fractions) ≈ 1.0
     end
 end
