@@ -16,21 +16,25 @@ using .PODEngine
 include(abspath("H2-rom/src/ROMInterpolator/ROMInterpolator.jl"))
 using .ROMInterpolator
 
-const MANIFEST_PATH = "data/manifest.json"
-const TRAIN_COUNT = 40
-const HOLDOUT_COUNT = 10
+const MANIFEST_PATH = get(ENV, "ROM_EVAL_MANIFEST", "data/manifest.json")
+const OUTPUT_ROOT = get(ENV, "ROM_EVAL_OUTPUT_ROOT", "plots/for_paper")
+const TRAIN_COUNT = parse(Int, get(ENV, "ROM_EVAL_TRAIN_COUNT", "40"))
+const HOLDOUT_COUNT = parse(Int, get(ENV, "ROM_EVAL_HOLDOUT_COUNT", "10"))
 const AMBIENT_TEMPERATURE_K = 300.0
 const RIC_THRESHOLD = 0.9999
 const BASELINE_EPSILON = 1.0
 const BASELINE_LAMBDA = 1e-6
-const SNAPSHOT_COUNTS = [5, 10, 15, 20, 40]
+const SNAPSHOT_COUNTS = sort(unique(filter(
+    count -> count <= TRAIN_COUNT,
+    [5, 10, 15, 20, 40, TRAIN_COUNT],
+)))
 const FIXED_MODE_COUNT_EXP2 = 4
 const EPSILON_VALUES = [0.5, 1.0, 1.5, 2.0, 3.0]
 const LAMBDA_VALUES = [1e-8, 1e-6, 1e-4, 1e-2]
 
-const EXP2_DIR = "plots/for_paper/02_snapshot_count"
-const EXP3_DIR = "plots/for_paper/03_pod_modes"
-const EXP4_DIR = "plots/for_paper/04_rbf_parameters"
+const EXP2_DIR = joinpath(OUTPUT_ROOT, "02_snapshot_count")
+const EXP3_DIR = joinpath(OUTPUT_ROOT, "03_pod_modes")
+const EXP4_DIR = joinpath(OUTPUT_ROOT, "04_rbf_parameters")
 
 function snapshot_temperature(path::String)
     return JLD2.jldopen(path, "r") do file
@@ -56,6 +60,51 @@ end
 function load_fixed_dataset(manifest_path::String=MANIFEST_PATH)
     isfile(manifest_path) || error("manifest not found: $manifest_path")
     manifest = JSON3.read(read(manifest_path, String))
+    if hasproperty(manifest, :runs) && hasproperty(manifest, :splits)
+        selected = sort(
+            collect(filter(case -> 1 <= Int(case.case_id) <= TRAIN_COUNT + HOLDOUT_COUNT, manifest.cases));
+            by=case -> Int(case.case_id),
+        )
+        length(selected) == TRAIN_COUNT + HOLDOUT_COUNT ||
+            error("expected cases 1--$(TRAIN_COUNT + HOLDOUT_COUNT) in paper manifest, found $(length(selected))")
+
+        temperatures = Vector{Vector{Float64}}()
+        parameters = Vector{Vector{Float64}}()
+        shapes = Tuple{Int, Int, Int}[]
+        physical_grids = Tuple{Int, Int, Int}[]
+        case_ids = Int[]
+        snapshot_ids = String[]
+        for case in selected
+            case_id = Int(case.case_id)
+            key = "case_$(lpad(case_id, 3, '0'))_n0240"
+            hasproperty(manifest.runs, Symbol(key)) || error("missing run record: $key")
+            run = getproperty(manifest.runs, Symbol(key))
+            String(run.status) in ("success", "cached") || error("run $key is not valid: $(run.status)")
+            hasproperty(run, :validation) && Bool(run.validation.valid) || error("run $key did not pass validation")
+            path = normpath(String(run.snapshot_path))
+            isfile(path) || error("snapshot does not exist: $path")
+            temperature = snapshot_temperature(path)
+            all(isfinite, temperature) || error("case $case_id contains non-finite temperatures")
+            mu = Float64.(case.mu)
+            length(mu) == 16 || error("case $case_id has $(length(mu)) parameters, expected 16")
+            metadata = snapshot_metadata(path)
+            push!(temperatures, vec(temperature))
+            push!(parameters, mu)
+            push!(shapes, size(temperature))
+            push!(physical_grids, (metadata.nx, metadata.ny, metadata.nz))
+            push!(case_ids, case_id)
+            push!(snapshot_ids, String(run.validation.snapshot_sha256))
+        end
+        length(unique(shapes)) == 1 || error("inconsistent saved array shapes: $(unique(shapes))")
+        length(unique(physical_grids)) == 1 || error("inconsistent physical grids: $(unique(physical_grids))")
+        length(unique(snapshot_ids)) == length(snapshot_ids) || error("snapshot hashes are not unique")
+        return (
+            X=reduce(hcat, temperatures), Mu=reduce(hcat, parameters), case_ids=case_ids,
+            snapshot_ids=snapshot_ids, shape=only(unique(shapes)),
+            physical_grid=only(unique(physical_grids)), train_indices=1:TRAIN_COUNT,
+            holdout_indices=(TRAIN_COUNT + 1):(TRAIN_COUNT + HOLDOUT_COUNT),
+        )
+    end
     cases = sort(
         collect(filter(case -> case.status == "success", manifest.cases));
         by=case -> Int(case.id),
@@ -309,8 +358,8 @@ function evaluate_snapshot_count(data)
     open(joinpath(EXP2_DIR, "README_REEVALUATED.md"), "w") do io
         println(io, "# Experiment 2: training-snapshot count")
         println(io)
-        println(io, "- Source dataset: 50 successful saved FVM snapshots.")
-        println(io, "- Fixed holdout: cases 41--50; training subsets are nested prefixes of cases 1--40.")
+        println(io, "- Source dataset: $(TRAIN_COUNT + HOLDOUT_COUNT) validated saved FVM snapshots.")
+        println(io, "- Fixed holdout: cases $(TRAIN_COUNT + 1)--$(TRAIN_COUNT + HOLDOUT_COUNT); training subsets are nested prefixes of cases 1--$TRAIN_COUNT.")
         println(io, "- Counts compared: $(join(SNAPSHOT_COUNTS, ", ")).")
         println(io, "- POD RIC threshold: $RIC_THRESHOLD; Gaussian RBF epsilon=$BASELINE_EPSILON, lambda=$BASELINE_LAMBDA.")
         println(io, "- Crosses in the plots denote holdout points outside the per-feature training bounds.")
@@ -324,7 +373,7 @@ function evaluate_pod_modes(data, baseline_pod)
     mkpath(EXP3_DIR)
     basis_full, singular_values, coefficients_full, mean_field = baseline_pod
     max_modes = size(basis_full, 2)
-    mode_counts = sort(unique(min.(max_modes, [1, 2, 3, 5, 8, 10, 15, 20, 25, 30, 35, max_modes])))
+    mode_counts = sort(unique(min.(max_modes, [1, 2, 3, 5, 8, 10, 15, 20, 25, 30, 35, 40, 50, 60, max_modes])))
     ric = cumsum(singular_values .^ 2) ./ sum(singular_values .^ 2)
     X_train = data.X[:, data.train_indices]
     Mu_train = data.Mu[:, data.train_indices]
@@ -442,7 +491,7 @@ function evaluate_pod_modes(data, baseline_pod)
     open(joinpath(EXP3_DIR, "README_REEVALUATED.md"), "w") do io
         println(io, "# Experiment 3: retained POD modes")
         println(io)
-        println(io, "- Train/holdout split: cases 1--40 / 41--50.")
+        println(io, "- Train/holdout split: cases 1--$TRAIN_COUNT / $(TRAIN_COUNT + 1)--$(TRAIN_COUNT + HOLDOUT_COUNT).")
         println(io, "- Evaluated mode counts: $(join(mode_counts, ", ")).")
         println(io, "- Gaussian RBF epsilon=$BASELINE_EPSILON, lambda=$BASELINE_LAMBDA.")
         println(io, "- The POD projection curve uses each holdout truth field's exact projection and is a lower bound for this basis.")
@@ -648,7 +697,7 @@ function evaluate_rbf_parameters(data, baseline_pod)
         println(io, "# Experiment 4: Gaussian RBF parameter sensitivity")
         println(io)
         println(io, "- This is an epsilon/lambda sweep for one Gaussian kernel, not a comparison of kernel families.")
-        println(io, "- Train/holdout split: cases 1--40 / 41--50; retained POD modes: $(size(basis, 2)).")
+        println(io, "- Train/holdout split: cases 1--$TRAIN_COUNT / $(TRAIN_COUNT + 1)--$(TRAIN_COUNT + HOLDOUT_COUNT); retained POD modes: $(size(basis, 2)).")
         println(io, "- Epsilon values: $(join(EPSILON_VALUES, ", ")); lambda values: $(join(LAMBDA_VALUES, ", ")).")
         println(io, "- Baseline: epsilon=$BASELINE_EPSILON, lambda=$BASELINE_LAMBDA.")
         println(io, @sprintf("- Best mean L2: epsilon=%.1f, lambda=%.0e (%.5f%%).", best_l2.epsilon, best_l2.lambda, best_l2.mean_l2_percent))
@@ -668,8 +717,8 @@ function write_split_and_dataset_metadata(data)
         )
         for index in eachindex(data.case_ids)
     ]
-    write_namedtuple_tsv("plots/for_paper/experiments_2_to_4_split.tsv", rows)
-    open("plots/for_paper/experiments_2_to_4_dataset.txt", "w") do io
+    write_namedtuple_tsv(joinpath(OUTPUT_ROOT, "experiments_2_to_4_split.tsv"), rows)
+    open(joinpath(OUTPUT_ROOT, "experiments_2_to_4_dataset.txt"), "w") do io
         println(io, "successful_snapshots=$(length(data.case_ids))")
         println(io, "train_count=$TRAIN_COUNT")
         println(io, "holdout_count=$HOLDOUT_COUNT")
@@ -681,7 +730,11 @@ function write_split_and_dataset_metadata(data)
 end
 
 function main()
-    println("Loading fixed 50-snapshot dataset (no FVM will be run)...")
+    if get(ENV, "ROM_EVAL_REQUIRE_NEW_OUTPUT", "0") == "1" && ispath(OUTPUT_ROOT)
+        error("refusing to reuse existing output path: $OUTPUT_ROOT")
+    end
+    mkpath(OUTPUT_ROOT)
+    println("Loading fixed $(TRAIN_COUNT + HOLDOUT_COUNT)-snapshot dataset (no FVM will be run)...")
     data = load_fixed_dataset()
     println("Physical grid: $(data.physical_grid); saved array shape: $(data.shape)")
     write_split_and_dataset_metadata(data)

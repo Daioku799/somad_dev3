@@ -1,0 +1,7 @@
+successful_snapshots=90
+train_count=80
+holdout_count=10
+physical_grid=240x240x30
+saved_array_shape=242x242x32
+parameter_dimension=16
+ambient_temperature_K=300.0
