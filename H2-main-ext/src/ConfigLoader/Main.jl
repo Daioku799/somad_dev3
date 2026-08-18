@@ -149,6 +149,47 @@ function load_config(config_path::String, tsv_config_path::String)
     epsilon = Float64(get(c_json, "epsilon", 1e-6))
     max_iter = get(c_json, "max_iter", 10000)
 
+    # 5. Heat sources (optional). Absent -> default uniform sources, which
+    # reproduce the previously hard-coded H2-main-original configuration.
+    power = PowerSourceConfig()
+    if haskey(c_json, "power_sources")
+        ps = c_json["power_sources"]
+        d = PowerSourceConfig()
+        q_ref = Float64(get(ps, "q_ref", d.q_ref))
+        block_lx = Float64(get(ps, "block_lx", d.block_lx))
+        block_ly = Float64(get(ps, "block_ly", d.block_ly))
+        px = haskey(ps, "positions_x") ? Float64.(ps["positions_x"]) : d.positions_x
+        py = haskey(ps, "positions_y") ? Float64.(ps["positions_y"]) : d.positions_y
+
+        n_block = length(px) * length(py)
+        scale = if haskey(ps, "scale")
+            rows = ps["scale"]
+            if !(rows isa AbstractVector) || isempty(rows)
+                throw(ArgumentError("power_sources.scale must be a non-empty array of rows"))
+            end
+            m = Matrix{Float64}(undef, length(rows), n_block)
+            for (r, row) in enumerate(rows)
+                if length(row) != n_block
+                    throw(ArgumentError(
+                        "power_sources.scale row $r has $(length(row)) entries, " *
+                        "expected $n_block (= length(positions_x) * length(positions_y))"))
+                end
+                m[r, :] = Float64.(row)
+            end
+            m
+        else
+            ones(3, n_block)
+        end
+        if size(scale, 1) != 3
+            throw(ArgumentError(
+                "power_sources.scale must have 3 rows (one per silicon die), got $(size(scale,1))"))
+        end
+        if any(<(0.0), scale)
+            throw(ArgumentError("power_sources.scale must be non-negative"))
+        end
+        power = PowerSourceConfig(q_ref, block_lx, block_ly, px, py, scale)
+    end
+
     return ModelConfig(
         materials,
         layers,
@@ -163,7 +204,8 @@ function load_config(config_path::String, tsv_config_path::String)
         snapshot_dir,
         fixed_silicon_lambda,
         epsilon,
-        max_iter
+        max_iter,
+        power
     )
 end
 

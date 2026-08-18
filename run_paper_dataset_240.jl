@@ -124,6 +124,7 @@ function build_model_config(mu::Vector{Float64}, data_root::String)
         base.fixed_silicon_lambda,
         1e-6,
         8000,
+        base.power,
     )
 end
 

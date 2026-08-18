@@ -1,6 +1,7 @@
 module Types
 
 export Material, Layer, DensityMapConfig, ManufacturingConfig, GASettings, TSVConfig, ModelConfig
+export PowerSourceConfig, is_uniform_power
 
 struct Material
     id::Int
@@ -52,6 +53,44 @@ struct TSVConfig
     ga::Union{Nothing, GASettings}
 end
 
+"""
+    PowerSourceConfig
+
+発熱源ブロックの配置と発熱密度倍率。
+
+ブロックは各ダイの `positions_x` x `positions_y` 格子上に置かれ、体積発熱密度は
+`q_ref * scale[die, block]` である。`scale` の列は1ダイ内のブロックを x を内側に
+した順（`(iy-1)*length(positions_x) + ix`）で並べる。これは
+`ModelBuilder.fill_power_grid!` の元のループ順と一致する。
+
+既定値は H2-main-original の固定発熱源（3ダイ x 4ブロック、全て等倍）を再現する。
+"""
+struct PowerSourceConfig
+    q_ref::Float64
+    block_lx::Float64
+    block_ly::Float64
+    positions_x::Vector{Float64}
+    positions_y::Vector{Float64}
+    scale::Matrix{Float64}
+end
+
+# Default reproduces the previously hard-coded sources in ModelBuilder.fill_power_grid!
+PowerSourceConfig() = PowerSourceConfig(
+    1.6e11,
+    0.2e-3, 0.2e-3,
+    [0.3e-3, 0.7e-3],
+    [0.3e-3, 0.7e-3],
+    ones(3, 4)
+)
+
+"""
+    is_uniform_power(p::PowerSourceConfig) -> Bool
+
+全ブロックが等倍かどうか。真なら発熱項は従来の一様 `Q_src` と一致するため、
+呼び出し側は従来経路をそのまま使ってビット一致を保証できる。
+"""
+is_uniform_power(p::PowerSourceConfig) = all(==(1.0), p.scale)
+
 struct ModelConfig
     materials::Vector{Material}
     layers::Vector{Layer}
@@ -67,6 +106,17 @@ struct ModelConfig
     fixed_silicon_lambda::Union{Nothing, Float64}
     epsilon::Float64
     max_iter::Int
+    power::PowerSourceConfig
 end
+
+# Backward-compatible 14-argument constructor. Existing call sites predate the
+# `power` field and must keep building the default (uniform) heat source.
+# NOTE: call sites that copy fields from another config do NOT inherit that
+# config's `power` through this path; they must pass it explicitly.
+ModelConfig(materials, layers, tsv, lx, ly, pg_dpth, s_dpth, d_ufill, r_bump,
+            snapshot_enabled, snapshot_dir, fixed_silicon_lambda, epsilon, max_iter) =
+    ModelConfig(materials, layers, tsv, lx, ly, pg_dpth, s_dpth, d_ufill, r_bump,
+                snapshot_enabled, snapshot_dir, fixed_silicon_lambda, epsilon, max_iter,
+                PowerSourceConfig())
 
 end # module

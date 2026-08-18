@@ -167,7 +167,8 @@ function default_model_config()
         base_config.snapshot_dir,
         base_config.fixed_silicon_lambda,
         base_config.epsilon,
-        base_config.max_iter
+        base_config.max_iter,
+        base_config.power
     )
 end
 

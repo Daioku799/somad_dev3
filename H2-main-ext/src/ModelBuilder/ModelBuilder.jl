@@ -11,6 +11,7 @@ using .GeometryLogic
 using .ComponentGenerator
 
 export build_model, CoordinateSystem, fill_power_grid!, fill_cylinder!, fill_sphere!, fill_plates!, set_properties!
+export power_blocks, build_power_map
 
 """
     build_model(config::ModelConfig, nxy::Int)
@@ -73,15 +74,38 @@ end
 
 # --- Internal Helper Fillers with BBox Optimization and Boundary Guard ---
 
+"""
+    power_blocks(config, zm) -> Vector{Tuple{NTuple{3,Float64}, NTuple{3,Float64}, Float64}}
+
+発熱源ブロックを `(bmin, bmax, q)` の列として返す。ID充填と発熱密度マップ構築の
+両方がこの関数だけを幾何の正本として使う。
+
+列挙順は元のハードコード実装（die 外側、y、x 内側）と一致させてある。
+`PowerSourceConfig.scale` の列順もこれに合わせる。
+"""
+function power_blocks(config, zm)
+    p = config.power
+    s = config.s_dpth - config.pg_dpth
+    z_bases = [zm[3]+s, zm[6]+s, zm[9]+s]
+    nx = length(p.positions_x)
+    blocks = Tuple{NTuple{3,Float64}, NTuple{3,Float64}, Float64}[]
+    for (d, z_base) in enumerate(z_bases)
+        for (iy, y) in enumerate(p.positions_y), (ix, x) in enumerate(p.positions_x)
+            b = (iy - 1) * nx + ix
+            q = p.q_ref * p.scale[d, b]
+            push!(blocks, ((x, y, z_base),
+                           (x + p.block_lx, y + p.block_ly, z_base + config.pg_dpth),
+                           q))
+        end
+    end
+    return blocks
+end
+
 function fill_power_grid!(ID, config, zm, ox, dh, Z)
     SZ = size(ID)
-    lx=0.2e-3; ly=0.2e-3
-    s = config.s_dpth - config.pg_dpth
-    for z_base in [zm[3]+s, zm[6]+s, zm[9]+s], y in [0.3e-3, 0.7e-3], x in [0.3e-3, 0.7e-3]
-        bmin = (x, y, z_base)
-        bmax = (x + lx, y + ly, z_base + config.pg_dpth)
+    for (bmin, bmax, _q) in power_blocks(config, zm)
         st, ed = get_index_range(bmin, bmax, ox, dh, SZ, Z)
-        
+
         for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
             if ID[i,j,k] != 0 continue end
             c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
@@ -91,6 +115,35 @@ function fill_power_grid!(ID, config, zm, ox, dh, Z)
             end
         end
     end
+end
+
+"""
+    build_power_map(config, ID, ox, dh, coordsys) -> Array{Float64,3}
+
+セルごとの体積発熱密度 [W/m^3] を返す。`fill_power_grid!` と同じブロック定義を
+使い、実際に MAT_PWRSRC (ID==7) となったセルにだけ値を書く。ブロック外は 0。
+
+ブロックが重なる場合は後勝ちではなく最大値を採る。既定配置ではブロックは
+重ならないため、この規則は挙動に影響しない。
+"""
+function build_power_map(config, ID::Array{UInt8,3}, ox, dh, coordsys)
+    SZ = size(ID)
+    Z = coordsys.Z
+    zm = calculate_zm(config)
+    qmap = zeros(Float64, SZ)
+    for (bmin, bmax, q) in power_blocks(config, zm)
+        st, ed = get_index_range(bmin, bmax, ox, dh, SZ, Z)
+
+        for k in max(1, st[3]-1):ed[3], j in max(1, st[2]-1):ed[2], i in max(1, st[1]-1):ed[1]
+            if ID[i,j,k] != 7 continue end
+            c1 = (ox[1] + dh[1]*(i-2), ox[2] + dh[2]*(j-2), Z[k])
+            c2 = (c1[1] + dh[1], c1[2] + dh[2], Z[k+1])
+            if is_included_rect(c1, c2, bmin, bmax)
+                qmap[i,j,k] = max(qmap[i,j,k], q)
+            end
+        end
+    end
+    return qmap
 end
 
 function fill_cylinder!(ID, obj, ox, dh, Z)

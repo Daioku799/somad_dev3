@@ -47,13 +47,23 @@ end
 """
 @brief 計算領域内部の熱源項の設定
 """
-function HeatSrc!(hs::Array{Float64,3}, ID::Array{UInt8,3}, par)
+function HeatSrc!(hs::Array{Float64,3}, ID::Array{UInt8,3}, par, qmap=nothing)
     backend = get_backend(par)
     SZ = size(hs)
     # PowerSource ID is fixed to 7 in Defaults.jl
-    @floop backend for k in 2:SZ[3]-1, j in 2:SZ[2]-1, i in 2:SZ[1]-1
-        if ID[i,j,k] == 7
-            hs[i,j,k] = Q_src
+    if qmap === nothing
+        # Uniform source: unchanged legacy path, kept bit-identical.
+        @floop backend for k in 2:SZ[3]-1, j in 2:SZ[2]-1, i in 2:SZ[1]-1
+            if ID[i,j,k] == 7
+                hs[i,j,k] = Q_src
+            end
+        end
+    else
+        # Spatially varying source: qmap already holds absolute W/m^3 per cell.
+        @floop backend for k in 2:SZ[3]-1, j in 2:SZ[2]-1, i in 2:SZ[1]-1
+            if ID[i,j,k] == 7
+                hs[i,j,k] = qmap[i,j,k]
+            end
         end
     end
 end
@@ -75,11 +85,11 @@ function conditions(F, SZ, Δh, solver, smoother)
     @printf(F, "ε      : %e\n", itr_tol)
 end
 
-function main(Δh, Δt, wk, ZC, ΔZ, ID, solver, smoother, bc_set, par; is_steady::Bool=false)
+function main(Δh, Δt, wk, ZC, ΔZ, ID, solver, smoother, bc_set, par; is_steady::Bool=false, qmap=nothing)
   conv_data = ConvergenceData(solver, smoother)
   SZ = size(wk.θ)
   qsrf = zeros(Float64, SZ[1], SZ[2])
-  HeatSrc!(wk.hsrc, ID, par)
+  HeatSrc!(wk.hsrc, ID, par, qmap)
   HC = BoundaryConditions.set_BC_coef(bc_set)
   F = open("log.txt", "w")
   conditions(F, SZ, Δh, solver, smoother)
@@ -174,7 +184,18 @@ function q3d(NX::Int, NY::Int, NZ::Int,
     BoundaryConditions.apply_boundary_conditions!(wk.θ, wk.λ, wk.ρ, wk.cp, wk.mask, bc_set)
 
     # 4. Simulation
-    tm = @elapsed conv_data = main(Δh, Δt, wk, ZC, ΔZ, ID, solver, smoother, bc_set, par, is_steady=is_steady)
+    # A uniform power map is left as `nothing` so the legacy source path runs
+    # unchanged; only a non-uniform configuration builds an explicit map.
+    qmap = nothing
+    if !modelA.ModelBuilder.ConfigLoader.Types.is_uniform_power(config.power)
+        qmap = modelA.ModelBuilder.build_power_map(config, ID, ox, Δh, coordsys)
+        total_W = sum(qmap[i,j,k] * dx * dy * ΔZ[k]
+                      for k in 2:MZ-1, j in 2:MY-1, i in 2:MX-1)
+        println("Non-uniform power map: scale=", config.power.scale,
+                "  total source power = ", @sprintf("%.6f", total_W), " W")
+    end
+    tm = @elapsed conv_data = main(Δh, Δt, wk, ZC, ΔZ, ID, solver, smoother, bc_set, par,
+                                   is_steady=is_steady, qmap=qmap)
 
     # 5. Result Plots
     plot_slice_xz_nu(2, mode, wk.θ, 0.3e-3, SZ, ox, Δh, Z, "temp3_xz_nu_y=0.3.png")
@@ -226,7 +247,11 @@ function q3d(NX::Int, NY::Int, NZ::Int,
                 "config_summary" => Dict(
                     "tsv_count" => length(config.tsv.coords),
                     "tsv_radius" => config.tsv.radius,
-                    "tsv_coords" => config.tsv.coords
+                    "tsv_coords" => config.tsv.coords,
+                    "power_q_ref" => config.power.q_ref,
+                    "power_scale" => config.power.scale,
+                    "power_positions_x" => config.power.positions_x,
+                    "power_positions_y" => config.power.positions_y
                 )
             ))
         catch e
