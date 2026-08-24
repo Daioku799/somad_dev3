@@ -15,7 +15,10 @@ using Test
         "test_snapshot_generator.jl",
         "test_pod_engine.jl",
         "test_rom_interpolator.jl",
-        "test_rom_validator.jl"
+        "test_rom_validator.jl",
+        "test_pipeline_data.jl",
+        "test_pipeline_report.jl",
+        "test_pipeline_rom.jl"
     ]
     
     for t in tests

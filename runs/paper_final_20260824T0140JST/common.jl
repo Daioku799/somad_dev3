@@ -4,12 +4,13 @@
 
 const ROOT = "/home/foo/somad_dev3"
 
-for m in ("PipelineData", "PipelineReport")
+for m in ("PipelineData", "PipelineReport", "PipelineROM")
     isdefined(Main, Symbol(m)) && continue
     include(joinpath(ROOT, "H2-rom", "src", m, "$(m).jl"))
 end
 using .PipelineData
 using .PipelineReport
+using .PipelineROM
 
 """
     PipelineConfig
