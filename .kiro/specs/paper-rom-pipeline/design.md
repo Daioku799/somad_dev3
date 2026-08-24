@@ -524,7 +524,8 @@ epsilon_constraint_front(primary::Function, constraint::Function, budget::Int,
 ##### Service Interface
 
 ```julia
-struct RunProvenance
+# 解析の進行に伴って設定・乱数指定・警告が追記されるため mutable
+mutable struct RunProvenance
     run_dir::String
     dataset_id::String
     n_cases::Int
@@ -532,13 +533,21 @@ struct RunProvenance
     pod_modes::Int
     rbf_settings::Dict{String,Any}
     seeds::Dict{String,Int}
+    warnings::Vector{String}
     generated_at::String
 end
 
-write_table(prov::RunProvenance, filename::String, header::Vector{String},
-            rows::Vector{Vector{Any}}; scope::String="pooled")::String
-write_text(prov::RunProvenance, filename::String, body::String)::String
-write_provenance(prov::RunProvenance)::String
+output_root(prov::RunProvenance)::String
+resolve_output(prov::RunProvenance, filename::AbstractString)::String
+write_table(prov::RunProvenance, filename::AbstractString, header::AbstractVector,
+            rows::AbstractVector; scope::AbstractString="pooled")::String
+write_text(prov::RunProvenance, filename::AbstractString, body::AbstractString)::String
+set_model_settings!(prov::RunProvenance; pod_modes, rbf_settings)::RunProvenance
+record_seed!(prov::RunProvenance, name::AbstractString, seed::Integer)::RunProvenance
+record_warning!(prov::RunProvenance, message::AbstractString)::RunProvenance
+warnings(prov::RunProvenance)::Vector{String}
+write_warnings(prov::RunProvenance; filename="warnings.txt")::String
+write_provenance(prov::RunProvenance; filename="provenance.json")::String
 ```
 
 - Preconditions: `prov.run_dir` が存在する
