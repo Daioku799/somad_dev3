@@ -212,3 +212,67 @@ function pod_spectrum(model::RomModel)
     total = sum(s2)
     return model.singular_values, total ≈ 0.0 ? zero(s2) : cumsum(s2) ./ total
 end
+
+"""
+    hot_row_indices(field, idx, k) -> Vector{Int}
+
+指定した列における各行の最大値を求め、その大きい順に `k` 行の添字を返す。
+最大温度は場全体の最大なので、常に上位に来る行だけを見れば足りる。
+探索では1回の評価につき全行を再構成する余裕がないため、この限定を用いる。
+"""
+function hot_row_indices(field::AbstractMatrix{Float64},
+                         idx::AbstractVector{<:Integer}, k::Integer)
+    isempty(idx) && throw(RomBuildError("行の選定に使う列が0件"))
+    n = size(field, 1)
+    k >= 1 || throw(RomBuildError("行数は1以上: $k"))
+    kk = min(Int(k), n)
+    rowmax = fill(-Inf, n)
+    for j in idx
+        col = @view field[:, j]
+        @inbounds @simd for i in 1:n
+            col[i] > rowmax[i] && (rowmax[i] = col[i])
+        end
+    end
+    return collect(partialsortperm(rowmax, 1:kk, rev = true))
+end
+
+"""
+    TmaxEvaluator
+
+限定した行だけで最大温度を予測する評価器。探索の内側で何万回も呼ばれるため、
+基底と平均場をあらかじめ行方向に切り出して保持する。
+`ev(mu)` の形で呼べる。
+"""
+struct TmaxEvaluator
+    rows::Vector{Int}
+    basis_rows::Matrix{Float64}
+    mean_rows::Vector{Float64}
+    interpolator::RBFInterpolator
+end
+
+"""
+    tmax_evaluator(model, rows) -> TmaxEvaluator
+
+`rows` に限定した最大温度の評価器を作る。
+"""
+function tmax_evaluator(model::RomModel, rows::AbstractVector{<:Integer})
+    r = collect(Int, rows)
+    isempty(r) && throw(RomBuildError("評価に使う行が0件"))
+    (minimum(r) >= 1 && maximum(r) <= size(model.basis, 1)) ||
+        throw(RomBuildError("行の添字が基底の範囲外"))
+    return TmaxEvaluator(r, Matrix{Float64}(model.basis[r, :]),
+                         Vector{Float64}(model.mean_field[r]), model.interpolator)
+end
+
+function (ev::TmaxEvaluator)(mu::AbstractVector{<:Real})
+    a = predict(ev.interpolator, Vector{Float64}(mu))
+    v = copy(ev.mean_rows)
+    @inbounds for m in eachindex(a)
+        am = a[m]
+        col = @view ev.basis_rows[:, m]
+        @simd for i in eachindex(v)
+            v[i] += col[i] * am
+        end
+    end
+    return maximum(v)
+end

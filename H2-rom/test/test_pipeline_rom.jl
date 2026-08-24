@@ -175,3 +175,49 @@ const S = make_synthetic()
         @test r.tmax_mae < lin_mae
     end
 end
+
+@testset "PipelineROM 限定行での最大温度評価" begin
+    st = RomSettings(modes = 10, epsilon = 1.0, lambda = 1e-8)
+    m = build_rom(S.field, S.mu, S.train, S.inner, st; names = S.names)
+
+    @testset "全行を使えば完全再構成と一致する" begin
+        # 加算の順序が違うため厳密な同値にはならない。丸め誤差の範囲で一致すればよい
+        ev = tmax_evaluator(m, 1:size(S.field, 1))
+        worst = 0.0
+        for i in vcat(S.validation, S.test)
+            a, b = ev(S.mu[:, i]), predict_tmax(m, S.mu[:, i])
+            @test a ≈ b
+            worst = max(worst, abs(a - b))
+        end
+        @test worst < 1e-9        # 丸め誤差の水準
+    end
+
+    @testset "上位行の選定" begin
+        k = 12
+        rows = hot_row_indices(S.field, S.train, k)
+        @test length(rows) == k
+        @test length(unique(rows)) == k
+        # 選ばれた行は、選ばれなかった行より学習中の最大値が大きい
+        rowmax = vec(maximum(S.field[:, S.train], dims = 2))
+        rest = setdiff(1:size(S.field, 1), rows)
+        @test minimum(rowmax[rows]) >= maximum(rowmax[rest])
+        # 行数が全体を超えても落ちない
+        @test length(hot_row_indices(S.field, S.train, 10^6)) == size(S.field, 1)
+    end
+
+    @testset "限定行でも最大温度が一致する" begin
+        # 学習で上位に来る行を十分取れば、未学習ケースでも最大値は変わらない
+        ev = tmax_evaluator(m, hot_row_indices(S.field, S.train, 40))
+        for i in vcat(S.validation, S.test)
+            @test ev(S.mu[:, i]) ≈ predict_tmax(m, S.mu[:, i])
+        end
+    end
+
+    @testset "不正な指定は中止する" begin
+        @test_throws RomBuildError tmax_evaluator(m, Int[])
+        @test_throws RomBuildError tmax_evaluator(m, [0])
+        @test_throws RomBuildError tmax_evaluator(m, [size(S.field, 1) + 1])
+        @test_throws RomBuildError hot_row_indices(S.field, Int[], 5)
+        @test_throws RomBuildError hot_row_indices(S.field, S.train, 0)
+    end
+end

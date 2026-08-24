@@ -7,7 +7,8 @@ using JLD2
 
 const ROOT = "/home/foo/somad_dev3"
 
-for m in ("PipelineData", "PipelineReport", "PipelineROM", "ObjectiveMetrics")
+for m in ("PipelineData", "PipelineReport", "PipelineROM", "ObjectiveMetrics",
+          "SearchOptimizer")
     isdefined(Main, Symbol(m)) && continue
     include(joinpath(ROOT, "H2-rom", "src", m, "$(m).jl"))
 end
@@ -15,6 +16,7 @@ using .PipelineData
 using .PipelineReport
 using .PipelineROM
 using .ObjectiveMetrics
+using .SearchOptimizer
 
 """
     PipelineConfig
@@ -47,6 +49,7 @@ struct PipelineConfig
 
     # --- 探索と統計 ---
     n_restart::Int                   # 探索のリスタート数
+    search_top_rows::Int             # 探索時に最大温度を評価する行数（上位から）
     learning_curve_seeds::Int        # 学習曲線の試行数
     learning_curve_sizes::Vector{Int}
     epsilon_levels::Int              # ε制約法の刻み数
@@ -123,6 +126,7 @@ const CFG = PipelineConfig(
     "grad3d_max",
 
     400,      # 探索のリスタート数
+    20000,    # 最大温度の評価に使う上位行数（全行との一致を実行時に検証する）
     5,        # 学習曲線の試行数
     [20, 40, 60, 100, 150, 200, 250, 300],
     10,       # ε制約法の刻み数

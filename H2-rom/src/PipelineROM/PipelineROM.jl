@@ -24,5 +24,6 @@ include("builder.jl")
 export RomSettings, RomModel, AccuracyReport, RomBuildError
 export build_rom, select_settings, predict_field, predict_tmax
 export evaluate_accuracy, save_rom, load_rom, pod_spectrum
+export hot_row_indices, TmaxEvaluator, tmax_evaluator
 
 end # module

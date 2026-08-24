@@ -19,7 +19,8 @@ using Test
         "test_pipeline_data.jl",
         "test_pipeline_report.jl",
         "test_pipeline_rom.jl",
-        "test_objective_metrics.jl"
+        "test_objective_metrics.jl",
+        "test_search_optimizer.jl"
     ]
     
     for t in tests
