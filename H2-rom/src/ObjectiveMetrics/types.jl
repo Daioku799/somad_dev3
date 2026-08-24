@@ -25,3 +25,20 @@ struct MetricError <: Exception
 end
 
 Base.showerror(io::IO, e::MetricError) = print(io, "MetricError: ", e.msg)
+
+"""候補指標の由来。設計変数由来の候補は温度場を使わないため予測誤差を持たない。"""
+@enum MetricSource FieldDerived DesignDerived
+
+"""
+    MetricSpec
+
+候補指標の共通の形。温度場由来か設計変数由来かの区別を持つ。
+"""
+struct MetricSpec
+    name::String
+    label::String
+    source::MetricSource
+end
+
+"""その候補が予測誤差を持つか。設計変数由来の候補は温度場を経ないため持たない。"""
+has_prediction_error(spec::MetricSpec) = spec.source === FieldDerived

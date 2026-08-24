@@ -1,20 +1,14 @@
-# 第3目的の候補となる指標の算出（Req 4.1）
+# 第3目的の候補となる指標の算出と統計量（Req 4.1, 4.2）
 #
 #   julia --project=H2-rom runs/paper_final_20260824T0140JST/objective_selection.jl
 #
-# 温度場から算出する候補5種を全ケースについて求め、TSV本数の水準ごとに
-# 値の範囲を出力する。採否の判定はここでは行わない。
+# 温度場由来5種と設計変数由来1種を全ケースについて求め、TSV本数の水準ごとに
+# 最大温度との順位相関と、設計によって取りうる幅を出力する。採否の判定は行わない。
 
 using Printf, Dates, Statistics
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const METRIC_LABEL = Dict(
-    "hot_plane_dt"       => "最高温面の面内温度差 [K]",
-    "hot_plane_grad_max" => "最高温面の面内最大勾配 [K/m]",
-    "max_plane_dt"       => "全面での面内温度差の最大 [K]",
-    "grad3d_max"         => "三次元勾配の最大 [K/m]",
-    "grad3d_mean"        => "三次元勾配の平均 [K/m]")
 
 function main()
     started = now()
@@ -30,48 +24,81 @@ function main()
             minimum(diff(geom.z_centers)), maximum(diff(geom.z_centers)))
 
     t0 = time()
-    m = field_metrics_all(ds.field, inner, geom)
-    @printf("候補5種を %d ケースについて算出（%.1f 秒）\n\n",
-            length(ds.records), time() - t0)
+    fm = field_metrics_all(ds.field, inner, geom)
+    dm = design_metrics_all([r.counts for r in ds.records])
+    @printf("候補 %d 種を %d ケースについて算出（%.1f 秒）\n",
+            length(ALL_METRIC_SPECS), length(ds.records), time() - t0)
+
+    # 設計変数由来の候補は、計画情報が持つ偏り指標と一致していなければならない
+    mismatch = [ds.records[i].name for i in eachindex(ds.records)
+                if dm.sum_sq[i] != ds.records[i].sum_sq]
+    isempty(mismatch) ||
+        error("偏り指標が計画情報と一致しない: $(join(first(mismatch, 5), ", "))")
+    @printf("偏り指標は計画情報の値と全 %d 件で一致\n\n", length(ds.records))
+
+    # 候補名 -> 全ケース分の値
+    value_of = Dict{String,Vector{Float64}}()
+    for name in FIELD_METRIC_NAMES
+        value_of[name] = getproperty(fm, Symbol(name))
+    end
+    for name in DESIGN_METRIC_NAMES
+        value_of[name] = Float64.(getproperty(dm, Symbol(name)))
+    end
 
     # --- ケースごとの値 ---------------------------------------------------
+    metric_names = [sp.name for sp in ALL_METRIC_SPECS]
     write_table(prov, "objective_metrics.tsv",
-                vcat(["name", "split", "budget", "sum_sq", "max_cell", "tmax",
-                      "hot_plane_k"], collect(FIELD_METRIC_NAMES)),
+                vcat(["name", "split", "budget", "max_cell", "tmax", "hot_plane_k"],
+                     metric_names),
                 [begin
                      r = ds.records[i]
-                     vcat([r.name, r.split, r.budget, r.sum_sq, r.max_cell,
-                           ds.tmax[i], m.hot_plane_k[i]],
-                          [getproperty(m, Symbol(k))[i] for k in FIELD_METRIC_NAMES])
+                     vcat([r.name, r.split, r.budget, r.max_cell,
+                           ds.tmax[i], fm.hot_plane_k[i]],
+                          [value_of[k][i] for k in metric_names])
                  end for i in eachindex(ds.records)])
 
-    # --- 水準ごとの範囲 ---------------------------------------------------
+    # --- 水準ごとの順位相関と幅（Req 4.2）---------------------------------
     lv = budgets(ds)
     rows = Any[]
-    for b in lv, k in FIELD_METRIC_NAMES
+    for sp in ALL_METRIC_SPECS, b in lv
         idx = budget_indices(ds, b)
-        v = getproperty(m, Symbol(k))[idx]
-        push!(rows, [b, length(idx), k, minimum(v), maximum(v),
-                     maximum(v) - minimum(v), mean(v), std(v)])
+        s = metric_stats(value_of[sp.name][idx], ds.tmax[idx])
+        push!(rows, [b, s.n, sp.name, string(sp.source), has_prediction_error(sp),
+                     s.spearman, s.min, s.max, s.range, s.mean, s.std, s.range_ratio])
     end
-    write_table(prov, "objective_metric_ranges.tsv",
-                ["budget", "n", "metric", "min", "max", "range", "mean", "std"],
+    write_table(prov, "objective_metric_stats.tsv",
+                ["budget", "n", "metric", "source", "has_prediction_error",
+                 "spearman_vs_tmax", "min", "max", "range", "mean", "std", "range_ratio"],
                 rows; scope = "per_budget")
 
-    println("=== 水準ごとの値の範囲 ===")
-    for k in FIELD_METRIC_NAMES
-        println("\n", METRIC_LABEL[k])
-        @printf("  %-6s %5s %14s %14s %14s %12s\n", "N", "n", "min", "max", "range", "range/mean")
+    println("=== 最大温度との順位相関（|値| が小さいほど独立）===")
+    @printf("%-34s%s\n", "候補", join([lpad("N=$b", 9) for b in lv]))
+    for sp in ALL_METRIC_SPECS
+        line = rpad(sp.label, 34)
         for b in lv
-            v = getproperty(m, Symbol(k))[budget_indices(ds, b)]
-            lo, hi, mu = minimum(v), maximum(v), mean(v)
-            @printf("  N=%-4d %5d %14.5g %14.5g %14.5g %11.2f%%\n",
-                    b, length(v), lo, hi, hi - lo, mu == 0 ? 0.0 : (hi - lo) / abs(mu) * 100)
+            idx = budget_indices(ds, b)
+            line *= @sprintf("%9.3f", spearman(ds.tmax[idx], value_of[sp.name][idx]))
+        end
+        flag = maximum(abs(spearman(ds.tmax[budget_indices(ds, b)],
+                                    value_of[sp.name][budget_indices(ds, b)])) for b in lv)
+        line *= flag < CFG.max_abs_spearman ? "   独立" : @sprintf("   上限%.2f超過", CFG.max_abs_spearman)
+        println(line)
+    end
+
+    println("\n=== 設計によって取りうる幅 ===")
+    for sp in ALL_METRIC_SPECS
+        println("\n", sp.label)
+        @printf("  %-7s %5s %14s %14s %14s %12s\n", "N", "n", "min", "max", "range", "range/mean")
+        for b in lv
+            s = metric_stats(value_of[sp.name][budget_indices(ds, b)],
+                             ds.tmax[budget_indices(ds, b)])
+            @printf("  N=%-5d %5d %14.5g %14.5g %14.5g %11.2f%%\n",
+                    b, s.n, s.min, s.max, s.range, s.range_ratio * 100)
         end
     end
 
     # 最高温面がどこに乗っているかは、指標の意味を左右するため記録する
-    hk = m.hot_plane_k
+    hk = fm.hot_plane_k
     println("\n最大温度が乗る面（内部添字）の分布:")
     for k in sort(unique(hk))
         @printf("  k=%-3d %4d 件（%.1f%%）\n", k, count(==(k), hk),

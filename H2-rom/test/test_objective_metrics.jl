@@ -147,3 +147,86 @@ end
         @test length(FIELD_METRIC_NAMES) == 5
     end
 end
+
+@testset "ObjectiveMetrics 候補の分類と設計変数由来の指標" begin
+
+    @testset "候補は由来の区別を持つ" begin
+        f = metric_spec("grad3d_max")
+        d = metric_spec("sum_sq")
+        @test f.source === FieldDerived
+        @test d.source === DesignDerived
+        # 設計変数由来の候補は予測誤差を持たない
+        @test has_prediction_error(f)
+        @test !has_prediction_error(d)
+        @test_throws MetricError metric_spec("存在しない指標")
+    end
+
+    @testset "全候補が名前で引ける" begin
+        names = [s.name for s in ALL_METRIC_SPECS]
+        for n in FIELD_METRIC_NAMES
+            @test n in names
+        end
+        for n in DESIGN_METRIC_NAMES
+            @test n in names
+        end
+        @test length(ALL_METRIC_SPECS) == length(FIELD_METRIC_NAMES) + length(DESIGN_METRIC_NAMES)
+        @test length(unique(names)) == length(names)
+    end
+
+    @testset "偏り指標はセル別本数の二乗和" begin
+        @test design_bias([3, 3, 3, 3]) == 36
+        @test design_bias([9, 3, 0, 0]) == 90
+        @test design_bias([0, 0, 0, 0]) == 0
+        # 同じ総本数でも集中しているほど大きい
+        @test design_bias([9, 3, 0, 0]) > design_bias([3, 3, 3, 3])
+    end
+
+    @testset "設計変数由来の候補を全ケースについて算出する" begin
+        counts = [[3, 3, 3, 3], [9, 3, 0, 0], [6, 6, 0, 0]]
+        v = design_metrics_all(counts)
+        @test v.sum_sq == [36, 90, 72]
+        @test length(v.sum_sq) == length(counts)
+    end
+end
+
+@testset "ObjectiveMetrics 統計量" begin
+
+    @testset "順位相関が定義どおり" begin
+        @test spearman([1.0, 2.0, 3.0, 4.0], [1.0, 2.0, 3.0, 4.0]) ≈ 1.0
+        @test spearman([1.0, 2.0, 3.0, 4.0], [4.0, 3.0, 2.0, 1.0]) ≈ -1.0
+        # 単調変換に対して不変
+        a = [1.0, 2.0, 3.0, 4.0, 5.0]
+        @test spearman(a, exp.(a)) ≈ 1.0
+        # 既知の小例: Pearson と一致する（同順位なし）
+        x = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y = [2.0, 1.0, 4.0, 3.0, 5.0]
+        @test spearman(x, y) ≈ 0.8
+    end
+
+    @testset "同順位は平均順位で扱う" begin
+        # 全て同値なら相関は定義できない。0 を返す
+        @test spearman([1.0, 1.0, 1.0], [1.0, 2.0, 3.0]) == 0.0
+        # 同順位を含んでも対称性は保たれる
+        x = [1.0, 2.0, 2.0, 3.0]
+        y = [5.0, 4.0, 4.0, 1.0]
+        @test spearman(x, y) ≈ spearman(y, x)
+        @test spearman(x, y) ≈ -1.0
+    end
+
+    @testset "長さが違えば中止する" begin
+        @test_throws MetricError spearman([1.0, 2.0], [1.0, 2.0, 3.0])
+    end
+
+    @testset "候補ごとの統計量" begin
+        tmax = [310.0, 312.0, 314.0, 316.0]
+        vals = [1.0, 3.0, 2.0, 4.0]
+        s = metric_stats(vals, tmax)
+        @test s.n == 4
+        @test s.min == 1.0
+        @test s.max == 4.0
+        @test s.range == 3.0
+        @test s.mean ≈ 2.5
+        @test s.spearman ≈ spearman(tmax, vals)
+        @test s.range_ratio ≈ 3.0 / 2.5
+    end
+end

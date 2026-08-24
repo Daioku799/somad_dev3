@@ -10,8 +10,14 @@ using Statistics
 
 include("types.jl")
 include("field_metrics.jl")
+include("design_metrics.jl")
+include("statistics.jl")
+include("specs.jl")
 
-export GridGeometry, MetricError, FIELD_METRIC_NAMES
+export GridGeometry, MetricError, MetricSource, FieldDerived, DesignDerived, MetricSpec
+export FIELD_METRIC_NAMES, DESIGN_METRIC_NAMES, ALL_METRIC_SPECS
 export field_metrics, field_metrics_all
+export design_bias, design_metrics_all
+export spearman, metric_stats, metric_spec, has_prediction_error
 
 end # module
