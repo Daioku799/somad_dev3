@@ -10,6 +10,9 @@ function _read_plan(spec::DatasetSpec)
     path = joinpath(spec.run_dir, spec.plan_name)
     isfile(path) || throw(DatasetLoadError("計画情報が見つからない: $(path)"))
     plan = JSON.parsefile(path)
+    plan isa AbstractDict ||
+        throw(DatasetLoadError("計画情報 $(path): 最上位が辞書でない ($(typeof(plan)))。" *
+                               "'cap' と 'cases' を持つ辞書が必要"))
     for k in REQUIRED_PLAN_KEYS
         _require(plan, k, "計画情報 $(path)")
     end

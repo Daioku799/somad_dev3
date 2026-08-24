@@ -144,6 +144,23 @@ spec_for(dir) = DatasetSpec(run_dir = dir)
         end
     end
 
+    @testset "異常系: 計画情報の最上位が辞書でない場合は中止" begin
+        mktempdir() do dir
+            make_synthetic(dir)
+            open(joinpath(dir, "case_plan.json"), "w") do io
+                JSON.print(io, [Dict("name" => "c01", "N" => 8)])
+            end
+            err = nothing
+            try
+                load_dataset(spec_for(dir))
+            catch e
+                err = e
+            end
+            @test err isa DatasetLoadError
+            @test occursin("最上位が辞書でない", sprint(showerror, err))
+        end
+    end
+
     @testset "run固有のパスを内部に持たない" begin
         mktempdir() do d1
             mktempdir() do d2
