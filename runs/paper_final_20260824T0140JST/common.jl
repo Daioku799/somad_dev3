@@ -2,15 +2,19 @@
 # 後続の全てのドライバはこのファイルからのみ条件を受け取り、各自で直書きしない。
 # 別のデータセットに対して同じ解析を行うには、末尾の `CFG` の構築だけを書き換える。
 
+using JSON
+using JLD2
+
 const ROOT = "/home/foo/somad_dev3"
 
-for m in ("PipelineData", "PipelineReport", "PipelineROM")
+for m in ("PipelineData", "PipelineReport", "PipelineROM", "ObjectiveMetrics")
     isdefined(Main, Symbol(m)) && continue
     include(joinpath(ROOT, "H2-rom", "src", m, "$(m).jl"))
 end
 using .PipelineData
 using .PipelineReport
 using .PipelineROM
+using .ObjectiveMetrics
 
 """
     PipelineConfig
@@ -65,6 +69,22 @@ function make_provenance(cfg::PipelineConfig, ds::LoadedDataset)
     record_seed!(prov, "learning_curve", cfg.seed_learning_curve)
     record_seed!(prov, "search", cfg.seed_search)
     return prov
+end
+
+
+"""
+格子間隔を代表ケースから読み取る。x・y は等間隔だが z は層構成に従って
+等間隔ではないため、スナップショットの z 座標をそのまま用いる。
+"""
+function load_geometry(cfg::PipelineConfig, ds::LoadedDataset)
+    case_dir = joinpath(cfg.run_dir, "cases", first(ds.records).name)
+    conf = JSON.parsefile(joinpath(case_dir, "config.json"))
+    snap = jldopen(joinpath(case_dir, ds.spec.snapshot_name), "r") do d
+        (z = d["z_centers"], nx = d["nx"], ny = d["ny"])
+    end
+    return GridGeometry(dx = conf["lx"] / snap.nx,
+                        dy = conf["ly"] / snap.ny,
+                        z_centers = snap.z[2:end-1])   # ゴーストを除く
 end
 
 """走査対象の本数を、学習水準の範囲内に限定する。"""

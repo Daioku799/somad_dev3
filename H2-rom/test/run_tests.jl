@@ -18,7 +18,8 @@ using Test
         "test_rom_validator.jl",
         "test_pipeline_data.jl",
         "test_pipeline_report.jl",
-        "test_pipeline_rom.jl"
+        "test_pipeline_rom.jl",
+        "test_objective_metrics.jl"
     ]
     
     for t in tests
