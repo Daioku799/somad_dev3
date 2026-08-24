@@ -51,3 +51,29 @@ function metric_stats(values::AbstractVector{<:Real}, tmax::AbstractVector{<:Rea
             mean = float(mu), std = length(values) >= 2 ? std(values) : 0.0,
             range_ratio = mu == 0 ? 0.0 : float(hi - lo) / abs(mu))
 end
+
+"""
+    metric_prediction_error(truth, pred; spread = nothing) -> NamedTuple
+
+実測の温度場から算出した候補の値 `truth` と、縮約モデルが再構成した温度場から
+算出した値 `pred` の誤差を返す。
+
+`spread` にその候補が設計によって取りうる幅を渡すと、幅に対する誤差の比
+`error_ratio` を返す。渡さない場合は `truth` の幅を用いる。予測可能性の条件は
+この比を用いて判定する（判定のしきい値は呼び出し側が持つ）。
+"""
+function metric_prediction_error(truth::AbstractVector{<:Real},
+                                 pred::AbstractVector{<:Real};
+                                 spread::Union{Nothing,Real} = nothing)
+    length(truth) == length(pred) ||
+        throw(MetricError("実測 $(length(truth)) 件と予測 $(length(pred)) 件で数が違う"))
+    isempty(truth) && throw(MetricError("比較対象が0件"))
+    d = pred .- truth
+    lo, hi = extrema(truth)
+    w = spread === nothing ? float(hi - lo) : float(spread)
+    mae = mean(abs.(d))
+    return (n = length(truth), mae = mae, rmse = sqrt(mean(abs2, d)),
+            maxe = maximum(abs.(d)), bias = mean(d),
+            spearman = length(truth) >= 2 ? spearman(truth, pred) : 0.0,
+            spread = w, error_ratio = w == 0 ? Inf : mae / w)
+end

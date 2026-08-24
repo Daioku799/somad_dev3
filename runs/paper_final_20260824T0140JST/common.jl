@@ -40,6 +40,11 @@ struct PipelineConfig
     max_error_ratio::Float64           # 第3目的の予測誤差の許容比（幅に対する）
     generalization_warn_factor::Float64  # 汎化検証の警告倍率
 
+    # --- 第3目的 ---
+    # 空文字なら2条件による機械的な選定に従う。名前を入れるとその候補に固定し、
+    # 判定表は全候補について残したうえで採用だけを上書きする。
+    third_objective_override::String
+
     # --- 探索と統計 ---
     n_restart::Int                   # 探索のリスタート数
     learning_curve_seeds::Int        # 学習曲線の試行数
@@ -111,6 +116,11 @@ const CFG = PipelineConfig(
     0.7,      # 独立性: |Spearman| < 0.7
     0.2,      # 予測可能性: 誤差 < 幅の 1/5
     2.0,      # 汎化検証: 学習水準の誤差の 2 倍を超えたら警告
+
+    # 第3目的は grad3d_max（三次元勾配の最大）に決定（2026-08-25）。
+    # 2条件を満たすのは grad3d_max（|rho| 0.303）と sum_sq（0.248）の2つで、
+    # 機械的な選定なら相関の低い sum_sq になるが、温度に基づく目的を採る判断。
+    "grad3d_max",
 
     400,      # 探索のリスタート数
     5,        # 学習曲線の試行数

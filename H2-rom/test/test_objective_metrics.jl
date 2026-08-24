@@ -230,3 +230,134 @@ end
         @test s.range_ratio ≈ 3.0 / 2.5
     end
 end
+
+@testset "ObjectiveMetrics 候補の予測誤差" begin
+
+    @testset "誤差が定義どおり" begin
+        truth = [10.0, 12.0, 14.0, 16.0]
+        pred  = [10.5, 11.5, 14.5, 15.5]
+        e = metric_prediction_error(truth, pred)
+        @test e.n == 4
+        @test e.mae ≈ 0.5
+        @test e.rmse ≈ 0.5
+        @test e.maxe ≈ 0.5
+        @test e.bias ≈ 0.0
+        @test e.spread ≈ 6.0            # truth の幅
+        @test e.error_ratio ≈ 0.5 / 6.0
+    end
+
+    @testset "完全に一致すれば誤差ゼロ・相関1" begin
+        v = [3.0, 1.0, 4.0, 1.5, 5.0]
+        e = metric_prediction_error(v, v)
+        @test e.mae == 0.0
+        @test e.maxe == 0.0
+        @test e.spearman ≈ 1.0
+        @test e.error_ratio == 0.0
+    end
+
+    @testset "偏りを検出する" begin
+        truth = [10.0, 12.0, 14.0]
+        e = metric_prediction_error(truth, truth .+ 2.0)
+        @test e.bias ≈ 2.0
+        @test e.mae ≈ 2.0
+        @test e.spearman ≈ 1.0          # 一定の偏りは順位を変えない
+    end
+
+    @testset "幅を外から与えられる" begin
+        truth = [10.0, 12.0, 14.0]
+        pred  = [10.0, 12.0, 15.0]
+        e = metric_prediction_error(truth, pred; spread = 20.0)
+        @test e.spread == 20.0
+        @test e.error_ratio ≈ (1.0 / 3.0) / 20.0
+    end
+
+    @testset "幅がゼロなら比は無限大" begin
+        e = metric_prediction_error([5.0, 5.0], [5.0, 6.0])
+        @test e.spread == 0.0
+        @test isinf(e.error_ratio)
+    end
+
+    @testset "件数が違えば中止する" begin
+        @test_throws MetricError metric_prediction_error([1.0, 2.0], [1.0])
+        @test_throws MetricError metric_prediction_error(Float64[], Float64[])
+    end
+end
+
+@testset "ObjectiveMetrics 第3目的の選定" begin
+    mk(name, src, rho, ratio) = (name = name, source = src,
+                                 max_abs_spearman = rho, error_ratio = ratio)
+    LIM_R, LIM_E = 0.7, 0.2
+
+    @testset "2条件を満たす候補のうち相関が最も低いものを採る" begin
+        c = [mk("a", FieldDerived, 0.90, 0.05),   # 独立性を満たさない
+             mk("b", FieldDerived, 0.50, 0.05),
+             mk("c", FieldDerived, 0.30, 0.05),   # これが採用される
+             mk("sum_sq", DesignDerived, 0.25, 0.0)]
+        adopted, v = select_third_objective(c; max_abs_spearman = LIM_R,
+                                            max_error_ratio = LIM_E)
+        @test adopted == "c"
+        @test length(v) == 4
+        @test count(x -> x.adopted, v) == 1
+        va = only(x for x in v if x.name == "a")
+        @test !va.independent && !va.adopted
+        @test occursin("冗長", va.reason)
+        # 設計変数由来は相関がより低くても温度場由来に劣後する
+        @test !only(x for x in v if x.name == "sum_sq").adopted
+    end
+
+    @testset "全候補が相関の上限を超えれば設計変数由来に退避する" begin
+        c = [mk("a", FieldDerived, 0.90, 0.05),
+             mk("b", FieldDerived, 0.85, 0.05),
+             mk("sum_sq", DesignDerived, 0.25, 0.0)]
+        adopted, v = select_third_objective(c; max_abs_spearman = LIM_R,
+                                            max_error_ratio = LIM_E)
+        @test adopted == "sum_sq"
+        @test only(x for x in v if x.name == "sum_sq").adopted
+        @test occursin("退避", only(x for x in v if x.name == "sum_sq").reason)
+    end
+
+    @testset "予測できない候補は独立でも不採用" begin
+        c = [mk("a", FieldDerived, 0.10, 0.90),   # 独立だが予測できない
+             mk("sum_sq", DesignDerived, 0.25, 0.0)]
+        adopted, v = select_third_objective(c; max_abs_spearman = LIM_R,
+                                            max_error_ratio = LIM_E)
+        @test adopted == "sum_sq"
+        @test occursin("予測できない", only(x for x in v if x.name == "a").reason)
+    end
+
+    @testset "決定による固定は判定表を残したまま採用を上書きする" begin
+        c = [mk("a", FieldDerived, 0.90, 0.05),
+             mk("b", FieldDerived, 0.30, 0.05),   # 機械的にはこれ
+             mk("sum_sq", DesignDerived, 0.25, 0.0)]
+        adopted, v = select_third_objective(c; max_abs_spearman = LIM_R,
+                                            max_error_ratio = LIM_E, override = "a")
+        @test adopted == "a"
+        va = only(x for x in v if x.name == "a")
+        @test va.adopted
+        @test occursin("決定により固定", va.reason)
+        @test occursin("独立性を満たさない", va.reason)
+        # 判定そのものは書き換えない
+        @test !va.independent
+        @test !only(x for x in v if x.name == "b").adopted
+        @test length(v) == 3
+    end
+
+    @testset "条件を満たす候補を固定した場合" begin
+        c = [mk("b", FieldDerived, 0.30, 0.05),
+             mk("sum_sq", DesignDerived, 0.25, 0.0)]
+        adopted, v = select_third_objective(c; max_abs_spearman = LIM_R,
+                                            max_error_ratio = LIM_E, override = "b")
+        @test adopted == "b"
+        @test occursin("2条件とも満たす", only(x for x in v if x.name == "b").reason)
+    end
+
+    @testset "不正な入力は中止する" begin
+        c = [mk("a", FieldDerived, 0.1, 0.1), mk("sum_sq", DesignDerived, 0.2, 0.0)]
+        @test_throws MetricError select_third_objective(c; max_abs_spearman = LIM_R,
+                                    max_error_ratio = LIM_E, override = "無い候補")
+        @test_throws MetricError select_third_objective(c; max_abs_spearman = LIM_R,
+                                    max_error_ratio = LIM_E, fallback = "無い退避先")
+        @test_throws MetricError select_third_objective([]; max_abs_spearman = LIM_R,
+                                    max_error_ratio = LIM_E)
+    end
+end

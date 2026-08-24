@@ -13,11 +13,13 @@ include("field_metrics.jl")
 include("design_metrics.jl")
 include("statistics.jl")
 include("specs.jl")
+include("selection.jl")
 
 export GridGeometry, MetricError, MetricSource, FieldDerived, DesignDerived, MetricSpec
 export FIELD_METRIC_NAMES, DESIGN_METRIC_NAMES, ALL_METRIC_SPECS
 export field_metrics, field_metrics_all
 export design_bias, design_metrics_all
-export spearman, metric_stats, metric_spec, has_prediction_error
+export spearman, metric_stats, metric_prediction_error, metric_spec, has_prediction_error
+export SelectionVerdict, select_third_objective
 
 end # module
