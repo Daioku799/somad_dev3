@@ -1,4 +1,4 @@
-# 縮約モデルの構築と保持誤差の評価（Req 1.1, 1.2）
+# 縮約モデルの構築と精度評価（Req 1.1, 1.2, 1.3, 2.1, 2.2, 2.5, 2.6）
 #
 #   julia --project=H2-rom runs/paper_final_20260824T0140JST/build_rom.jl
 #
@@ -92,6 +92,47 @@ function main()
     write_table(prov, "pod_spectrum.tsv", ["mode", "singular_value", "cumulative_ric"],
                 [[i, svals[i], ric[i]] for i in eachindex(svals)])
 
+    # --- ベースライン比較（Req 1.3）---------------------------------------
+    # 問うべきは「ROM が正確か」ではなく「はるかに単純なモデルに勝つか」である。
+    #   const : 学習平均                （情報なし）
+    #   count : Tmax = a + b N          （2 母数、配置を見ない）
+    #   cells : Tmax = a + sum b_ij n_ij（17 母数、配置に線形）
+    # cells に勝って初めて、非線形な代理モデルが要ることが示せる。
+    nall = length(ds.records)
+    Nvec = [Float64(r.budget) for r in ds.records]
+    designs = ["const" => ones(nall, 1),
+               "count" => hcat(ones(nall), Nvec),
+               "cells" => hcat(ones(nall), permutedims(ds.mu))]
+    score3(p, t) = (mean(abs.(p .- t)), sqrt(mean(abs2, p .- t)), maximum(abs.(p .- t)))
+    println("\n=== ベースライン比較（Tmax の予測誤差）===")
+    @printf("%-8s %6s %9s %9s %9s | %9s %9s %9s\n",
+            "model", "母数", "val MAE", "val RMSE", "val max", "test MAE", "test RMSE", "test max")
+    base_rows = Any[]
+    mae_of = Dict{String,NTuple{2,Float64}}()
+    for (nm, A) in designs
+        b = A[tr, :] \ ds.tmax[tr]
+        mv, rvv, xv = score3(A[va, :] * b, ds.tmax[va])
+        mt, rtt, xt = score3(A[te, :] * b, ds.tmax[te])
+        @printf("%-8s %6d %9.5f %9.5f %9.5f | %9.5f %9.5f %9.5f\n",
+                nm, size(A, 2), mv, rvv, xv, mt, rtt, xt)
+        push!(base_rows, [nm, size(A, 2), mv, rvv, xv, mt, rtt, xt])
+        mae_of[nm] = (mv, mt)
+    end
+    @printf("%-8s %6d %9.5f %9.5f %9.5f | %9.5f %9.5f %9.5f\n", "ROM", best.modes,
+            rv.tmax_mae, rv.tmax_rmse, rv.tmax_maxe, rt.tmax_mae, rt.tmax_rmse, rt.tmax_maxe)
+    push!(base_rows, ["ROM", best.modes, rv.tmax_mae, rv.tmax_rmse, rv.tmax_maxe,
+                      rt.tmax_mae, rt.tmax_rmse, rt.tmax_maxe])
+    write_table(prov, "baseline_comparison.tsv",
+                ["model", "n_param", "val_mae", "val_rmse", "val_maxe",
+                 "test_mae", "test_rmse", "test_maxe"], base_rows)
+    println()
+    for nm in ("count", "cells")
+        iv = (mae_of[nm][1] - rv.tmax_mae) / mae_of[nm][1] * 100
+        it = (mae_of[nm][2] - rt.tmax_mae) / mae_of[nm][2] * 100
+        @printf("ROM vs %-6s: validation %+.1f%%, test %+.1f%%%s\n", nm, iv, it,
+                nm == "cells" ? "   <- 非線形な代理モデルが要るかの基準" : "")
+    end
+
     path = save_rom(resolve_output(prov, "rom_model.jld2"), model)
     @printf("\n縮約モデルを保存: %s（%.2f GB）\n", path, filesize(path) / 2^30)
 
@@ -104,6 +145,68 @@ function main()
     end
     @printf("再読み込みの一致: 最大差 %.3e K（%d 件）\n", worst, length(va) + length(te))
     worst == 0.0 || error("再読み込みした縮約モデルの予測が一致しない（最大差 $worst K）")
+
+    # --- 配置効果の幅と合格判定（Req 2.1, 2.2）-----------------------------
+    # 問うべきは「誤差が小さいか」ではなく「配置による差より十分小さいか」である。
+    lv = budgets(ds)
+    println("\n=== 配置効果の幅と合格判定 ===")
+    @printf("しきい値 = 幅 x %.2f\n", CFG.accuracy_threshold_ratio)
+    @printf("%5s %6s %11s %11s %9s %9s %9s %s\n",
+            "N", "n", "Tmax最小", "Tmax最大", "幅[K]", "誤差[K]", "誤差/幅", "判定")
+    judge_rows = Any[]
+    for b in lv
+        idx = budget_indices(ds, b)
+        hidx = [i for i in idx if ds.records[i].split in ("validation", "test")]
+        lo, hi = extrema(ds.tmax[idx])
+        spread = hi - lo
+        err = isempty(hidx) ? NaN :
+              mean(abs(predict_tmax(model, @view ds.mu[:, i]) - ds.tmax[i]) for i in hidx)
+        thr = spread * CFG.accuracy_threshold_ratio
+        if isnan(err)
+            @printf("%5d %6d %11.4f %11.4f %9.4f %9s %9s %s\n",
+                    b, length(idx), lo, hi, spread, "-", "-", "保持ケースなし")
+            push!(judge_rows, [b, length(idx), lo, hi, spread, NaN, thr, NaN, "no_holdout"])
+            continue
+        end
+        verdict, warn, ratio = judge_accuracy(err, spread; tmax_threshold = thr)
+        @printf("%5d %6d %11.4f %11.4f %9.4f %9.4f %9.4f %s\n",
+                b, length(idx), lo, hi, spread, err, ratio, String(verdict))
+        push!(judge_rows, [b, length(idx), lo, hi, spread, err, thr, ratio, String(verdict)])
+        warn === nothing || record_warning!(prov, "N=$b: $warn")
+    end
+    write_table(prov, "placement_spread_judgment.tsv",
+                ["budget", "n", "tmax_min", "tmax_max", "spread", "holdout_mae",
+                 "threshold", "error_to_spread", "verdict"],
+                judge_rows; scope = "per_budget")
+
+    # --- 最適化性能（Req 2.5, 2.6）----------------------------------------
+    # 順位相関: 縮約モデルが設計の優劣を正しく並べられるか
+    # regret  : 縮約モデルが選んだ設計と、候補中の真の最良との差
+    println("\n=== 最適化性能（保持ケースのみ）===")
+    @printf("%8s %6s %10s %10s %10s\n", "範囲", "n", "順位相関", "regret[K]", "真の最良[K]")
+    opt_rows = Any[]
+    function opt_metrics(idx)
+        p = [predict_tmax(model, @view ds.mu[:, i]) for i in idx]
+        t = ds.tmax[idx]
+        chosen = idx[argmin(p)]
+        return (n = length(idx), rho = spearman(p, t),
+                regret = ds.tmax[chosen] - minimum(t), best = minimum(t),
+                chosen = ds.records[chosen].name)
+    end
+    hold_all = vcat(va, te)
+    m = opt_metrics(hold_all)
+    @printf("%8s %6d %10.4f %10.4f %10.4f\n", "全水準", m.n, m.rho, m.regret, m.best)
+    push!(opt_rows, ["pooled", m.n, m.rho, m.regret, m.best, m.chosen])
+    for b in lv
+        idx = [i for i in hold_all if ds.records[i].budget == b]
+        length(idx) >= 2 || continue
+        mb = opt_metrics(idx)
+        @printf("%8s %6d %10.4f %10.4f %10.4f\n", "N=$b", mb.n, mb.rho, mb.regret, mb.best)
+        push!(opt_rows, ["N=$b", mb.n, mb.rho, mb.regret, mb.best, mb.chosen])
+    end
+    write_table(prov, "optimization_metrics.tsv",
+                ["scope", "n", "spearman", "regret", "true_best_tmax", "chosen_case"],
+                opt_rows; scope = "per_budget")
 
     write_text(prov, "build_rom_summary.txt", """
     データセット: $(CFG.dataset_id)

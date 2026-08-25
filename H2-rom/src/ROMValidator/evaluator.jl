@@ -216,18 +216,52 @@ function calculate_hotspot_error(
     return dist
 end
 
+"""既定の合格しきい値 [K]。
+
+配置効果の幅（同一TSV本数内で最大温度が取りうる幅）より小さくなければ、
+判定は意味を持たない。旧既定の 2.0 K は旧データセットの幅 1.6 K を上回っており、
+どんな誤差でも合格になっていた。呼び出し側は幅に応じた値を明示的に渡すのが望ましい。
 """
-    judge_accuracy(mean_tmax_error::Float64; tmax_threshold::Float64=2.0) -> Symbol
+const DEFAULT_TMAX_THRESHOLD = 0.5
+
+"""
+    judge_accuracy(mean_tmax_error::Float64; tmax_threshold=DEFAULT_TMAX_THRESHOLD) -> Symbol
 
 Judge whether the model accuracy is acceptable based on the mean Tmax error.
 Returns `:validated` if the error is within the threshold, or `:unfit` otherwise.
 """
-function judge_accuracy(mean_tmax_error::Float64; tmax_threshold::Float64=2.0)::Symbol
+function judge_accuracy(mean_tmax_error::Float64;
+                        tmax_threshold::Float64=DEFAULT_TMAX_THRESHOLD)::Symbol
     if mean_tmax_error <= tmax_threshold
         return :validated
     else
         return :unfit
     end
+end
+
+"""
+    judge_accuracy(mean_tmax_error, placement_spread; tmax_threshold)
+        -> (verdict, warning, error_to_spread)
+
+配置効果の幅と対比した合格判定。しきい値が幅以上の場合、合格しても
+「配置による差より粗い精度でも通る」ことになり判定が意味を持たないため、
+`:inconclusive` と警告を返す。
+
+`error_to_spread` は予測誤差を幅で割った値で、この比が小さいほど
+縮約モデルで配置を比べる根拠が強い。
+"""
+function judge_accuracy(mean_tmax_error::Float64, placement_spread::Float64;
+                        tmax_threshold::Float64=DEFAULT_TMAX_THRESHOLD)
+    placement_spread > 0 ||
+        throw(ArgumentError("配置効果の幅は正でなければならない: $placement_spread"))
+    ratio = mean_tmax_error / placement_spread
+    if tmax_threshold >= placement_spread
+        msg = "合格しきい値 $(tmax_threshold) K が配置効果の幅 $(placement_spread) K 以上のため、" *
+              "判定が意味を持たない。しきい値を幅より小さく設定すること"
+        return (:inconclusive, msg, ratio)
+    end
+    verdict = mean_tmax_error <= tmax_threshold ? :validated : :unfit
+    return (verdict, nothing, ratio)
 end
 
 """

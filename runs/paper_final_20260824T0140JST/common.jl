@@ -8,7 +8,7 @@ using JLD2
 const ROOT = "/home/foo/somad_dev3"
 
 for m in ("PipelineData", "PipelineReport", "PipelineROM", "ObjectiveMetrics",
-          "SearchOptimizer")
+          "SearchOptimizer", "ROMValidator")
     isdefined(Main, Symbol(m)) && continue
     include(joinpath(ROOT, "H2-rom", "src", m, "$(m).jl"))
 end
@@ -17,6 +17,7 @@ using .PipelineReport
 using .PipelineROM
 using .ObjectiveMetrics
 using .SearchOptimizer
+using .ROMValidator: judge_accuracy, DEFAULT_TMAX_THRESHOLD
 
 """
     PipelineConfig

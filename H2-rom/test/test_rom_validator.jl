@@ -4,7 +4,7 @@ using Test
 if !isdefined(Main, :ROMValidator)
     include("../src/ROMValidator/ROMValidator.jl")
 end
-using .ROMValidator: ValidationResult, ValidationSummary, get_validation_samples, get_trained_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results, measure_dataset_size, measure_fvm_runtime
+using .ROMValidator: DEFAULT_TMAX_THRESHOLD, ValidationResult, ValidationSummary, get_validation_samples, get_trained_samples, load_test_case, calculate_l2_error, calculate_tmax_error, calculate_hotspot_error, judge_accuracy, evaluate_validation_results, measure_dataset_size, measure_fvm_runtime
 using JLD2
 using JSON3
 
@@ -175,8 +175,28 @@ end
     @test judge_accuracy(1.5; tmax_threshold=2.0) == :validated
     @test judge_accuracy(2.0; tmax_threshold=2.0) == :validated
     @test judge_accuracy(2.1; tmax_threshold=2.0) == :unfit
-    @test judge_accuracy(1.9) == :validated  # default tmax_threshold = 2.0
+    # 既定のしきい値は配置効果の幅より小さい値に変更した（旧 2.0 K は旧データの
+    # 幅 1.6 K を上回っており、どんな誤差でも合格になっていた）
+    @test DEFAULT_TMAX_THRESHOLD == 0.5
+    @test judge_accuracy(0.4) == :validated
+    @test judge_accuracy(1.9) == :unfit
     @test judge_accuracy(2.5) == :unfit
+
+    # 配置効果の幅と対比する判定
+    v, w, r = judge_accuracy(0.09, 3.7; tmax_threshold=0.74)
+    @test v == :validated
+    @test w === nothing
+    @test r ≈ 0.09 / 3.7
+    v, w, r = judge_accuracy(1.5, 3.7; tmax_threshold=0.74)
+    @test v == :unfit
+    @test w === nothing
+    # しきい値が幅以上なら判定が意味を持たない
+    v, w, r = judge_accuracy(0.09, 1.6; tmax_threshold=2.0)
+    @test v == :inconclusive
+    @test w !== nothing && occursin("意味を持たない", w)
+    v, w, _ = judge_accuracy(0.09, 2.0; tmax_threshold=2.0)
+    @test v == :inconclusive
+    @test_throws ArgumentError judge_accuracy(0.09, 0.0)
 
     # 2. Test evaluate_validation_results with valid inputs (expect :validated)
     results_pass = [
