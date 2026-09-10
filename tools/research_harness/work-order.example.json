@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "draft-replace-with-task-id",
+  "scope": {
+    "objective": "この例を具体的な一作業の依頼に置き換える",
+    "task_refs": ["対象specとtaskを明記する"],
+    "decisions": {},
+    "unresolved": ["対象作業・条件・本人承認の確定"],
+    "references": [
+      {"path": "docs/研究AIハーネス_使い方.md", "heading": "## 作業票"}
+    ],
+    "operations": {
+      "implement": {"write_files": [], "commands": []},
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "draft"},
+  "approvals": {},
+  "notes": "未承認の雛形。研究実装・テスト・実験・スライド作成の許可ではない。"
+}
