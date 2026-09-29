@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-impl-physics-primitives-20260929",
+  "scope": {
+    "objective": "Tasks 2.1〜2.4の内部面コンダクタンス、整数TSV配置、外部境界熱流、エネルギー収支・solver品質をTDDで実装する",
+    "task_refs": ["multiobjective-tsv-optimization: 2.1", "multiobjective-tsv-optimization: 2.2", "multiobjective-tsv-optimization: 2.3", "multiobjective-tsv-optimization: 2.4"],
+    "decisions": {
+      "D1": "内部面は承認済み直列熱抵抗式だけを用い、外部ghostまたは境界条件を内部面helperへ渡さない",
+      "D2": "整数countsはrow-major 4x4として再scaleせず、cell内候補を(distance2, y_index, x_index)で決定的に選ぶ",
+      "D3": "境界熱流率は外向きを正とし、Dirichlet、Neumann、現行Robinの式と6面一回集計を実装する",
+      "D4": "solver品質は承認済みNumericalPolicy、収束flag、最終相対残差、energy相対不均衡の全条件でfail closedに判定する",
+      "D5": "局所unit testだけを実行し、既存FVM kernel統合、snapshot生成、benchmark、pilot、full探索を実行しない"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          "H2-main-ext/src/ThermalOperators/ThermalOperators.jl",
+          "H2-main-ext/src/ThermalOperators/Types.jl",
+          "H2-main-ext/src/ThermalOperators/Conductance.jl",
+          "H2-main-ext/src/ThermalOperators/BoundaryOperators.jl",
+          "H2-main-ext/src/ThermalOperators/EnergyBalance.jl",
+          "H2-main-ext/src/ComponentGenerator/IntegerLayout.jl",
+          "H2-main-ext/test/test_thermal_operators.jl",
+          "H2-main-ext/test/test_integer_layout.jl",
+          ".kiro/specs/multiobjective-tsv-optimization/tasks.md",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-impl-physics-primitives-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {
+        "write_files": [],
+        "commands": [
+          ["julia", "--project=H2-main-ext", "H2-main-ext/test/test_thermal_operators.jl"],
+          ["julia", "--project=H2-main-ext", "H2-main-ext/test/test_integer_layout.jl"]
+        ]
+      }
+    },
+    "presentation": null
+  },
+  "state": {"phase": "in_progress"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "d2e0c8ebac65300a43d86c2a357adc2e2e54ca308c0db3be76590a2d1899ea58",
+      "user_message": "2026-09-29 current conversation: implement Tasks 1.1 through 3.4 in manual mode",
+      "user_quote": "その方針で進めて。"
+    },
+    "test": {
+      "scope_hash": "d2e0c8ebac65300a43d86c2a357adc2e2e54ca308c0db3be76590a2d1899ea58",
+      "user_message": "2026-09-29 current conversation: implement and locally verify Tasks 1.1 through 3.4",
+      "user_quote": "その方針で進めて。"
+    }
+  },
+  "notes": "Tasks 2.1、2.2、2.4の独立APIと解析unit testは完了。Task 2.3は境界演算子APIと6面・符号・重複検査まで実装したが、現行FVM境界処理への接続確認を残しているため未完了のままとする。"
+}
