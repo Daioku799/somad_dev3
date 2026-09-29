@@ -5,6 +5,8 @@ using ThreadsX
 using JLD2 # Added
 
 include("common.jl")
+include("ResearchContracts/ResearchContracts.jl")
+include("ThermalOperators/ThermalOperators.jl")
 include("modelA.jl")
 include("boundary_conditions.jl")
 include("Zcoord.jl")
@@ -15,6 +17,8 @@ include("convergence_history.jl")
 include("parse_log_residuals.jl")
 
 using .Common
+using .ResearchContracts
+using .ThermalOperators
 using .Common: WorkBuffers, ItrMax, Q_src, get_backend
 using .NonUniform
 using .NonUniform: PBiCGSTAB!, CG!, calRHS!

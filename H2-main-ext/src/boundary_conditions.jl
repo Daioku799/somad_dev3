@@ -4,11 +4,14 @@ module BoundaryConditions
 # Common モジュールは親モジュールで定義されている必要があります
 import ..Common
 using ..Common: BoundaryType, ISOTHERMAL, HEAT_FLUX, CONVECTION
+using ..ResearchContracts: ContractError
+using ..ThermalOperators: BoundaryFace, DirichletBoundary, NeumannBoundary, RobinBoundary
+using ..ThermalOperators: boundary_heat_rate
 
 export BoundaryCondition, BoundaryConditionSet,
        isothermal_bc, heat_flux_bc, adiabatic_bc, convection_bc,
        create_boundary_conditions, apply_boundary_conditions!, print_boundary_conditions,
-       set_BC_coef
+       set_BC_coef, thermal_boundary_heat_rate
 
 
 # 単一境界面の境界条件
@@ -80,6 +83,38 @@ function create_boundary_conditions(x_minus_bc::BoundaryCondition,
     return BoundaryConditionSet(x_minus_bc, x_plus_bc, 
                                 y_minus_bc, y_plus_bc,
                                 z_minus_bc, z_plus_bc)
+end
+
+"""
+    thermal_boundary_heat_rate(bc, face, cell_temperature; conductance_W_K=nothing)
+
+Adapt the existing solver boundary contract to the shared outward-positive
+boundary heat-rate convention. Existing Neumann values are coordinate-positive
+fluxes, so the three minus faces are sign-reversed at this adapter boundary.
+"""
+function thermal_boundary_heat_rate(bc::BoundaryCondition,
+                                    face::BoundaryFace,
+                                    cell_temperature::Real;
+                                    conductance_W_K::Union{Nothing,Real}=nothing)::Float64
+    if bc.type == ISOTHERMAL
+        conductance_W_K === nothing &&
+            throw(ContractError("Dirichlet boundary heat rate requires its existing FVM conductance"))
+        return boundary_heat_rate(
+            DirichletBoundary(bc.temperature, conductance_W_K), face, cell_temperature,
+        )
+    elseif bc.type == HEAT_FLUX
+        outward_sign = face.side in (:xminus, :yminus, :zminus) ? -1.0 : 1.0
+        return boundary_heat_rate(
+            NeumannBoundary(outward_sign * bc.heat_flux), face, cell_temperature,
+        )
+    elseif bc.type == CONVECTION
+        return boundary_heat_rate(
+            RobinBoundary(bc.heat_transfer_coefficient, bc.ambient_temperature),
+            face,
+            cell_temperature,
+        )
+    end
+    throw(ContractError("unsupported existing boundary condition type: $(bc.type)"))
 end
 
 """

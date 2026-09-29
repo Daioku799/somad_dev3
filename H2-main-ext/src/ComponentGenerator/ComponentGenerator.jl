@@ -1,19 +1,24 @@
 module ComponentGenerator
 
+using ..ResearchContracts
+
 include("Types.jl")
 include("Layout.jl")
 include("Validator.jl")
+include("IntegerLayout.jl")
 include("Main.jl")
 
 using .Types
 using .Layout
 using .Validator
+using .IntegerLayout
 using .Main
 
 # Re-export
 export GeometryObject, ShapeType, CYLINDER, SPHERE, BOX
 export generate_components
 export generate_all_components
+export IntegerLayout, IntegerLayoutSpec, VerifiedLayout, expand_integer_counts
 
 using ..ConfigLoader: ModelConfig, calculate_zm, calculate_solder_radius
 

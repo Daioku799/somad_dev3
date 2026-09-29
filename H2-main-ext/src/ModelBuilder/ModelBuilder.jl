@@ -1,11 +1,13 @@
 module ModelBuilder
 
+include("../ResearchContracts/ResearchContracts.jl")
 include("Grid.jl")
 include("../ConfigLoader/ConfigLoader.jl")
 include("../GeometryLogic/GeometryLogic.jl")
 include("../ComponentGenerator/ComponentGenerator.jl")
 
 using .Grid
+using .ResearchContracts
 using .ConfigLoader
 using .GeometryLogic
 using .ComponentGenerator

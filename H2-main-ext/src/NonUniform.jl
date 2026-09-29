@@ -7,6 +7,8 @@ using ThreadsX
 # Common モジュールは親モジュールで定義されている必要があります
 import ..Common
 using ..Common: WorkBuffers, ItrMax, FloatMin, λf, get_backend, myfill!, mycopy!
+using ..ResearchContracts: ContractError
+using ..ThermalOperators: internal_face_conductance
 
 import ..BoundaryConditions
 using ..BoundaryConditions: BoundaryConditionSet
@@ -14,7 +16,28 @@ using ..BoundaryConditions: BoundaryConditionSet
 import ..RHSCore
 using ..RHSCore: apply_bc2RHS!
 
-export PBiCGSTAB!, CG!, calRHS!
+export PBiCGSTAB!, CG!, calRHS!, fvm_face_conductance
+
+"""
+Use the shared series-resistance operator only when both sides are physical
+cells. A face touching a ghost cell retains the existing boundary coefficient.
+"""
+@inline function fvm_face_conductance(area::T, d_p::T, d_n::T,
+                                      legacy_center_distance::T,
+                                      k_p::T, k_n::T,
+                                      mask_p::T, mask_n::T) where {T <: AbstractFloat}
+    mask_p in (zero(T), one(T)) && mask_n in (zero(T), one(T)) ||
+        throw(ContractError("FVM face masks must be exactly zero or one"))
+    if mask_p == one(T) && mask_n == one(T)
+        return T(internal_face_conductance(area, d_p, d_n, k_p, k_n))
+    end
+    isfinite(legacy_center_distance) && legacy_center_distance > zero(T) ||
+        throw(ContractError("legacy boundary center distance must be finite and positive"))
+    value = λf(k_p, k_n, mask_p, mask_n) * area / legacy_center_distance
+    isfinite(value) && value >= zero(T) ||
+        throw(ContractError("legacy boundary face conductance is invalid"))
+    return value
+end
 
 
 """
@@ -399,12 +422,20 @@ function CalcRK!(
         m0 = m[i,j,k]
 
         # 熱伝導項（面積×コンダクタンス）
-        cond_xm = λf(λ[i-1,j,k], λ0, m[i-1,j,k], m0) * dy0 * dz_k * ddx
-        cond_xp = λf(λ[i+1,j,k], λ0, m[i+1,j,k], m0) * dy0 * dz_k * ddx
-        cond_ym = λf(λ[i,j-1,k], λ0, m[i,j-1,k], m0) * dx0 * dz_k * ddy
-        cond_yp = λf(λ[i,j+1,k], λ0, m[i,j+1,k], m0) * dx0 * dz_k * ddy
-        cond_zm = λf(λ[i,j,k-1], λ0, m[i,j,k-1], m0) * dx0 * dy0 / (ZC[k]-ZC[k-1])
-        cond_zp = λf(λ[i,j,k+1], λ0, m[i,j,k+1], m0) * dx0 * dy0 / (ZC[k+1]-ZC[k])
+        cond_xm = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i-1,j,k], m0, m[i-1,j,k])
+        cond_xp = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i+1,j,k], m0, m[i+1,j,k])
+        cond_ym = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j-1,k], m0, m[i,j-1,k])
+        cond_yp = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j+1,k], m0, m[i,j+1,k])
+        cond_zm = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k-1] / 2,
+                                       ZC[k] - ZC[k-1], λ0, λ[i,j,k-1],
+                                       m0, m[i,j,k-1])
+        cond_zp = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k+1] / 2,
+                                       ZC[k+1] - ZC[k], λ0, λ[i,j,k+1],
+                                       m0, m[i,j,k+1])
 
         # 対流項（CommonSolver.jl方式）
         conv_xm = HC[1] * dy0 * dz_k * (oneT - m[i-1,j,k])
@@ -479,12 +510,20 @@ function CalcAX!(ax::AbstractArray{T,3},
         m0 = m[i,j,k]
 
         # 熱伝導項（面積×コンダクタンス）
-        cond_xm = λf(λ[i-1,j,k], λ0, m[i-1,j,k], m0) * dy0 * dz_k * ddx
-        cond_xp = λf(λ[i+1,j,k], λ0, m[i+1,j,k], m0) * dy0 * dz_k * ddx
-        cond_ym = λf(λ[i,j-1,k], λ0, m[i,j-1,k], m0) * dx0 * dz_k * ddy
-        cond_yp = λf(λ[i,j+1,k], λ0, m[i,j+1,k], m0) * dx0 * dz_k * ddy
-        cond_zm = λf(λ[i,j,k-1], λ0, m[i,j,k-1], m0) * dx0 * dy0 / (ZC[k]-ZC[k-1])
-        cond_zp = λf(λ[i,j,k+1], λ0, m[i,j,k+1], m0) * dx0 * dy0 / (ZC[k+1]-ZC[k])
+        cond_xm = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i-1,j,k], m0, m[i-1,j,k])
+        cond_xp = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i+1,j,k], m0, m[i+1,j,k])
+        cond_ym = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j-1,k], m0, m[i,j-1,k])
+        cond_yp = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j+1,k], m0, m[i,j+1,k])
+        cond_zm = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k-1] / 2,
+                                       ZC[k] - ZC[k-1], λ0, λ[i,j,k-1],
+                                       m0, m[i,j,k-1])
+        cond_zp = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k+1] / 2,
+                                       ZC[k+1] - ZC[k], λ0, λ[i,j,k+1],
+                                       m0, m[i,j,k+1])
 
         # 対流項（CommonSolver.jl方式）
         conv_xm = HC[1] * dy0 * dz_k * (oneT - m[i-1,j,k])
@@ -707,12 +746,20 @@ function resSOR(θ::AbstractArray{T,3},
         m0 = m[i,j,k]
 
         # 熱伝導項（面積×コンダクタンス）
-        cond_xm = λf(λ[i-1,j,k], λ0, m[i-1,j,k], m0) * dy0 * dz_k * ddx
-        cond_xp = λf(λ[i+1,j,k], λ0, m[i+1,j,k], m0) * dy0 * dz_k * ddx
-        cond_ym = λf(λ[i,j-1,k], λ0, m[i,j-1,k], m0) * dx0 * dz_k * ddy
-        cond_yp = λf(λ[i,j+1,k], λ0, m[i,j+1,k], m0) * dx0 * dz_k * ddy
-        cond_zm = λf(λ[i,j,k-1], λ0, m[i,j,k-1], m0) * dx0 * dy0 / (ZC[k]-ZC[k-1])
-        cond_zp = λf(λ[i,j,k+1], λ0, m[i,j,k+1], m0) * dx0 * dy0 / (ZC[k+1]-ZC[k])
+        cond_xm = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i-1,j,k], m0, m[i-1,j,k])
+        cond_xp = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i+1,j,k], m0, m[i+1,j,k])
+        cond_ym = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j-1,k], m0, m[i,j-1,k])
+        cond_yp = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j+1,k], m0, m[i,j+1,k])
+        cond_zm = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k-1] / 2,
+                                       ZC[k] - ZC[k-1], λ0, λ[i,j,k-1],
+                                       m0, m[i,j,k-1])
+        cond_zp = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k+1] / 2,
+                                       ZC[k+1] - ZC[k], λ0, λ[i,j,k+1],
+                                       m0, m[i,j,k+1])
 
         # 対流項（CommonSolver.jl方式）
         conv_xm = HC[1] * dy0 * dz_k * (oneT - m[i-1,j,k])
@@ -788,12 +835,20 @@ function sor!(θ::AbstractArray{T,3},
         m0 = m[i,j,k]
 
         # 熱伝導項（面積×コンダクタンス）
-        cond_xm = λf(λ[i-1,j,k], λ0, m[i-1,j,k], m0) * dy0 * dz_k * ddx
-        cond_xp = λf(λ[i+1,j,k], λ0, m[i+1,j,k], m0) * dy0 * dz_k * ddx
-        cond_ym = λf(λ[i,j-1,k], λ0, m[i,j-1,k], m0) * dx0 * dz_k * ddy
-        cond_yp = λf(λ[i,j+1,k], λ0, m[i,j+1,k], m0) * dx0 * dz_k * ddy
-        cond_zm = λf(λ[i,j,k-1], λ0, m[i,j,k-1], m0) * dx0 * dy0 / (ZC[k]-ZC[k-1])
-        cond_zp = λf(λ[i,j,k+1], λ0, m[i,j,k+1], m0) * dx0 * dy0 / (ZC[k+1]-ZC[k])
+        cond_xm = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i-1,j,k], m0, m[i-1,j,k])
+        cond_xp = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                       λ0, λ[i+1,j,k], m0, m[i+1,j,k])
+        cond_ym = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j-1,k], m0, m[i,j-1,k])
+        cond_yp = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                       λ0, λ[i,j+1,k], m0, m[i,j+1,k])
+        cond_zm = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k-1] / 2,
+                                       ZC[k] - ZC[k-1], λ0, λ[i,j,k-1],
+                                       m0, m[i,j,k-1])
+        cond_zp = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k+1] / 2,
+                                       ZC[k+1] - ZC[k], λ0, λ[i,j,k+1],
+                                       m0, m[i,j,k+1])
 
         # 対流項（CommonSolver.jl方式）
         conv_xm = HC[1] * dy0 * dz_k * (oneT - m[i-1,j,k])
@@ -877,12 +932,20 @@ function rbsor_core!(θ::AbstractArray{T,3},
             m0 = m[i,j,k]
 
             # 熱伝導項（面積×コンダクタンス）
-            cond_xm = λf(λ[i-1,j,k], λ0, m[i-1,j,k], m0) * dy0 * dz_k * ddx
-            cond_xp = λf(λ[i+1,j,k], λ0, m[i+1,j,k], m0) * dy0 * dz_k * ddx
-            cond_ym = λf(λ[i,j-1,k], λ0, m[i,j-1,k], m0) * dx0 * dz_k * ddy
-            cond_yp = λf(λ[i,j+1,k], λ0, m[i,j+1,k], m0) * dx0 * dz_k * ddy
-            cond_zm = λf(λ[i,j,k-1], λ0, m[i,j,k-1], m0) * dx0 * dy0 / (ZC[k]-ZC[k-1])
-            cond_zp = λf(λ[i,j,k+1], λ0, m[i,j,k+1], m0) * dx0 * dy0 / (ZC[k+1]-ZC[k])
+            cond_xm = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                           λ0, λ[i-1,j,k], m0, m[i-1,j,k])
+            cond_xp = fvm_face_conductance(dy0 * dz_k, dx0 / 2, dx0 / 2, dx0,
+                                           λ0, λ[i+1,j,k], m0, m[i+1,j,k])
+            cond_ym = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                           λ0, λ[i,j-1,k], m0, m[i,j-1,k])
+            cond_yp = fvm_face_conductance(dx0 * dz_k, dy0 / 2, dy0 / 2, dy0,
+                                           λ0, λ[i,j+1,k], m0, m[i,j+1,k])
+            cond_zm = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k-1] / 2,
+                                           ZC[k] - ZC[k-1], λ0, λ[i,j,k-1],
+                                           m0, m[i,j,k-1])
+            cond_zp = fvm_face_conductance(dx0 * dy0, dz_k / 2, ΔZ[k+1] / 2,
+                                           ZC[k+1] - ZC[k], λ0, λ[i,j,k+1],
+                                           m0, m[i,j,k+1])
 
             # 対流項（CommonSolver.jl方式）
             conv_xm = HC[1] * dy0 * dz_k * (oneT - m[i-1,j,k])

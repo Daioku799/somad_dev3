@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-impl-fvm-integration-20260929",
+  "scope": {
+    "objective": "Tasks 2.2、2.3、2.5の既存ComponentGenerator・境界条件・全FVM kernel接続を局所回帰試験付きで実装する",
+    "task_refs": ["multiobjective-tsv-optimization: 2.2", "multiobjective-tsv-optimization: 2.3", "multiobjective-tsv-optimization: 2.5"],
+    "decisions": {
+      "D1": "maskが1の二つの物理セルだけをinternal_face_conductanceへ渡し、ghostを含む外部境界係数は現行lambda_f式と中心距離を維持する",
+      "D2": "x・yの物理セル半幅は各dx/2・dy/2、zは各DeltaZ/2として共有直列抵抗を評価する",
+      "D3": "既存Neumann値は座標正方向流束として保持し、境界熱流診断adapterでminus面のみ符号反転して外向き正へ変換する",
+      "D4": "整数配置moduleをComponentGeneratorからexportするが、既存連続density配置経路は変更しない",
+      "D5": "module読込と係数・境界adapterの局所unit testだけを実行し、FVM solve、snapshot生成、benchmark、pilot、full探索を実行しない",
+      "D6": "既存dirty hunkを保持し、競合する別件の境界・TIM・power修正を改変またはcommitしない"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          "H2-main-ext/src/ModelBuilder/ModelBuilder.jl",
+          "H2-main-ext/src/ComponentGenerator/ComponentGenerator.jl",
+          "H2-main-ext/src/boundary_conditions.jl",
+          "H2-main-ext/src/NonUniform.jl",
+          "H2-main-ext/src/heat3ds.jl",
+          "H2-main-ext/test/test_fvm_operator_integration.jl",
+          ".kiro/specs/multiobjective-tsv-optimization/tasks.md",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-impl-fvm-integration-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {
+        "write_files": [],
+        "commands": [
+          ["julia", "--project=H2-main-ext", "H2-main-ext/test/test_fvm_operator_integration.jl"],
+          ["julia", "--project=H2-main-ext", "-e", "include(\"H2-main-ext/src/modelA.jl\"); using .modelA; @assert isdefined(modelA.ModelBuilder.ComponentGenerator, :IntegerLayout)"],
+          ["julia", "--project=H2-main-ext", "-e", "include(\"H2-main-ext/src/heat3ds.jl\")"]
+        ]
+      }
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "afd5cba3222392e0641fa1fd20abf8ad25a82fda3c1f13646eb679d0dae674e9",
+      "user_message": "2026-09-29 current conversation: implement Tasks 1.1 through 3.4 in manual mode",
+      "user_quote": "その方針で進めて。"
+    },
+    "test": {
+      "scope_hash": "afd5cba3222392e0641fa1fd20abf8ad25a82fda3c1f13646eb679d0dae674e9",
+      "user_message": "2026-09-29 current conversation: implement and locally verify Tasks 1.1 through 3.4",
+      "user_quote": "その方針で進めて。"
+    }
+  },
+  "notes": "REDはfvm_face_conductance未定義で確認。GREENは統合unit test 16件、modelA整数配置export、heat3ds統合includeが成功。全5 solver kernel・30内部面係数の共有helper接続と旧直接lambda_f式の不在を監査した。ghost境界は現行式を維持し、FVM solveや数値実験は実行していない。既存dirty hunkは保持した。"
+}
