@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-impl-contracts-20260929",
+  "scope": {
+    "objective": "Tasks 1.1〜1.4の共通物理条件・単位・content identity・数値policy承認・legacy隔離契約をTDDで実装する",
+    "task_refs": ["multiobjective-tsv-optimization: 1.1", "multiobjective-tsv-optimization: 1.2", "multiobjective-tsv-optimization: 1.3", "multiobjective-tsv-optimization: 1.4"],
+    "decisions": {
+      "D1": "設計済みPhysicsContract、NumericalPolicy、content hash、schema/legacy規則を実装し、新しい研究条件を追加しない",
+      "D2": "承認record IDとpolicy content hashの一致を必須とし、Boolean単独で承認済みにしない",
+      "D3": "既存成果物は変更せずLEGACY_UNVERIFIEDとして新schemaへの昇格を拒否する",
+      "D4": "局所unit testだけを実行し、FVM、snapshot生成、benchmark、pilot、full探索を実行しない"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          "H2-main-ext/Project.toml",
+          "H2-main-ext/src/ResearchContracts/ResearchContracts.jl",
+          "H2-main-ext/src/ResearchContracts/Types.jl",
+          "H2-main-ext/src/ResearchContracts/Identity.jl",
+          "H2-main-ext/src/ResearchContracts/Validation.jl",
+          "H2-main-ext/test/test_research_contracts.jl",
+          ".kiro/specs/multiobjective-tsv-optimization/tasks.md",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-impl-contracts-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {
+        "write_files": [],
+        "commands": [
+          ["julia", "--project=H2-main-ext", "H2-main-ext/test/test_research_contracts.jl"]
+        ]
+      }
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "6a5735f99b53c06fcabd9b3a58cbc6896d9a079a7cdbe17722814c57a393f1ac",
+      "user_message": "2026-09-29 current conversation: implement Tasks 1.1 through 3.4 in manual mode",
+      "user_quote": "その方針で進めて。"
+    },
+    "test": {
+      "scope_hash": "6a5735f99b53c06fcabd9b3a58cbc6896d9a079a7cdbe17722814c57a393f1ac",
+      "user_message": "2026-09-29 current conversation: implement and locally verify Tasks 1.1 through 3.4",
+      "user_quote": "その方針で進めて。"
+    }
+  },
+  "notes": "既存dirty変更を保持し、列挙した新規moduleとcleanなProject.tomlだけを編集した。REDはmodule未存在で失敗、GREENは29 tests pass。外部reviewerは利用枠上限で使用できず、kiro-review手順によるmanual reviewとfresh local verificationを実施した。"
+}

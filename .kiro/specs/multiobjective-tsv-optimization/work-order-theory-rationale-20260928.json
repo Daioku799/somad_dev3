@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-theory-rationale-20260928",
+  "scope": {
+    "objective": "承認済み多目的TSV最適化要件を、学会・指導教員への説明と本人の理解に使える局所完結型の理論・採用根拠文書として記述する",
+    "task_refs": ["multiobjective-tsv-optimization: explanatory theory and rationale document"],
+    "decisions": {
+      "D1": "requirements.mdを設計契約の正本とし、解説文書は理論・採用意図・代替案・検証意図・限界を説明する",
+      "D2": "各章で説明対象と主語を明示し、記号は初出定義に加えて章ごとに再定義する",
+      "D3": "式の直前または直後に各記号・単位・式が表す物理量を記載し、遠い章の定義だけに依存しない",
+      "D4": "採用済み、design段階で決定、将来候補、不採用、検証結果待ちを区別する",
+      "D5": "主張を近似パレート集合、離散gmax、経験的誤差幅、xy二格子感度へ限定し、保証されない内容を併記する",
+      "D6": "一次資料と公式文書を優先して参考文献を付し、外部資料の事実と本研究への適用判断を区別する",
+      "D7": "今回の作業は説明文書と要件承認metadataに限定し、design.md、実装、テスト、数値実験を行わない"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md", "heading": "## 6. Research Intent Boundary"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/brief.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/work-order-requirements-revision-20260928.json"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/work-order-requirements-final-review-corrections-20260928.json"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          ".kiro/specs/multiobjective-tsv-optimization/theory-and-rationale.md",
+          ".kiro/specs/multiobjective-tsv-optimization/spec.json",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-theory-rationale-20260928.json"
+        ],
+        "commands": []
+      },
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "6484f8d90e1799e004cbd23f0b2a84204bcce89858c72b5415980123e93a9067",
+      "user_message": "2026-09-28 current conversation: approve requirements and request explanatory document using the proposed structure",
+      "user_quote": "承認。次のステップに進む前に、まだ認知と理解が追いついていないので、ここまでの要件を正確に理解したい。"
+    }
+  },
+  "notes": "説明文書作成のみ。新しい研究条件、design、実装、テスト、数値実験、スライド作成は含まない。requirementsとの独立レビューを実施し、目的評価器の解析検証、dataset独立性、ROM適用判定、公平比較、代表点選定の説明を補完した。再レビューは矛盾・新規理論誤りなしの合格相当。"
+}

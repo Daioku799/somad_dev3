@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "requirements-multiobjective-tsv-optimization-final-review-corrections-20260928",
+  "scope": {
+    "objective": "承認済み6方針のSol Max・Astra再レビューで判明した曖昧さを、研究方法を変えず検証可能な要件へ修正する",
+    "task_refs": ["multiobjective-tsv-optimization: requirements final review corrections"],
+    "decisions": {
+      "D1": "界面のセル側勾配は対象セルPのk_Pで共有面熱流束密度を除して求める",
+      "D2": "stress setは通常dataset全splitとも配置重複を禁止し、unsupportedを本探索停止条件へ接続する",
+      "D3": "HV参照点外判定を全目的最小化の方向に合わせ、正規化目的値が1.1を超える非劣解点で判定する",
+      "D4": "比較予算はphase・問題・seedごとの一意ROM評価数で一致させ、cache accountingをrunごとに分離する",
+      "D5": "代表点は非劣解archiveだけから決定順に選び、不足時は支配点で補充せずfail closedとする",
+      "D6": "30は選定slot数とし、異なる方式間で同一layoutならFVM結果を再利用して一意solve数も報告する",
+      "D7": "一様基準配置3件を二格子評価へ追加し、旧paper-rom-pipelineとの置換対応を要件単位で明記する"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md", "heading": "## 6. Research Intent Boundary"},
+      {"path": ".kiro/specs/paper-rom-pipeline/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/work-order-requirements-revision-20260928.json"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          ".kiro/specs/multiobjective-tsv-optimization/requirements.md",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-requirements-final-review-corrections-20260928.json"
+        ],
+        "commands": []
+      },
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "5434a42c430c470633010d29cd9a7721e2f261504b00a0e397026099cdf1c9dd",
+      "user_message": "2026-09-28 current conversation: approve recommendations and authorize Sol Max/Astra re-review",
+      "user_quote": "承認。必要ならばsol maxやastraを用いて再レビュー。"
+    }
+  },
+  "notes": "Sol MaxとAstraのread-onlyレビューで判明した承認済み方針の曖昧さだけを修正した。本票D6は先行revision票D17の『一意な代表30点』を、方式・問題内では一意だが方式・問題間の重複を許す30 selection slotとして明確化し、この数量解釈について優先する。本票は旧paper-rom-pipeline requirements全体を参照hashへ束縛してReq14.8の置換対照を監査可能にした。設計、実装、テスト、数値実験は含まない。"
+}

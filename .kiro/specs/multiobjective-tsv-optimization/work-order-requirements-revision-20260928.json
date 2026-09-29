@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "requirements-multiobjective-tsv-optimization-revision-20260928",
+  "scope": {
+    "objective": "追加承認された配置生成、誤差幅、baseline、FVM検証、数値定義および旧spec優先順位を要件へ統合して再レビューする",
+    "task_refs": ["multiobjective-tsv-optimization: requirements revision and review"],
+    "decisions": {
+      "D1": "現行条件はTSV直径40 um、最小中心間ピッチ80 um、セル上限9とし、将来の直径10 um条件と分離する",
+      "D2": "gmaxはFVMの直列熱抵抗による面コンダクタンスと面熱流束から再構成する離散セル中心勾配ノルム最大値とする",
+      "D3": "通常配置はu~Uniform(-0.7,1.0), alpha=10^uの対称Dirichlet混合から生成し、総数とセル上限を厳密に満たす",
+      "D4": "datasetはtrain 300, validation 42, test 42, interpolation-test 60の計444配置とする",
+      "D5": "7配置規則x3本数の21配置を独立stress setとし、通常testとstressの最大絶対残差から経験的誤差幅を定める",
+      "D6": "ROMの必須判定は本数別・目的別に正規化MAE<0.2かつSpearman>=0.9とし、stress単点の正規化絶対誤差>=0.2をunsupportedとする",
+      "D7": "240/480x30比較はxy方向二格子感度・順位安定性であり、3次元格子独立性とは呼ばない",
+      "D8": "ランダムbaselineはNSGA-IIと生成分布および一意ROM評価予算を一致させ、両方式をFVM再評価する",
+      "D9": "2目的は各方式9点、3目的は各方式6点を同一の事前規則で選び、合計30点をFVM再評価する",
+      "D10": "比較の主要指標は凍結正規化範囲と参照点1.1を使うhypervolumeとし、seed median/IQRを報告する",
+      "D11": "2目的kneeは正規化空間の端点弦からの最大垂直距離とし、判別不能時はarc-length中点へfallbackする",
+      "D12": "目的相関は独立FVM test母集団を主要診断とし、stressおよび非劣解集合の相関は条件付き参考値とする",
+      "D13": "パイロット前に100〜1000候補の全場評価throughput benchmarkを行い、許容不能なら方針確認へ戻る",
+      "D14": "交叉率と突然変異率の具体値はdesignで提示し、パイロット前に本人承認を得る",
+      "D15": "本specは多目的探索、444配置dataset、gmax、ROM検証、代表点FVM再評価についてpaper-rom-pipelineの競合内容を置き換える"
+      ,"D16": "gmaxのセル中心成分は両側面勾配の距離加重線形再構成とし、直交格子・セル内一定スカラー熱伝導率・接触熱抵抗なしへ適用する"
+      ,"D17": "全seedを方式・問題別に統合し、一意な代表30点を極値・knee・maximinで選び、重複をmaximin補充しOODはtie-breakだけに用いる"
+      ,"D18": "HV正規化は固定本数別2目的問題と3目的問題で別々に凍結し、ゼロ幅または参照点外非劣解があればINCONCLUSIVEとする"
+      ,"D19": "Dirichlet標本は制約付き二乗誤差最小の整数射影とし、OODは正規化layoutのtrain最近傍距離とvalidation 95 percentileで診断する"
+      ,"D20": "xy二格子誤差比は固定本数別3点で計算し、同じ本数の一様配置と代表点だけで改善符号・支配関係を調べる"
+      ,"D21": "3目的NSGA-IIとrandom baselineの初期TSV本数を整数一様分布とし、pilot 3 seed・full 10 seedを対応indexで比較する"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md", "heading": "## 6. Research Intent Boundary"},
+      {"path": ".kiro/specs/paper-rom-pipeline/requirements.md", "heading": "### Requirement 7: 交換関係の提示"},
+      {"path": ".kiro/specs/paper-rom-pipeline/design.md", "heading": "## Requirements Traceability"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          ".kiro/specs/multiobjective-tsv-optimization/brief.md",
+          ".kiro/specs/multiobjective-tsv-optimization/requirements.md",
+          ".kiro/specs/multiobjective-tsv-optimization/spec.json",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-requirements-revision-20260928.json"
+        ],
+        "commands": []
+      },
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "ready"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "f5c13abe9938922e422dd72718cd7b7a6f440c65ee753eb36f32a77b519b6698",
+      "user_message": "2026-09-28 current conversation: approve six review resolutions and request final review",
+      "user_quote": "承認。必要ならばsol maxやastraを用いて再レビュー。"
+    }
+  },
+  "notes": "要件改訂と独立レビューだけを許可対象とする。2026-09-28の条件付き差戻し6項目は本人承認により解消した。designで固定すると明記した数値許容誤差・stress規則score・遺伝演算率は、そのdesign承認前に実行しない。コード実装、テスト実行、snapshot生成、パイロット探索、本探索および長時間FVMは含まない。"
+}

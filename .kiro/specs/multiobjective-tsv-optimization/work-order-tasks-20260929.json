@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-tasks-20260929",
+  "scope": {
+    "objective": "承認済みの多目的TSV最適化要件・設計を、依存関係、責務境界、完了条件、承認停止点を持つ実装タスクへ分解する",
+    "task_refs": ["multiobjective-tsv-optimization: tasks generation"],
+    "decisions": {
+      "D1": "2026-09-29の本人指示『進めて』をdesign承認とTasksフェーズ移行の根拠とする",
+      "D2": "NSGA-IIはthroughput benchmark、pilot、xy二格子検証、本人によるfull承認、full探索の順とし、最初から本探索を実行しない",
+      "D3": "pilotは100個体・100世代・3 seed、fullの初期設定は200個体・300世代・10 seedとし、pilot後に変更する場合は理由・計算量影響・変更値を再承認する",
+      "D4": "tasks.mdは実装・テスト基盤を対象とし、FVM、snapshot生成、benchmark、pilot、full、代表点FVM再評価という科学的数値実験を今回実行しない",
+      "D5": "具体的なROM hyperparameter候補集合とnumerical-vv正式policyは暗黙に補わず、対応stage前の承認停止点として残す"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/steering/product.md"},
+      {"path": ".kiro/steering/tech.md"},
+      {"path": ".kiro/steering/structure.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          ".kiro/specs/multiobjective-tsv-optimization/tasks.md",
+          ".kiro/specs/multiobjective-tsv-optimization/spec.json",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-tasks-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "cd02487f5aa456ea7cf2e62ccf6f89d08799dd44db81a2a44857a8b5a12aa6dc",
+      "user_message": "2026-09-29 current conversation: approve design and proceed to task generation",
+      "user_quote": "進めて。"
+    }
+  },
+  "notes": "Tasks生成だけを扱う。独立task-graph reviewの指摘に基づきdataset実行境界、先行approval state machine、xy二格子専用plan、代表点FVM launcherを追加し、過大taskを分割した。mutableな出力spec.jsonは参照入力から除外して同一作業範囲のhashを確定した。tasks本人承認前に実装、テスト、数値実験、commitへ進まない。"
+}

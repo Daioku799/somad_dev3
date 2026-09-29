@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-design-20260929",
+  "scope": {
+    "objective": "承認済み多目的TSV最適化要件について既存FVM・ROM・GAとの統合点を調査し、実装可能で検証可能なKiro設計書とdiscovery記録を作成する",
+    "task_refs": ["multiobjective-tsv-optimization: design generation"],
+    "decisions": {
+      "D1": "requirements.mdを科学的条件と受入基準の正本とし、designで研究方法・閾値・比較系列を追加変更しない",
+      "D2": "既存コードを拡張する複雑な統合としてFVM配置側とROM最適化側を読み取り調査し、research.mdへ根拠を記録する",
+      "D3": "設計は責務境界、依存方向、型付き契約、fail-closed gate、file structure、要件traceability、検証戦略を具体化する",
+      "D4": "designで決定すると承認済み要件に明記された値やtie-breakは設計案として提示し、design承認までは実装条件として確定しない",
+      "D5": "今回の作業はdesign.md、research.md、spec metadata、作業票に限定し、実装、テスト、数値実験、長時間計算を行わない",
+      "D6": "新規Julia依存は原則追加せず、既存標準ライブラリと現行project依存で構成できるかを優先評価する"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/steering/product.md"},
+      {"path": ".kiro/steering/tech.md"},
+      {"path": ".kiro/steering/structure.md"},
+      {"path": ".kiro/steering/roadmap.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/theory-and-rationale.md"},
+      {"path": ".kiro/specs/component-generator/design.md"},
+      {"path": ".kiro/specs/heat3ds-ext/design.md"},
+      {"path": ".kiro/specs/snapshot-generator/design.md"},
+      {"path": ".kiro/specs/pod-engine/design.md"},
+      {"path": ".kiro/specs/rom-interpolator/design.md"},
+      {"path": ".kiro/specs/rom-validator/design.md"},
+      {"path": ".kiro/specs/ga-optimizer/design.md"},
+      {"path": ".kiro/specs/paper-rom-pipeline/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          ".kiro/specs/multiobjective-tsv-optimization/design.md",
+          ".kiro/specs/multiobjective-tsv-optimization/research.md",
+          ".kiro/specs/multiobjective-tsv-optimization/spec.json",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-design-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {"write_files": [], "commands": []}
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "8956d8e94a0d48e5276f2c8a8bcee7392070ae42f8e8a7b1c2f616f77ec81530",
+      "user_message": "2026-09-29 current conversation: proceed to the next step after approved requirements",
+      "user_quote": "続行"
+    }
+  },
+  "notes": "設計資料の作成だけを扱う。FVM側・ROM/探索側の読み取りdiscoveryと独立設計レビューを実施し、最終判定はGO。126受入基準IDの欠落0、git diff --check通過。design本人承認前にtasks生成、実装、テスト、snapshot生成、pilot/full探索、FVM計算へ進まない。"
+}
