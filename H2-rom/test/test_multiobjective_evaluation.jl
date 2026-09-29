@@ -7,10 +7,33 @@ using .ResearchContracts
 using .ThermalOperators
 using .MultiobjectiveEvaluation
 
-function physics_contract(; conductivities=(4.0, 4.0))
+function approved_numerical_policy()
+    draft = NumericalPolicy("numerical-vv-v1", "approval-001", 1e-12, 1e-10, 1e-6, 1e-4, false)
+    record = ApprovalRecord("approval-001", "numerical-vv-v1", policy_content_hash(draft), true)
+    return approve_policy(draft, record)
+end
+
+const TEST_NUMERICAL_POLICY = approved_numerical_policy()
+
+function gradient_atol(temperature, geom)
+    centers = center_coordinates(geom)
+    ranges = geom.physical_ranges
+    distances = Float64[]
+    for axis in 1:3
+        physical_centers = view(centers[axis], ranges[axis])
+        append!(distances, diff(physical_centers))
+    end
+    d_min = minimum(filter(>(0.0), distances))
+    physical_temperature = view(temperature, ranges...)
+    temperature_scale_K = max(maximum(abs, physical_temperature), 1.0)
+    gradient_scale_K_per_m = max(1.0, temperature_scale_K / d_min)
+    return 100 * eps(Float64) * gradient_scale_K_per_m
+end
+
+function physics_contract(; conductivities=(4.0, 4.0), grid_shape=(3, 3, 3))
     metadata = PhysicsMetadata(
         "bc-test", "heat-test", "materials-test", "geometry-test", 1.0,
-        40e-6, 80e-6, (240, 240, 30), "row-major-4x4-v1",
+        40e-6, 80e-6, grid_shape, "row-major-4x4-v1",
     )
     return PhysicsContract(
         "physics-test", content_hash(metadata), repeat("a", 64), repeat("b", 64),
@@ -30,31 +53,37 @@ end
 
 function field_bundle(temperature, material_id, conductivity, geom;
                       counts=ntuple(i -> i == 1 ? 9 : 0, 16),
-                      physics=physics_contract(), case_id="case-1",
+                      physics=nothing, case_id="case-1",
                       objective_definition_id="tmax-gmax-v1")
+    physical_shape = ntuple(axis -> length(geom.physical_ranges[axis]), 3)
+    actual_physics = physics === nothing ? physics_contract(grid_shape=physical_shape) : physics
+    temperature_field = Float64.(temperature)
+    material_field = UInt8.(material_id)
+    conductivity_field = Float64.(conductivity)
     layout_signature = content_id("layout", (
         counts=counts,
-        tsv_diameter_m=physics.tsv_diameter_m,
-        min_pitch_m=physics.min_pitch_m,
-        rule_version=physics.layout_rule_version,
+        tsv_diameter_m=actual_physics.tsv_diameter_m,
+        min_pitch_m=actual_physics.min_pitch_m,
+        rule_version=actual_physics.layout_rule_version,
     ))
     identity = FieldIdentity(
         case_id,
         layout_signature,
         geom.grid_signature,
-        content_hash(physics),
-        content_id("material-field", material_id),
-        content_id("conductivity-field", conductivity),
+        content_hash(actual_physics),
+        content_id("temperature-field", temperature_field),
+        content_id("material-field", material_field),
+        content_id("conductivity-field", conductivity_field),
         objective_definition_id,
     )
     return FieldBundle(
         counts,
-        Float64.(temperature),
-        UInt8.(material_id),
-        Float64.(conductivity),
+        temperature_field,
+        material_field,
+        conductivity_field,
         geom,
         identity,
-        physics,
+        actual_physics,
         :K,
     )
 end
@@ -99,17 +128,24 @@ end
 
     constant_field = field_bundle(fill(321.0, 4, 4, 4), material, conductivity, geom)
     constant_result = evaluate_gmax(constant_field)
-    @test constant_result.value_K_per_m == 0.0
-    @test constant_result.components_K_per_m == (0.0, 0.0, 0.0)
+    constant_atol = gradient_atol(constant_field.temperature, geom)
+    @test isapprox(constant_result.value_K_per_m, 0.0;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=constant_atol)
+    @test all(isapprox(component, 0.0;
+                       rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=constant_atol)
+              for component in constant_result.components_K_per_m)
 
     slopes = (2.0, -3.0, 5.0)
     linear = [300.0 + slopes[1] * x[i] + slopes[2] * y[j] + slopes[3] * z[k]
               for i in eachindex(x), j in eachindex(y), k in eachindex(z)]
     linear_result = evaluate_gmax(field_bundle(linear, material, conductivity, geom))
-    @test linear_result.components_K_per_m[1] ≈ slopes[1] rtol=1e-10
-    @test linear_result.components_K_per_m[2] ≈ slopes[2] rtol=1e-10
-    @test linear_result.components_K_per_m[3] ≈ slopes[3] rtol=1e-10
-    @test linear_result.value_K_per_m ≈ sqrt(sum(abs2, slopes)) rtol=1e-10
+    linear_atol = gradient_atol(linear, geom)
+    for axis in 1:3
+        @test isapprox(linear_result.components_K_per_m[axis], slopes[axis];
+                       rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=linear_atol)
+    end
+    @test isapprox(linear_result.value_K_per_m, sqrt(sum(abs2, slopes));
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=linear_atol)
 end
 
 @testset "nonuniform z and identical conductivity across material IDs" begin
@@ -119,9 +155,13 @@ end
     material = [i <= 2 ? UInt8(2) : UInt8(7) for i in 1:4, j in 1:4, k in 1:4]
     conductivity = fill(4.0, 4, 4, 4)
     result = evaluate_gmax(field_bundle(temperature, material, conductivity, geom))
-    @test result.value_K_per_m ≈ sqrt(3.0^2 + 7.0^2) rtol=1e-10
-    @test result.components_K_per_m[1] ≈ 3.0 rtol=1e-10
-    @test result.components_K_per_m[3] ≈ 7.0 rtol=1e-10
+    atol = gradient_atol(temperature, geom)
+    @test isapprox(result.value_K_per_m, sqrt(3.0^2 + 7.0^2);
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
+    @test isapprox(result.components_K_per_m[1], 3.0;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
+    @test isapprox(result.components_K_per_m[3], 7.0;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
 end
 
 @testset "two-material one-dimensional steady conduction" begin
@@ -144,17 +184,24 @@ end
             temperature[i, j, k] = 300.0 - heat_flux / k_right * (x[i] - interface_x)
         end
     end
-    physics = physics_contract(conductivities=(k_left, k_right))
+    physics = physics_contract(conductivities=(k_left, k_right), grid_shape=(6, 3, 3))
     field = field_bundle(temperature, material, conductivity, geom; physics=physics)
     result = evaluate_gmax(field)
-    @test result.value_K_per_m ≈ heat_flux / k_left rtol=1e-10
-    @test result.components_K_per_m[1] ≈ -heat_flux / k_left rtol=1e-10
+    atol = gradient_atol(temperature, geom)
+    @test isapprox(result.value_K_per_m, heat_flux / k_left;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
+    @test isapprox(result.components_K_per_m[1], -heat_flux / k_left;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
     @test result.material_id == UInt8(2)
     left_gradient = MultiobjectiveEvaluation._axis_gradient(field, 3, 2, 2, 1)
     right_gradient = MultiobjectiveEvaluation._axis_gradient(field, 4, 2, 2, 1)
-    @test left_gradient ≈ -heat_flux / k_left rtol=1e-10
-    @test right_gradient ≈ -heat_flux / k_right rtol=1e-10
-    @test -k_left * left_gradient ≈ -k_right * right_gradient rtol=1e-10
+    @test isapprox(left_gradient, -heat_flux / k_left;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
+    @test isapprox(right_gradient, -heat_flux / k_right;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol, atol=atol)
+    @test isapprox(-k_left * left_gradient, -k_right * right_gradient;
+                   rtol=TEST_NUMERICAL_POLICY.gradient_rtol,
+                   atol=max(k_left, k_right) * atol)
 end
 
 @testset "identity, geometry, material, and mask failures are explicit" begin
@@ -166,7 +213,8 @@ end
 
     wrong_identity = FieldIdentity(
         field.identity.case_id, field.identity.layout_signature, "wrong-grid",
-        field.identity.physics_contract_hash, field.identity.material_field_signature,
+        field.identity.physics_contract_hash, field.identity.temperature_field_signature,
+        field.identity.material_field_signature,
         field.identity.conductivity_field_signature, field.identity.objective_definition_id,
     )
     wrong_grid = FieldBundle(
@@ -174,6 +222,19 @@ end
         field.geometry, wrong_identity, field.physics, field.temperature_unit,
     )
     @test_throws ContractError evaluate_objectives(wrong_grid)
+
+    changed_temperature = copy(temperature)
+    changed_temperature[2, 2, 2] += 1.0
+    stale_temperature_identity = FieldBundle(
+        field.counts, changed_temperature, field.material_id, field.conductivity,
+        field.geometry, field.identity, field.physics, field.temperature_unit,
+    )
+    @test_throws ContractError evaluate_objectives(stale_temperature_identity)
+
+    wrong_grid_physics = physics_contract(grid_shape=(240, 240, 30))
+    @test_throws ContractError evaluate_objectives(field_bundle(
+        temperature, material, conductivity, geom; physics=wrong_grid_physics,
+    ))
 
     wrong_k = copy(conductivity)
     wrong_k[2, 2, 2] = 5.0

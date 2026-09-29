@@ -38,7 +38,7 @@
     },
     "presentation": null
   },
-  "state": {"phase": "complete"},
+  "state": {"phase": "in_progress"},
   "approvals": {
     "implement": {
       "scope_hash": "0cfe40ba6a0249d954b2cd36933c66a2710d86cbf2c19c4aad61c5599fa05464",
@@ -51,5 +51,5 @@
       "user_quote": "その方針で進めて。"
     }
   },
-  "notes": "REDはmodule未存在で確認。GREENは17 tests pass。小配列fixtureでversion・shape・K単位・温度/材料/熱伝導率/grid/layout/physics signature・approval record・PASS品質・immutable pathのround-tripと改ざん/legacy拒否を確認した。FVM solveや研究snapshot生成は実行していない。"
+  "notes": "snapshot型・保存読込・改ざん拒否は実装済みで、物理範囲shapeとPhysicsMetadataも照合する。独立reviewにより現行q3d保存経路が旧辞書形式のままと判明した。Task 5.1でcanonical整数配置、候補固有材料場、fix_conv_rhs=true、実solver品質を結合するまでverified snapshotを生成できないため、Task 2.6と本work-orderはin_progressへ戻した。FVM solveや研究snapshot生成は実行していない。"
 }

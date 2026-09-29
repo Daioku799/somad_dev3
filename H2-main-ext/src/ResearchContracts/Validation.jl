@@ -49,7 +49,8 @@ function validate_physics_contract(contract::PhysicsContract)::PhysicsContract
         throw(ContractError("physics_config_hash does not match metadata content"))
 
     ids = contract.silicon_material_ids
-    ids[1] != ids[2] || throw(ContractError("silicon material IDs must be distinct"))
+    ids == (UInt8(2), UInt8(7)) ||
+        throw(ContractError("silicon material IDs must be exactly 2 and 7"))
     all(k -> isfinite(k) && k > 0.0, contract.expected_silicon_conductivity_W_mK) ||
         throw(ContractError("expected silicon conductivities must be finite and positive"))
     contract.units == UnitContract() || throw(ContractError("unsupported or ambiguous unit contract"))

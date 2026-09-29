@@ -8,10 +8,10 @@ using .ResearchContracts
 using .ThermalOperators
 using .SnapshotContract
 
-function snapshot_physics()
+function snapshot_physics(; grid_shape=(3, 3, 3))
     metadata = PhysicsMetadata(
         "bc-test", "heat-test", "materials-test", "geometry-test", 1.0,
-        40e-6, 80e-6, (240, 240, 30), "row-major-4x4-v1",
+        40e-6, 80e-6, grid_shape, "row-major-4x4-v1",
     )
     return PhysicsContract(
         "physics-test", content_hash(metadata), repeat("a", 64), repeat("b", 64),
@@ -92,6 +92,15 @@ end
         snapshot.approval_record, snapshot.temperature_unit,
     )
     @test_throws ContractError validate_snapshot(bad_shape)
+
+    wrong_grid_physics = snapshot_physics(grid_shape=(240, 240, 30))
+    wrong_grid_metadata = ThermalSnapshot(
+        snapshot.envelope, snapshot.counts, snapshot.temperature,
+        snapshot.material_id, snapshot.conductivity, snapshot.geometry,
+        snapshot.identity, wrong_grid_physics, snapshot.quality, snapshot.policy,
+        snapshot.approval_record, snapshot.temperature_unit,
+    )
+    @test_throws ContractError validate_snapshot(wrong_grid_metadata)
 
     changed_temperature = copy(snapshot.temperature)
     changed_temperature[2, 2, 2] += 1.0

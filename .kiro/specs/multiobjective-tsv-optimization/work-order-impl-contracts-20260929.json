@@ -39,7 +39,7 @@
     },
     "presentation": null
   },
-  "state": {"phase": "complete"},
+  "state": {"phase": "in_progress"},
   "approvals": {
     "implement": {
       "scope_hash": "6a5735f99b53c06fcabd9b3a58cbc6896d9a079a7cdbe17722814c57a393f1ac",
@@ -52,5 +52,5 @@
       "user_quote": "その方針で進めて。"
     }
   },
-  "notes": "既存dirty変更を保持し、列挙した新規moduleとcleanなProject.tomlだけを編集した。REDはmodule未存在で失敗、GREENは29 tests pass。外部reviewerは利用枠上限で使用できず、kiro-review手順によるmanual reviewとfresh local verificationを実施した。"
+  "notes": "共通契約は実装済みで、材料ID 2・7の固定も検証する。独立reviewにより、Task 1.4のLEGACY_UNVERIFIED昇格拒否は成立する一方、旧snapshot・旧目的値・旧探索結果の参照専用reader/version dispatchが未実装と判明したためin_progressへ戻した。既存成果物は変更していない。"
 }

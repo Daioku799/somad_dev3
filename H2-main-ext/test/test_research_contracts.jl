@@ -50,6 +50,14 @@ end
     @test physics.min_pitch_m == 80e-6
 
     @test_throws ContractError sample_physics(diameter=10e-6) |> validate_baseline_physics
+    wrong_ids = PhysicsContract(
+        physics.physics_config_id, physics.physics_config_hash,
+        physics.material_table_hash, physics.heat_map_hash,
+        physics.layout_rule_version, physics.tsv_diameter_m, physics.min_pitch_m,
+        (UInt8(1), UInt8(7)), physics.expected_silicon_conductivity_W_mK,
+        physics.metadata, physics.units,
+    )
+    @test_throws ContractError validate_physics_contract(wrong_ids)
     @test validate_baseline_physics(physics) === physics
 end
 

@@ -48,6 +48,15 @@ end
     @test balance.heat_out_W == 12.0
     @test balance.relative_imbalance == 0.0
 
+    inlet_face = BoundaryFace(:xminus, (1, 2, 3), 1.0, 0.5)
+    outlet_face = BoundaryFace(:xplus, (4, 2, 3), 1.0, 0.5)
+    identified_rates = [
+        BoundaryHeatRate(inlet_face, -2.0),
+        BoundaryHeatRate(outlet_face, 12.0),
+    ]
+    @test energy_balance(10.0, identified_rates).relative_imbalance == 0.0
+    @test_throws ContractError energy_balance(10.0, vcat(identified_rates, identified_rates[1:1]))
+
     imbalanced = energy_balance(10.0, [9.0])
     @test imbalanced.relative_imbalance ≈ 0.1
 

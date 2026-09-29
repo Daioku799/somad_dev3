@@ -75,10 +75,17 @@ function validate_snapshot(snapshot::ThermalSnapshot)::ThermalSnapshot
         throw(ContractError("snapshot material shape does not match geometry"))
     size(snapshot.conductivity) == expected_shape ||
         throw(ContractError("snapshot conductivity shape does not match geometry"))
+    physical_shape = ntuple(axis -> length(geometry.physical_ranges[axis]), 3)
+    physical_shape == snapshot.physics.metadata.grid_shape ||
+        throw(ContractError("snapshot physical grid shape does not match PhysicsMetadata"))
     all(isfinite, snapshot.temperature) ||
         throw(ContractError("snapshot temperature contains non-finite values"))
-    all(value -> isfinite(value) && value > 0.0, snapshot.conductivity) ||
-        throw(ContractError("snapshot conductivity must be finite and positive"))
+    all(isfinite, snapshot.conductivity) ||
+        throw(ContractError("snapshot conductivity contains non-finite values"))
+    for k in geometry.physical_ranges[3], j in geometry.physical_ranges[2], i in geometry.physical_ranges[1]
+        snapshot.conductivity[i, j, k] > 0.0 ||
+            throw(ContractError("snapshot physical-cell conductivity must be positive at ($i,$j,$k)"))
+    end
 
     identity = snapshot.identity
     isempty(strip(identity.case_id)) && throw(ContractError("snapshot case ID must not be empty"))

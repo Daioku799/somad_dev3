@@ -37,9 +37,12 @@ function validate_field_bundle(field::FieldBundle)::FieldBundle
         throw(ContractError("material shape does not match grid geometry"))
     size(field.conductivity) == expected_shape ||
         throw(ContractError("conductivity shape does not match grid geometry"))
+    physical_shape = ntuple(axis -> length(geometry.physical_ranges[axis]), 3)
+    physical_shape == field.physics.metadata.grid_shape ||
+        throw(ContractError("physical grid shape does not match PhysicsMetadata"))
     all(isfinite, field.temperature) || throw(ContractError("temperature field contains non-finite values"))
-    all(value -> isfinite(value) && value > 0.0, field.conductivity) ||
-        throw(ContractError("conductivity field must be finite and positive"))
+    all(isfinite, field.conductivity) ||
+        throw(ContractError("conductivity field contains non-finite values"))
 
     identity = field.identity
     for (label, value) in (
@@ -47,6 +50,7 @@ function validate_field_bundle(field::FieldBundle)::FieldBundle
         ("layout_signature", identity.layout_signature),
         ("grid_signature", identity.grid_signature),
         ("physics_contract_hash", identity.physics_contract_hash),
+        ("temperature_field_signature", identity.temperature_field_signature),
         ("material_field_signature", identity.material_field_signature),
         ("conductivity_field_signature", identity.conductivity_field_signature),
         ("objective_definition_id", identity.objective_definition_id),
@@ -63,6 +67,8 @@ function validate_field_bundle(field::FieldBundle)::FieldBundle
         throw(ContractError("layout signature does not match integer counts and physics"))
     identity.physics_contract_hash == content_hash(field.physics) ||
         throw(ContractError("physics contract hash mismatch"))
+    identity.temperature_field_signature == content_id("temperature-field", field.temperature) ||
+        throw(ContractError("temperature field signature mismatch"))
     identity.material_field_signature == content_id("material-field", field.material_id) ||
         throw(ContractError("material field signature mismatch"))
     identity.conductivity_field_signature == content_id("conductivity-field", field.conductivity) ||
@@ -72,6 +78,8 @@ function validate_field_bundle(field::FieldBundle)::FieldBundle
     expected_k = field.physics.expected_silicon_conductivity_W_mK
     ranges = geometry.physical_ranges
     for k in ranges[3], j in ranges[2], i in ranges[1]
+        isfinite(field.conductivity[i, j, k]) && field.conductivity[i, j, k] > 0.0 ||
+            throw(ContractError("physical-cell conductivity must be finite and positive at ($i,$j,$k)"))
         material = field.material_id[i, j, k]
         position = findfirst(==(material), ids)
         position === nothing && continue

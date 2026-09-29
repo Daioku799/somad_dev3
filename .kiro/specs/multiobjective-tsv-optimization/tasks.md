@@ -21,10 +21,11 @@
   - 完了時、未承認またはhash不一致のpolicyでは後段callbackが一度も呼ばれない。
   - _Requirements: 4.8, 4.9, 14.7_
 
-- [x] 1.4 schema versionと旧成果物の隔離を実装する
+- [ ] 1.4 schema versionと旧成果物の隔離を実装する
   - finalized artifactを上書きしないversion dispatchとimmutable run境界を設ける。
   - 旧snapshot、旧目的値、旧探索結果を`LEGACY_UNVERIFIED`として読み取り専用にする。
   - 完了時、旧成果物を新datasetへ品質昇格しようとすると明示的に拒否される。
+  - 現状: 昇格拒否と新schema検証は実装済み。旧snapshot・旧目的値・旧探索結果を参照専用で読むversion dispatchは未実装。
   - _Requirements: 5.12, 14.6, 14.8_
 
 - [ ] 2. FVM物理基盤を整備する
@@ -60,10 +61,11 @@
   - 完了時、solverが使用する全内部面係数が同じfixtureの共有演算子値と一致する。
   - _Requirements: 3.2, 3.3, 4.6, 4.7_
 
-- [x] 2.6 品質・物理identity付きsnapshot契約を実装する
+- [ ] 2.6 品質・物理identity付きsnapshot契約を実装する
   - 温度、材料、熱伝導率、格子、候補identity、数値品質をversion付きで保存する。
   - 読込時にshape、単位、各signatureと品質状態を再検証する。
   - 完了時、正常snapshotはround-tripし、不一致または不合格snapshotはdataset昇格を拒否される。
+  - 現状: 型・保存読込・改ざん拒否は実装済み。現行`q3d`保存経路は旧辞書形式のままであり、Task 5.1でcanonical整数配置、候補固有材料場、`fix_conv_rhs=true`、実solver品質を結合するまでverified snapshotを生成しない。
   - _Requirements: 1.6, 4.8, 14.5_
 
 - [ ] 3. 共通目的評価器を実装する
@@ -73,10 +75,11 @@
   - 完了時、局所最大を含むfixtureで部分評価との差を検出し、欠損・非有限・shape不一致を拒否する。
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-- [x] 3.2 面熱流束から材料側面勾配を計算する
+- [ ] 3.2 面熱流束から材料側面勾配を計算する
   - 共有内部面係数で向き付き熱流束を求め、対象cell側の熱伝導率で勾配へ換算する。
   - 材料ID 2・7とシリコン物性の一致を検証し、内部異材面を含める。
   - 完了時、外部境界依存cellを除外し、mask空・不正幾何・signature不一致をfallbackなしで拒否する。
+  - 現状: 勾配計算と場ごとのsignature照合は実装済み。countsと候補固有材料・熱伝導率場が同一候補から生成された証明はTask 6.1のfield factory接続まで未完。
   - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.7, 3.8, 3.9, 3.11_
 
 - [x] 3.3 セル中心勾配と`gmax`を再構成する

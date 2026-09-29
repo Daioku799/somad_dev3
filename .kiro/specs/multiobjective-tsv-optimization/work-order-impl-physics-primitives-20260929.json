@@ -56,5 +56,5 @@
       "user_quote": "その方針で進めて。"
     }
   },
-  "notes": "Tasks 2.1、2.2、2.4の独立APIと解析unit testを完了した。Task 2.3の既存境界条件adapter接続はwork-order-impl-fvm-integration-20260929で完了した。"
+  "notes": "Tasks 2.1、2.2、2.4の独立APIと解析unit testを完了した。Task 2.3の既存境界条件adapter接続はwork-order-impl-fvm-integration-20260929で完了した。独立review後、energy balanceへBoundaryHeatRate入力を追加し、境界面identityの重複を数値化前に拒否する。"
 }

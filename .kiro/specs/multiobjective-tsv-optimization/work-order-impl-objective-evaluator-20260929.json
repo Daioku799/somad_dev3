@@ -40,7 +40,7 @@
     },
     "presentation": null
   },
-  "state": {"phase": "complete"},
+  "state": {"phase": "in_progress"},
   "approvals": {
     "implement": {
       "scope_hash": "d72862d60c681ee10a1a126639cab056b6fdaccb4eb4c170911384aaf1670d89",
@@ -53,5 +53,5 @@
       "user_quote": "その方針で進めて。"
     }
   },
-  "notes": "REDはmodule未存在で確認。GREENは全30 tests pass。全physical-cell Tmax、共有面コンダクタンスgmax、定数・xyz線形・非一様z・同物性異ID・二材料定常伝熱の両側勾配と熱流連続性・identity失敗を局所解析fixtureで検証した。FVM、ROM学習、数値実験は実行していない。"
+  "notes": "全physical-cell Tmax、共有面コンダクタンスgmax、解析fixtureを実装した。独立review後、温度場signature、PhysicsMetadata grid shape照合、材料ID 2・7固定、承認済みnumerical-vvのrtolと設計式atolを追加した。一方、countsと材料・熱伝導率場が同一候補由来である証明はTask 6.1の候補固有field factoryなしには成立しないため、Task 3.2と本work-orderはin_progressとした。FVM、ROM学習、数値実験は実行していない。"
 }

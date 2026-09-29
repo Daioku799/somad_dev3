@@ -3,6 +3,7 @@ struct FieldIdentity
     layout_signature::String
     grid_signature::String
     physics_contract_hash::String
+    temperature_field_signature::String
     material_field_signature::String
     conductivity_field_signature::String
     objective_definition_id::String

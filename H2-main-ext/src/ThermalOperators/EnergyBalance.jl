@@ -14,6 +14,18 @@ function energy_balance(generated_heat_W::Real,
     return EnergyBalanceResult(generated, rates, heat_in, heat_out, relative_imbalance)
 end
 
+"""Compute energy balance from identified faces after rejecting duplicates."""
+function energy_balance(generated_heat_W::Real,
+                        boundary_heat_rates::AbstractVector{BoundaryHeatRate})::EnergyBalanceResult
+    # Reuse the same face identity rule as boundary aggregation before discarding
+    # provenance for the compact numeric result.
+    aggregate_boundary_heat_rates(boundary_heat_rates)
+    return energy_balance(
+        generated_heat_W,
+        [rate.heat_rate_W for rate in boundary_heat_rates],
+    )
+end
+
 function assess_solve_quality(converged::Bool,
                               final_relative_residual::Real,
                               balance::EnergyBalanceResult,
