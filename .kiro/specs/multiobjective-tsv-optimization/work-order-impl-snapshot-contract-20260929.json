@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "id": "multiobjective-tsv-optimization-impl-snapshot-contract-20260929",
+  "scope": {
+    "objective": "Task 2.6の品質・物理identity付きsnapshot保存読込契約をTDDで実装する",
+    "task_refs": ["multiobjective-tsv-optimization: 2.6"],
+    "decisions": {
+      "D1": "snapshotは温度・材料ID・熱伝導率・GridGeometry3D・counts・PhysicsContract・SolveQuality・NumericalPolicy・ApprovalRecordを保持する",
+      "D2": "保存前と読込時にshape、K単位、全content signature、policy approval record、PASS品質を再検証する",
+      "D3": "artifact IDはsnapshot内容由来hashとし、既存path上書きとLEGACY_UNVERIFIED昇格を拒否する",
+      "D4": "一時ディレクトリの小配列round-trip unit testだけを実行し、FVM solve、研究snapshot生成、dataset生成、benchmark、pilot、full探索を実行しない"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": ".kiro/steering/agent_policy.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/requirements.md"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/design.md"}
+    ],
+    "operations": {
+      "implement": {
+        "write_files": [
+          "H2-main-ext/src/SnapshotContract/SnapshotContract.jl",
+          "H2-main-ext/src/SnapshotContract/Types.jl",
+          "H2-main-ext/src/SnapshotContract/Validation.jl",
+          "H2-main-ext/src/SnapshotContract/Persistence.jl",
+          "H2-main-ext/test/test_snapshot_contract.jl",
+          ".kiro/specs/multiobjective-tsv-optimization/tasks.md",
+          ".kiro/specs/multiobjective-tsv-optimization/work-order-impl-snapshot-contract-20260929.json"
+        ],
+        "commands": []
+      },
+      "test": {
+        "write_files": [],
+        "commands": [
+          ["julia", "--project=H2-main-ext", "H2-main-ext/test/test_snapshot_contract.jl"]
+        ]
+      }
+    },
+    "presentation": null
+  },
+  "state": {"phase": "complete"},
+  "approvals": {
+    "implement": {
+      "scope_hash": "0cfe40ba6a0249d954b2cd36933c66a2710d86cbf2c19c4aad61c5599fa05464",
+      "user_message": "2026-09-29 current conversation: implement Tasks 1.1 through 3.4 in manual mode",
+      "user_quote": "その方針で進めて。"
+    },
+    "test": {
+      "scope_hash": "0cfe40ba6a0249d954b2cd36933c66a2710d86cbf2c19c4aad61c5599fa05464",
+      "user_message": "2026-09-29 current conversation: implement and locally verify Tasks 1.1 through 3.4",
+      "user_quote": "その方針で進めて。"
+    }
+  },
+  "notes": "REDはmodule未存在で確認。GREENは17 tests pass。小配列fixtureでversion・shape・K単位・温度/材料/熱伝導率/grid/layout/physics signature・approval record・PASS品質・immutable pathのround-tripと改ざん/legacy拒否を確認した。FVM solveや研究snapshot生成は実行していない。"
+}

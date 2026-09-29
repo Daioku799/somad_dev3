@@ -60,7 +60,7 @@
   - 完了時、solverが使用する全内部面係数が同じfixtureの共有演算子値と一致する。
   - _Requirements: 3.2, 3.3, 4.6, 4.7_
 
-- [ ] 2.6 品質・物理identity付きsnapshot契約を実装する
+- [x] 2.6 品質・物理identity付きsnapshot契約を実装する
   - 温度、材料、熱伝導率、格子、候補identity、数値品質をversion付きで保存する。
   - 読込時にshape、単位、各signatureと品質状態を再検証する。
   - 完了時、正常snapshotはround-tripし、不一致または不合格snapshotはdataset昇格を拒否される。
