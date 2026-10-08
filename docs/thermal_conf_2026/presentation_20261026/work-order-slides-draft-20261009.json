@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-presentation-draft-20261009",
+  "scope": {
+    "objective": "2026年8月28日作成の提出PDFと対応する既存成果だけを根拠に、提出時主張、主張―根拠対応、10分発表の構成、説明用ノート付きMarp草稿を作成する",
+    "task_refs": [
+      "thermal-conf-2026: submitted claims analysis",
+      "thermal-conf-2026: 10-minute oral presentation draft"
+    ],
+    "decisions": {
+      "D1": "本人の2026-10-09の応答『その内容で進めて』に基づき、提出PDF分析、主張―根拠対応、仮目次、スライド草稿の順で進める",
+      "D2": "発表の中心は、固定解析条件においてPOD–RBF ROMが未知TSV配置を予測し、FVMで検証する低温候補の選別に利用できたこととする",
+      "D3": "提出PDFにある旧gmaxと順位相関は提出時の観察として記録するが、格子依存性と工学的意味を再検討中のため発表の主結果にはしない",
+      "D4": "探索配置は候補抽出と表現し、大域最適性、未知の発熱分布・境界条件・TSV径への一般化は主張しない",
+      "D5": "新規FVM、ROM学習、スイープ、図の再生成は行わず、既存図と既存集計だけを使用する",
+      "D6": "説明確認前のMarpは草稿とし、発表用の採用済み資料とは扱わない"
+    },
+    "unresolved": [],
+    "references": [
+      {
+        "path": "docs/熱工学コンファレンス2026_U00303 (1).pdf"
+      },
+      {
+        "path": "docs/thermal_conf_2026/manuscript_1page.md"
+      },
+      {
+        "path": "docs/PROGRESS_REPORT_2026-09-03.md"
+      },
+      {
+        "path": "docs/thermal_conf_2026/derived/verification_summary.tsv"
+      },
+      {
+        "path": "docs/thermal_conf_2026/derived/field_comparison_case.tsv"
+      },
+      {
+        "path": "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"
+      },
+      {
+        "path": "runs/paper_final_20260824T0140JST/rom/interp_validation.tsv"
+      },
+      {
+        "path": "docs/thermal_conf_2026/make_figures.jl"
+      },
+      {
+        "path": "docs/thermal_conf_2026/figures/fig1_model_parameterization.png"
+      },
+      {
+        "path": "docs/thermal_conf_2026/figures/fig2_accuracy_verification.png"
+      },
+      {
+        "path": "docs/thermal_conf_2026/figures/fig3_field_comparison.png"
+      },
+      {
+        "path": ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md",
+        "heading": "## 1. 結論"
+      },
+      {
+        "path": ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md",
+        "heading": "## 2. 背景: 何が問題だったか"
+      }
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md",
+          "docs/thermal_conf_2026/presentation_20261026/claim_evidence_matrix.md",
+          "docs/thermal_conf_2026/presentation_20261026/talk_outline.md",
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft.md",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes.yml",
+          "docs/thermal_conf_2026/presentation_20261026/figure-manifest.json"
+        ],
+        "commands": []
+      }
+    },
+    "presentation": {
+      "claims": {
+        "C1": {
+          "text": "3D-ICのTSV配置候補は組合せ的に増えるため、固定解析条件でFVM候補を絞り込むPOD–RBF ROMを構築した",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf"
+          ]
+        },
+        "C2": {
+          "text": "対象は総発熱量0.384 W、上面対流・側面下面断熱、240×240×30格子の3層モデルで、TSV配置を各セル0～9本の4×4密度マップとして表現した",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+            "docs/thermal_conf_2026/manuscript_1page.md"
+          ]
+        },
+        "C3": {
+          "text": "424配置をROM構築300、モデル選定42、独立評価42、未学習TSV本数の補間評価40に分けた",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+            "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv",
+            "runs/paper_final_20260824T0140JST/rom/interp_validation.tsv"
+          ]
+        },
+        "C4": {
+          "text": "独立評価42配置で最高温度MAE 0.0950 K、300 Kからの温度上昇基準の温度場相対L2誤差0.493%を得た",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+            "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"
+          ]
+        },
+        "C5": {
+          "text": "ROMで選んだ配置を含む代表8配置をFVMで再計算し、探索配置は同一本数の一様配置より最高温度をN=36、48、60でそれぞれ1.355、1.376、1.119 K低減した",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+            "docs/thermal_conf_2026/derived/verification_summary.tsv"
+          ]
+        },
+        "C6": {
+          "text": "結論は固定した非一様発熱分布と解析条件における候補選別までであり、大域最適性や条件外への一般化は主張しない",
+          "evidence": [
+            "docs/thermal_conf_2026/manuscript_1page.md",
+            "docs/PROGRESS_REPORT_2026-09-03.md"
+          ]
+        },
+        "C7": {
+          "text": "提出時に報告した旧gmaxとTmaxの低い順位相関は観察事実として残すが、旧gmaxは格子依存性と工学的意味を再検討中であり主結果には用いない",
+          "evidence": [
+            "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+            ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md"
+          ]
+        }
+      },
+      "figures": {
+        "F1": {
+          "inputs": [
+            "docs/thermal_conf_2026/figures/fig1_model_parameterization.png",
+            "docs/thermal_conf_2026/make_figures.jl"
+          ],
+          "series": [
+            "4×4 TSV density map",
+            "XY material map",
+            "YZ cross-section"
+          ],
+          "transform": "既存の提出用生成図を無変更で再利用。追加の集計・正規化なし",
+          "axes": {
+            "x": "Position X [mm]",
+            "y": "Position Y [mm]",
+            "z": "Position Z [mm]",
+            "density": "TSV density [-]"
+          },
+          "claims": [
+            "C2"
+          ]
+        },
+        "F2": {
+          "inputs": [
+            "docs/thermal_conf_2026/figures/fig2_accuracy_verification.png",
+            "docs/thermal_conf_2026/derived/verification_summary.tsv",
+            "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv",
+            "docs/thermal_conf_2026/make_figures.jl"
+          ],
+          "series": [
+            "validation Tmax",
+            "test Tmax",
+            "ROM-predicted reduction",
+            "FVM-verified reduction"
+          ],
+          "transform": "既存の提出用集計図を無変更で再利用。左はFVM対ROM、右は同一本数の一様配置との差",
+          "axes": {
+            "left_x": "FVM Tmax [K]",
+            "left_y": "ROM Tmax [K]",
+            "right_x": "TSV count N [-]",
+            "right_y": "Tmax reduction vs. uniform [K]"
+          },
+          "claims": [
+            "C4",
+            "C5"
+          ]
+        },
+        "F3": {
+          "inputs": [
+            "docs/thermal_conf_2026/figures/fig3_field_comparison.png",
+            "docs/thermal_conf_2026/derived/field_comparison_case.tsv",
+            "docs/thermal_conf_2026/make_figures.jl"
+          ],
+          "series": [
+            "FVM temperature field",
+            "ROM temperature field",
+            "ROM minus FVM signed error"
+          ],
+          "transform": "独立評価84配置のうちTmax誤差最大のn60_123について、既存の同一断面図を無変更で再利用",
+          "axes": {
+            "x": "Position X [mm]",
+            "y": "Position Y [mm]",
+            "temperature": "Temperature [K]",
+            "error": "ROM − FVM [K]"
+          },
+          "claims": [
+            "C4"
+          ]
+        }
+      }
+    }
+  },
+  "state": {
+    "phase": "ready"
+  },
+  "approvals": {
+    "slides": {
+      "scope_hash": "10e7e8b6a20f5484cc2707440291ff2e2562b320500624546e6ea48735fb07ed",
+      "user_message": "2026-10-09 user message immediately following the proposed four-deliverable workflow and provisional outline",
+      "user_quote": "その内容で進めて"
+    }
+  },
+  "notes": "数値実験と図の再生成を含まない。説明確認前の資料は草稿であり、発表用採用は別途presentation_acceptanceを必要とする。"
+}

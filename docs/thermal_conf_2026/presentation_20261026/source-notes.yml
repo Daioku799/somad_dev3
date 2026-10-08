@@ -1,0 +1,75 @@
+report_date: 2026-10-26
+status: draft_before_presenter_explanation_confirmation
+source_repository: somad_dev3
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-20261009.json
+manifest: docs/thermal_conf_2026/presentation_20261026/figure-manifest.json
+submitted_pdf:
+  path: docs/熱工学コンファレンス2026_U00303 (1).pdf
+  created_at: 2026-08-28T13:19:37+09:00
+  sha256: 77edf80afb0dba6da82d84d5b8f303bb280a89654054dcb654921b18b5cea0ec
+  pages: 1
+main_message: >-
+  固定した解析条件の範囲では、TSV密度マップを入力とするPOD–RBF ROMが
+  未知配置の最高温度を約0.1 Kの誤差で予測し、FVMで検証すべき低温配置候補の選別に利用できた。
+claims:
+  C1:
+    slides: [2]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+  C2:
+    slides: [3]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - docs/thermal_conf_2026/manuscript_1page.md
+  C3:
+    slides: [4]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv
+      - runs/paper_final_20260824T0140JST/rom/interp_validation.tsv
+  C4:
+    slides: [5, 6]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv
+  C5:
+    slides: [7]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - docs/thermal_conf_2026/derived/verification_summary.tsv
+  C6:
+    slides: [8, 9]
+    evidence:
+      - docs/thermal_conf_2026/manuscript_1page.md
+      - docs/PROGRESS_REPORT_2026-09-03.md
+  C7:
+    slides: [8]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - .kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md
+figures:
+  F1:
+    used_in_slides: [3]
+    path: docs/thermal_conf_2026/figures/fig1_model_parameterization.png
+    generator: docs/thermal_conf_2026/make_figures.jl
+    note: 既存の提出用モデル説明図を無変更で再利用。一様N=48の例。
+  F2:
+    used_in_slides: [6]
+    path: docs/thermal_conf_2026/figures/fig2_accuracy_verification.png
+    generator: docs/thermal_conf_2026/make_figures.jl
+    inputs:
+      - runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv
+      - docs/thermal_conf_2026/derived/verification_summary.tsv
+    note: 左はvalidation/testのFVM対ROM、右は探索配置と一様配置の差。
+  F3:
+    used_in_slides: [5]
+    path: docs/thermal_conf_2026/figures/fig3_field_comparison.png
+    generator: docs/thermal_conf_2026/make_figures.jl
+    inputs:
+      - docs/thermal_conf_2026/derived/field_comparison_case.tsv
+    note: test中でTmax誤差最大のn60_123。平均ケースではない。
+limitations:
+  - 固定した非一様発熱分布、境界条件、TSV径、3層共通配置の範囲。
+  - 探索配置の大域最適性を主張しない。
+  - 旧gmaxは格子依存性と工学的意味を再検討中であり、主結果に用いない。
+  - 新規FVM、ROM学習、スイープ、図の再生成は実施していない。

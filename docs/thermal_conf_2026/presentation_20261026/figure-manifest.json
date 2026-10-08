@@ -1,0 +1,147 @@
+{
+  "presentation": {
+    "claims": {
+      "C1": {
+        "text": "3D-ICのTSV配置候補は組合せ的に増えるため、固定解析条件でFVM候補を絞り込むPOD–RBF ROMを構築した",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf"
+        ]
+      },
+      "C2": {
+        "text": "対象は総発熱量0.384 W、上面対流・側面下面断熱、240×240×30格子の3層モデルで、TSV配置を各セル0～9本の4×4密度マップとして表現した",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+          "docs/thermal_conf_2026/manuscript_1page.md"
+        ]
+      },
+      "C3": {
+        "text": "424配置をROM構築300、モデル選定42、独立評価42、未学習TSV本数の補間評価40に分けた",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+          "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv",
+          "runs/paper_final_20260824T0140JST/rom/interp_validation.tsv"
+        ]
+      },
+      "C4": {
+        "text": "独立評価42配置で最高温度MAE 0.0950 K、300 Kからの温度上昇基準の温度場相対L2誤差0.493%を得た",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+          "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"
+        ]
+      },
+      "C5": {
+        "text": "ROMで選んだ配置を含む代表8配置をFVMで再計算し、探索配置は同一本数の一様配置より最高温度をN=36、48、60でそれぞれ1.355、1.376、1.119 K低減した",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+          "docs/thermal_conf_2026/derived/verification_summary.tsv"
+        ]
+      },
+      "C6": {
+        "text": "結論は固定した非一様発熱分布と解析条件における候補選別までであり、大域最適性や条件外への一般化は主張しない",
+        "evidence": [
+          "docs/thermal_conf_2026/manuscript_1page.md",
+          "docs/PROGRESS_REPORT_2026-09-03.md"
+        ]
+      },
+      "C7": {
+        "text": "提出時に報告した旧gmaxとTmaxの低い順位相関は観察事実として残すが、旧gmaxは格子依存性と工学的意味を再検討中であり主結果には用いない",
+        "evidence": [
+          "docs/熱工学コンファレンス2026_U00303 (1).pdf",
+          ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md"
+        ]
+      }
+    },
+    "figures": {
+      "F1": {
+        "inputs": [
+          "docs/thermal_conf_2026/figures/fig1_model_parameterization.png",
+          "docs/thermal_conf_2026/make_figures.jl"
+        ],
+        "series": [
+          "4×4 TSV density map",
+          "XY material map",
+          "YZ cross-section"
+        ],
+        "transform": "既存の提出用生成図を無変更で再利用。追加の集計・正規化なし",
+        "axes": {
+          "x": "Position X [mm]",
+          "y": "Position Y [mm]",
+          "z": "Position Z [mm]",
+          "density": "TSV density [-]"
+        },
+        "claims": [
+          "C2"
+        ]
+      },
+      "F2": {
+        "inputs": [
+          "docs/thermal_conf_2026/figures/fig2_accuracy_verification.png",
+          "docs/thermal_conf_2026/derived/verification_summary.tsv",
+          "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv",
+          "docs/thermal_conf_2026/make_figures.jl"
+        ],
+        "series": [
+          "validation Tmax",
+          "test Tmax",
+          "ROM-predicted reduction",
+          "FVM-verified reduction"
+        ],
+        "transform": "既存の提出用集計図を無変更で再利用。左はFVM対ROM、右は同一本数の一様配置との差",
+        "axes": {
+          "left_x": "FVM Tmax [K]",
+          "left_y": "ROM Tmax [K]",
+          "right_x": "TSV count N [-]",
+          "right_y": "Tmax reduction vs. uniform [K]"
+        },
+        "claims": [
+          "C4",
+          "C5"
+        ]
+      },
+      "F3": {
+        "inputs": [
+          "docs/thermal_conf_2026/figures/fig3_field_comparison.png",
+          "docs/thermal_conf_2026/derived/field_comparison_case.tsv",
+          "docs/thermal_conf_2026/make_figures.jl"
+        ],
+        "series": [
+          "FVM temperature field",
+          "ROM temperature field",
+          "ROM minus FVM signed error"
+        ],
+        "transform": "独立評価84配置のうちTmax誤差最大のn60_123について、既存の同一断面図を無変更で再利用",
+        "axes": {
+          "x": "Position X [mm]",
+          "y": "Position Y [mm]",
+          "temperature": "Temperature [K]",
+          "error": "ROM − FVM [K]"
+        },
+        "claims": [
+          "C4"
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md",
+      "sha256": "213eecaa7aa3b81b5cd34a6cf44ca131dd1553371ada2b5832b8254200fcd804"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/claim_evidence_matrix.md",
+      "sha256": "eeceb3fe03ea325ea48129909cefcc2171e865d37b01206db51a74a5747c9eaf"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/talk_outline.md",
+      "sha256": "0cdd749aaf026f8a5fb68626eee70bf84539dbdf83a1a61c5fb8e2b6e46d08a9"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/slides_draft.md",
+      "sha256": "e117e8ca7c8132e2209b498e691651c236644821886de87a57fd747a01c30cbb"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/source-notes.yml",
+      "sha256": "127d800d726d7fa8dae85c9925a01b5ec1187e365e535ea9bc853c3c961d26ef"
+    }
+  ]
+}
