@@ -1,0 +1,40 @@
+report_date: 2026-10-26
+status: draft_v4_before_presenter_explanation_confirmation
+scope: main_deck_only_no_backup_slides
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v3.md
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v4-20261016.json
+manifest: docs/thermal_conf_2026/presentation_20261026/figure-manifest-v4.json
+revision_approval:
+  date: 2026-10-16
+  quote: "class=claim,takeawayのような表記ばかりだと返って読みづらくなるので、普通の文にできないか。重要な主張ではこの限りではないが...。またスライド2,3のイラストも何を表しているか明瞭ではないので、イメージ画像を拾ってきたり生成したりしたいね。"
+content_changes:
+  - claim、takeaway、conditionsの装飾枠を通常文として常用しない。
+  - 研究目的、主要精度、FVM検証結果、最終結論だけを引用形式で強調する。
+  - スライド2と3のCSS模式図を生成概念図へ置換する。
+  - 研究主張、数値、留保、10枚構成は第3稿から変更しない。
+generated_images:
+  slide_2:
+    path: docs/thermal_conf_2026/presentation_20261026/intro_3dic_thermal_v4.png
+    sha256: 61e52398dc2b16a550f2192eb62a913e0f3ee9e80778d4e907f5939f70978be6
+    mode: built-in image generation
+    purpose: 3D-IC、垂直TSV、局所発熱、上面への熱流を示す導入用概念図。
+    limitation: 実解析モデル、層数、境界条件、解析結果を表す図ではない。
+    prompt_summary: three-dimensional integrated circuit cutaway, vertical copper TSVs, localized hotspots, upward heat flow, no text
+  slide_3:
+    path: docs/thermal_conf_2026/presentation_20261026/intro_design_space_fvm_v4.png
+    sha256: 1db99ec64a84714334a0204700192109756edda09ae8c9e1c56f0c74b29884aa
+    mode: built-in image generation
+    purpose: 多数のTSV配置候補と詳細FVM評価の関係を示す導入用概念図。
+    limitation: 候補数、計算時間、絞込み率を定量化した図ではない。
+    prompt_summary: many TSV layout thumbnails funneling toward detailed thermal simulation with a clock, no text
+main_message: >-
+  固定した解析条件の範囲では、4×4 TSV密度マップを入力とするPOD–RBF ROMが
+  未知配置の最高温度を0.0950 KのMAEで予測し、FVMで検証すべき低温配置候補の選別に利用できた。
+limitations:
+  - 生成画像は導入用概念図であり、研究データ、解析モデル、解析結果ではない。
+  - 固定した非一様発熱分布、境界条件、TSV径、3層共通配置の範囲。
+  - 探索配置の大域最適性を主張しない。
+  - 密度解像度間の比較および次元の呪いの回避を実証したとは主張しない。
+  - ROMをFVMの完全な代替とは位置付けない。
+  - 新規FVM、ROM学習、スイープは実施していない。
+  - 本編のみで、補助スライドは含めていない。
