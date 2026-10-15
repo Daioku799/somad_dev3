@@ -1,0 +1,36 @@
+report_date: 2026-10-16
+status: preview_before_slide_integration
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-pod-mode-preview-20261016.json
+purpose: スライド4へ掲載する前に、第1・第2 PODモードの形状を本人が確認する。
+inputs:
+  rom_model:
+    path: runs/paper_final_20260824T0140JST/rom/rom_model.jld2
+    sha256: cebb89c36ca5fe63cab3db8200b41d00b0583b30c7f47ed0c5f7146d248dca6d
+    used_fields:
+      - basis
+      - singular_values
+      - inner_shape
+  coordinate_snapshot:
+    path: runs/paper_final_20260824T0140JST/verify/uniform_N48/snapshot.jld2
+    sha256: 7db1ba15e96ffef4899d13af9a0e59dcb86192eb61e72902ed9d64efdd081cee
+    used_fields:
+      - z_centers
+transform:
+  modes: [1, 2]
+  reshape: 1728000×24のbasis各列を240×240×30へ変形
+  slice: z=0.3475 mmのXY断面
+  normalization: 追加の正規化なし
+  color_scale: 2断面の最大絶対値による共通対称色範囲
+  contribution: singular_valuesの二乗比から算出
+result:
+  slice_index: 17
+  z_mm: 0.3475
+  mode_1_variance_pct: 96.235519
+  mode_2_additional_variance_pct: 1.457044
+  cumulative_mode_1_to_2_pct: 97.692563
+  common_color_limit: 0.000914040194
+interpretation:
+  - 図は温度場ではなく、平均場からの変動を表すPOD基底形状である。
+  - 基底の符号は任意であり、実際の寄与は係数a_jとの積a_j phi_jで決まる。
+  - 2モードだけで再構成するという意味ではなく、採用24モード中の例である。
+  - 本人確認前なのでスライドには未掲載。

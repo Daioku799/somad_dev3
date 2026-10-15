@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-pod-mode-preview-20261016",
+  "scope": {
+    "objective": "保存済みROMから第1・第2 PODモードのXY断面を可視化し、スライドへ掲載する前の確認用画像を作成する",
+    "task_refs": ["thermal-conf-2026: POD mode preview before slide integration"],
+    "decisions": {
+      "D1": "新規FVM計算やROM再学習は行わず、保存済みrom_model.jld2のbasisとsingular_valuesだけを使用する",
+      "D2": "24モード中の例として第1・第2モードを表示する",
+      "D3": "スライド3のXY材料分布と対応するz=0.3475 mmのXY断面を表示する",
+      "D4": "POD基底は温度そのものではないため、POD basis amplitude [-]として正負を発散色で表示する",
+      "D5": "2モードを比較できるよう両パネルで共通の対称色範囲を用い、値の正規化は追加しない",
+      "D6": "第1モードの寄与率と第2モードの追加寄与率は保存済み特異値から算出してタイトルに表示する",
+      "D7": "この画像は掲載前確認用であり、既存スライド本文は変更しない",
+      "D8": "8MiBを超える実データはハーネス参照上限のためreferencesへ直接登録せず、固定パスとSHA-256を生成記録へ残して描画時に照合する"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt"},
+      {"path": "H2-rom/src/PipelineROM/types.jl"},
+      {"path": "H2-rom/src/PipelineROM/builder.jl"},
+      {"path": "H2-rom/src/PODEngine/solver.jl"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/plot_pod_modes_preview.jl",
+          "docs/thermal_conf_2026/presentation_20261026/pod_modes_preview.png",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-pod-mode-preview.yml",
+          "docs/thermal_conf_2026/presentation_20261026/figure-manifest-pod-mode-preview.json"
+        ],
+        "commands": [
+          ["julia", "--project=H2-rom", "docs/thermal_conf_2026/presentation_20261026/plot_pod_modes_preview.jl"]
+        ]
+      }
+    },
+    "presentation": {
+      "claims": {
+        "C1": {
+          "text": "本研究のROMは平均温度場と24個のPODモードの係数付き線形結合で温度場を再構成し、第1・第2モードはその基底形状の例である",
+          "evidence": [
+            "H2-rom/src/PipelineROM/types.jl",
+            "H2-rom/src/PipelineROM/builder.jl",
+            "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt"
+          ]
+        }
+      },
+      "figures": {
+        "F1": {
+          "inputs": [
+            "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv",
+            "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt",
+            "H2-rom/src/PipelineROM/builder.jl"
+          ],
+          "series": ["POD mode 1", "POD mode 2"],
+          "transform": "保存済みbasisの第1・第2列を240×240×30へreshapeし、z=0.3475 mmのXY断面を抽出する。両断面の最大絶対値を用いた共通対称色範囲で表示し、追加の正規化は行わない。寄与率は保存済みsingular_valuesの二乗比から算出する",
+          "axes": {
+            "x": "Position X [mm]",
+            "y": "Position Y [mm]",
+            "color": "POD basis amplitude [-]"
+          },
+          "claims": ["C1"]
+        }
+      }
+    }
+  },
+  "state": {"phase": "ready"},
+  "approvals": {
+    "slides": {
+      "scope_hash": "583947e2c12f3fdd0ade50d86b0cb0d36a3ff77bbb553b6d24a1cd4591b9a3c1",
+      "user_message": "2026-10-16 request to preview the POD-mode image before slide integration",
+      "user_quote": "スライドに乗せる前にその画像を見せてほしい"
+    }
+  },
+  "notes": "確認用画像だけを生成する。スライドへの掲載判断と説明確認は未実施。実描画ではrom_model.jld2（SHA-256 cebb89c36ca5fe63cab3db8200b41d00b0583b30c7f47ed0c5f7146d248dca6d）とuniform_N48/snapshot.jld2（SHA-256 7db1ba15e96ffef4899d13af9a0e59dcb86192eb61e72902ed9d64efdd081cee）を読み、生成スクリプト内でも照合する。"
+}

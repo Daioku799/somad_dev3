@@ -1,0 +1,45 @@
+{
+  "presentation": {
+    "claims": {
+      "C1": {
+        "text": "本研究のROMは平均温度場と24個のPODモードの係数付き線形結合で温度場を再構成し、第1・第2モードはその基底形状の例である",
+        "evidence": [
+          "H2-rom/src/PipelineROM/types.jl",
+          "H2-rom/src/PipelineROM/builder.jl",
+          "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt"
+        ]
+      }
+    },
+    "figures": {
+      "F1": {
+        "inputs": [
+          "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv",
+          "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt",
+          "H2-rom/src/PipelineROM/builder.jl"
+        ],
+        "series": ["POD mode 1", "POD mode 2"],
+        "transform": "保存済みbasisの第1・第2列を240×240×30へreshapeし、z=0.3475 mmのXY断面を抽出する。両断面の最大絶対値を用いた共通対称色範囲で表示し、追加の正規化は行わない。寄与率は保存済みsingular_valuesの二乗比から算出する",
+        "axes": {
+          "x": "Position X [mm]",
+          "y": "Position Y [mm]",
+          "color": "POD basis amplitude [-]"
+        },
+        "claims": ["C1"]
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/plot_pod_modes_preview.jl",
+      "sha256": "7158c6145fd5ec077492f59ec4595065e662ef83973a6b93bce22081f1ce084b"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/pod_modes_preview.png",
+      "sha256": "cd6ca9cdb23321c5f344a3b0a8a0db121f5852451bb5df83882cc01c5d724d6b"
+    },
+    {
+      "path": "docs/thermal_conf_2026/presentation_20261026/source-notes-pod-mode-preview.yml",
+      "sha256": "6628bc704851aadd9cb02597f304c68b453bae0ee29846409705ef01d3310d8b"
+    }
+  ]
+}
