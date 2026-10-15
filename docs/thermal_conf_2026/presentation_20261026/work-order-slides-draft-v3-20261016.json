@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-presentation-main-draft-v3-20261016",
+  "scope": {
+    "objective": "承認された10枚構成に基づき、導入からROM、TSV密度マップ、精度評価、配置探索、FVM検証へ順接する10分学会発表の本編第3稿を作成する",
+    "task_refs": [
+      "thermal-conf-2026: approved ten-slide main-story revision",
+      "thermal-conf-2026: 10-minute oral presentation main deck v3"
+    ],
+    "decisions": {
+      "D1": "本編は表紙、3D-ICの熱問題、設計初期における配置評価、縮約モデル、TSV密度マップ、解析・評価方法、ROMの予測精度、ROMを用いた配置探索、探索配置のFVM検証、まとめの10枚とする",
+      "D2": "独立した目次スライドと補助スライドは作成しない",
+      "D3": "各スライドのタイトルは短い名詞句とし、主張はタイトル直下の一文または主要図中に置く",
+      "D4": "導入ではROMと密度マップの詳細を先取りせず、熱問題、多数候補の評価困難、研究目的の順に説明する",
+      "D5": "ROMによる温度場の低次元化を説明した後、入力側の高次元化を抑える表現として4×4 TSV密度マップを導入する。次元の呪いを回避したとは断定しない",
+      "D6": "速度は倍率で主張せず、最終ログにある約9.40×10^7回のROM評価と89.1分という探索規模を示す",
+      "D7": "探索結果はN=48の探索配置と一様配置の4×4セル別TSV本数を可視化し、FVM最高温度差1.376 Kを示す。N=36、48、60の範囲は1.119〜1.376 Kとする",
+      "D8": "探索配置は低温候補と表現し、大域最適性、条件外への一般化、ROMによるFVMの完全代替を主張しない",
+      "D9": "新規FVM、ROM学習、スイープは実施しない。既存のverification_candidates.tsvに記録されたセル別本数の可視化だけを新規描画する",
+      "D10": "第2稿を保持し、第3稿を別ファイルとして作成する。発表者本人の説明確認前は草稿とする"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": "docs/熱工学コンファレンス2026_U00303 (1).pdf"},
+      {"path": "docs/thermal_conf_2026/manuscript_1page.md"},
+      {"path": "docs/PROGRESS_REPORT_2026-09-03.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/claim_evidence_matrix.md"},
+      {"path": "docs/thermal_conf_2026/derived/verification_summary.tsv"},
+      {"path": "docs/thermal_conf_2026/derived/field_comparison_case.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/optimize.log"},
+      {"path": "runs/paper_final_20260824T0140JST/pipeline.log"},
+      {"path": "docs/thermal_conf_2026/figures/fig1_model_parameterization.png"},
+      {"path": "docs/thermal_conf_2026/figures/fig3_field_comparison.png"},
+      {"path": "docs/thermal_conf_2026/make_figures.jl"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft_v3.md",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-v3.yml",
+          "docs/thermal_conf_2026/presentation_20261026/figure-manifest-v3.json"
+        ],
+        "commands": []
+      }
+    },
+    "presentation": {
+      "claims": {
+        "C1": {
+          "text": "3D-ICでは高密度実装と局所発熱によって高温部が生じ、TSV配置は最高温度に影響する",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf"]
+        },
+        "C2": {
+          "text": "多数のTSV配置候補を3次元FVMだけで広く評価することは難しいため、FVMで確認すべき候補を高速に選別する仕組みを構築する",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf"]
+        },
+        "C3": {
+          "text": "POD–RBF ROMは1,728,000点の温度場をPOD基底係数で表し、本研究では24モード、累積寄与率0.999782を採用した",
+          "evidence": ["runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt", "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv"]
+        },
+        "C4": {
+          "text": "TSV配置を各セル0〜9本の4×4密度マップとして表し、ROMへの入力を固定長16成分とした",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/manuscript_1page.md"]
+        },
+        "C5": {
+          "text": "424配置をROM構築300、モデル選定42、独立評価42、未学習TSV本数の補間評価40に分けた",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"]
+        },
+        "C6": {
+          "text": "独立評価42配置で最高温度MAE 0.0950 K、300 Kからの温度上昇基準の温度場相対L2誤差0.493%を得た",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"]
+        },
+        "C7": {
+          "text": "TSV本数36〜60の25水準、各400リスタートで約9.40×10^7回のROM評価を89.1分で行った",
+          "evidence": ["runs/paper_final_20260824T0140JST/optimize.log"]
+        },
+        "C8": {
+          "text": "ROMで選んだ配置はFVMでも同一本数の一様配置より低温となり、N=36、48、60で最高温度を1.355、1.376、1.119 K低減した",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/derived/verification_summary.tsv"]
+        },
+        "C9": {
+          "text": "結論は固定した非一様発熱分布と解析条件における候補選別までであり、大域最適性や条件外への一般化は主張しない",
+          "evidence": ["docs/thermal_conf_2026/manuscript_1page.md", "docs/PROGRESS_REPORT_2026-09-03.md"]
+        }
+      },
+      "figures": {
+        "F1": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig1_model_parameterization.png", "docs/thermal_conf_2026/make_figures.jl"],
+          "series": ["4×4 TSV density map", "XY material map", "YZ cross-section"],
+          "transform": "既存図を無変更で再利用する",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "z": "Position Z [mm]", "density": "TSV density [-]"},
+          "claims": ["C4"]
+        },
+        "F2": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig3_field_comparison.png", "docs/thermal_conf_2026/derived/field_comparison_case.tsv", "docs/thermal_conf_2026/make_figures.jl"],
+          "series": ["FVM temperature field", "ROM temperature field", "ROM minus FVM signed error"],
+          "transform": "test中でTmax誤差最大のn60_123について既存図を無変更で再利用する",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "temperature": "Temperature [K]", "error": "ROM − FVM [K]"},
+          "claims": ["C6"]
+        },
+        "F3": {
+          "inputs": ["runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv"],
+          "series": ["searched N=48 cell counts", "uniform N=48 cell counts"],
+          "transform": "verification_candidates.tsvのcounts列を行優先で4×4へ整形し、Marp内のHTMLグリッドとして同一色尺度0〜9本で並べる。集計・正規化なし",
+          "axes": {"x": "Density-cell column [-]", "y": "Density-cell row [-]", "color": "TSV count per cell [-]"},
+          "claims": ["C8"]
+        }
+      }
+    }
+  },
+  "state": {"phase": "ready"},
+  "approvals": {
+    "slides": {
+      "scope_hash": "5ef0c90960ebc46da2e77c7d6bca178d50d0d220b65259f7905d35ee18bea111",
+      "user_message": "2026-10-16 user response immediately following the proposed ten-slide main-story revision",
+      "user_quote": "本編のみこの方針で作成できる？"
+    }
+  },
+  "notes": "本人が承認した10枚の本編のみを作成する。補助スライド、数値実験、ROM再学習、FVM再計算は含まない。説明確認前は草稿。"
+}

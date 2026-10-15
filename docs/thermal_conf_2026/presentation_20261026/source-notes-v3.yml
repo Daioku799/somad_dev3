@@ -1,0 +1,95 @@
+report_date: 2026-10-26
+status: draft_v3_before_presenter_explanation_confirmation
+scope: main_deck_only_no_backup_slides
+source_repository: somad_dev3
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v3-20261016.json
+manifest: docs/thermal_conf_2026/presentation_20261026/figure-manifest-v3.json
+storyboard_approval:
+  date: 2026-10-16
+  quote: "本編のみこの方針で作成できる？"
+title: "TSV密度マップを用いた縮約モデルによる3DIC の熱設計最適化の研究"
+submitted_pdf:
+  path: docs/熱工学コンファレンス2026_U00303 (1).pdf
+  created_at: 2026-08-28T13:19:37+09:00
+  sha256: 77edf80afb0dba6da82d84d5b8f303bb280a89654054dcb654921b18b5cea0ec
+  pages: 1
+main_message: >-
+  固定した解析条件の範囲では、4×4 TSV密度マップを入力とするPOD–RBF ROMが
+  未知配置の最高温度を0.0950 KのMAEで予測し、FVMで検証すべき低温配置候補の選別に利用できた。
+slide_titles:
+  1: 正式演題
+  2: 3D-ICの熱問題
+  3: 設計初期における配置評価
+  4: 縮約モデル（ROM）
+  5: TSV密度マップ
+  6: 解析・評価方法
+  7: ROMの予測精度
+  8: ROMを用いた配置探索
+  9: 探索配置のFVM検証
+  10: まとめ
+claims:
+  C1:
+    slides: [2]
+    evidence: [docs/熱工学コンファレンス2026_U00303 (1).pdf]
+  C2:
+    slides: [3]
+    evidence: [docs/熱工学コンファレンス2026_U00303 (1).pdf]
+  C3:
+    slides: [4]
+    evidence:
+      - runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt
+      - runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv
+  C4:
+    slides: [5]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - docs/thermal_conf_2026/manuscript_1page.md
+  C5:
+    slides: [6]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv
+  C6:
+    slides: [7]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv
+  C7:
+    slides: [8]
+    evidence: [runs/paper_final_20260824T0140JST/optimize.log]
+  C8:
+    slides: [9]
+    evidence:
+      - docs/熱工学コンファレンス2026_U00303 (1).pdf
+      - docs/thermal_conf_2026/derived/verification_summary.tsv
+      - runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv
+  C9:
+    slides: [9, 10]
+    evidence:
+      - docs/thermal_conf_2026/manuscript_1page.md
+      - docs/PROGRESS_REPORT_2026-09-03.md
+figures:
+  F1:
+    used_in_slides: [5]
+    path: docs/thermal_conf_2026/figures/fig1_model_parameterization.png
+    note: 既存図を無変更で再利用。一様N=48の4×4密度マップ、XY材料分布、YZ断面。
+  F2:
+    used_in_slides: [7]
+    path: docs/thermal_conf_2026/figures/fig3_field_comparison.png
+    note: 既存図を無変更で再利用。test中でTmax誤差最大のn60_123。平均ケースではない。
+  F3:
+    used_in_slides: [9]
+    path: embedded_html_in_slides_draft_v3.md
+    input: runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv
+    note: best_N48とuniform_N48のcounts列を行優先で4×4へ整形。集計・正規化なし。
+runtime_note:
+  displayed: "約9.40×10^7回のROM評価を89.1分"
+  source: runs/paper_final_20260824T0140JST/optimize.log
+  limitation: FVMとの直接速度倍率ではなく、20スレッドでの探索規模と所要時間。
+limitations:
+  - 固定した非一様発熱分布、境界条件、TSV径、3層共通配置の範囲。
+  - 探索配置の大域最適性を主張しない。
+  - 密度解像度間の比較および次元の呪いの回避を実証したとは主張しない。
+  - ROMをFVMの完全な代替とは位置付けない。
+  - 新規FVM、ROM学習、スイープは実施していない。
+  - 本編のみで、補助スライドは含めていない。
