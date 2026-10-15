@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-presentation-draft-v2-20261009",
+  "scope": {
+    "objective": "承認済み9枚構成と既存根拠を維持し、短い名詞句のタイトルと本文中の主張を用いた10分学会発表の第2稿を作成する",
+    "task_refs": [
+      "thermal-conf-2026: approved nine-slide storyboard revision",
+      "thermal-conf-2026: 10-minute oral presentation draft v2"
+    ],
+    "decisions": {
+      "D1": "発表の中心は、固定解析条件においてPOD–RBF ROMが未知TSV配置を予測し、FVMで検証する低温候補の選別に利用できたこととする",
+      "D2": "本編は表紙、多数配置評価の難しさ、密度マップの導入、ROMの構築・評価方法、温度場の再現性、最高温度の予測精度、配置探索結果のFVM検証、適用範囲と限界、まとめの9枚とする",
+      "D3": "各スライドのタイトルは短い名詞句とし、結論または主張は本文冒頭の一文、図、強調欄へ置く",
+      "D4": "演題は本人の2026-10-09の指定『TSV密度マップを用いた縮約モデルによる3DIC の熱設計最適化の研究』を使用する",
+      "D5": "提出PDFにある旧gmaxは提出時の観察として記録するが、格子依存性と工学的意味を再検討中のため発表の主結果にはしない",
+      "D6": "探索配置は候補抽出と表現し、大域最適性、未知の発熱分布・境界条件・TSV径への一般化は主張しない",
+      "D7": "新規FVM、ROM学習、スイープ、図の再生成は行わず、既存図と既存集計だけを使用する",
+      "D8": "第1稿は保持し、第2稿を別ファイルとして作成する。説明確認前は草稿とする"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": "docs/熱工学コンファレンス2026_U00303 (1).pdf"},
+      {"path": "docs/thermal_conf_2026/manuscript_1page.md"},
+      {"path": "docs/PROGRESS_REPORT_2026-09-03.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/claim_evidence_matrix.md"},
+      {"path": "docs/thermal_conf_2026/derived/verification_summary.tsv"},
+      {"path": "docs/thermal_conf_2026/derived/field_comparison_case.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/interp_validation.tsv"},
+      {"path": "docs/thermal_conf_2026/make_figures.jl"},
+      {"path": "docs/thermal_conf_2026/figures/fig1_model_parameterization.png"},
+      {"path": "docs/thermal_conf_2026/figures/fig2_accuracy_verification.png"},
+      {"path": "docs/thermal_conf_2026/figures/fig3_field_comparison.png"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md", "heading": "## 1. 結論"},
+      {"path": ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md", "heading": "## 2. 背景: 何が問題だったか"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/talk_outline_v2.md",
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft_v2.md",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-v2.yml",
+          "docs/thermal_conf_2026/presentation_20261026/figure-manifest-v2.json"
+        ],
+        "commands": []
+      }
+    },
+    "presentation": {
+      "claims": {
+        "C1": {
+          "text": "3D-ICのTSV配置候補は組合せ的に増えるため、固定解析条件でFVM候補を絞り込むPOD–RBF ROMを構築した",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf"]
+        },
+        "C2": {
+          "text": "対象は総発熱量0.384 W、上面対流・側面下面断熱、240×240×30格子の3層モデルで、TSV配置を各セル0～9本の4×4密度マップとして表現した",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/manuscript_1page.md"]
+        },
+        "C3": {
+          "text": "424配置をROM構築300、モデル選定42、独立評価42、未学習TSV本数の補間評価40に分けた",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv", "runs/paper_final_20260824T0140JST/rom/interp_validation.tsv"]
+        },
+        "C4": {
+          "text": "独立評価42配置で最高温度MAE 0.0950 K、300 Kからの温度上昇基準の温度場相対L2誤差0.493%を得た",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"]
+        },
+        "C5": {
+          "text": "ROMで選んだ配置を含む代表8配置をFVMで再計算し、探索配置は同一本数の一様配置より最高温度をN=36、48、60でそれぞれ1.355、1.376、1.119 K低減した",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/derived/verification_summary.tsv"]
+        },
+        "C6": {
+          "text": "結論は固定した非一様発熱分布と解析条件における候補選別までであり、大域最適性や条件外への一般化は主張しない",
+          "evidence": ["docs/thermal_conf_2026/manuscript_1page.md", "docs/PROGRESS_REPORT_2026-09-03.md"]
+        },
+        "C7": {
+          "text": "提出時に報告した旧gmaxとTmaxの低い順位相関は観察事実として残すが、旧gmaxは格子依存性と工学的意味を再検討中であり主結果には用いない",
+          "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", ".kiro/specs/multiobjective-tsv-optimization/uniformity-metric-rationale.md"]
+        }
+      },
+      "figures": {
+        "F1": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig1_model_parameterization.png", "docs/thermal_conf_2026/make_figures.jl"],
+          "series": ["4×4 TSV density map", "XY material map", "YZ cross-section"],
+          "transform": "既存の提出用生成図を無変更で再利用。追加の集計・正規化なし",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "z": "Position Z [mm]", "density": "TSV density [-]"},
+          "claims": ["C2"]
+        },
+        "F2": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig2_accuracy_verification.png", "docs/thermal_conf_2026/derived/verification_summary.tsv", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv", "docs/thermal_conf_2026/make_figures.jl"],
+          "series": ["validation Tmax", "test Tmax", "ROM-predicted reduction", "FVM-verified reduction"],
+          "transform": "既存の提出用集計図を無変更で再利用。左はFVM対ROM、右は同一本数の一様配置との差",
+          "axes": {"left_x": "FVM Tmax [K]", "left_y": "ROM Tmax [K]", "right_x": "TSV count N [-]", "right_y": "Tmax reduction vs. uniform [K]"},
+          "claims": ["C4", "C5"]
+        },
+        "F3": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig3_field_comparison.png", "docs/thermal_conf_2026/derived/field_comparison_case.tsv", "docs/thermal_conf_2026/make_figures.jl"],
+          "series": ["FVM temperature field", "ROM temperature field", "ROM minus FVM signed error"],
+          "transform": "独立評価84配置のうちTmax誤差最大のn60_123について、既存の同一断面図を無変更で再利用",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "temperature": "Temperature [K]", "error": "ROM − FVM [K]"},
+          "claims": ["C4"]
+        }
+      }
+    }
+  },
+  "state": {"phase": "ready"},
+  "approvals": {
+    "slides": {
+      "scope_hash": "fb3cb38ec38f98d8dbb8cf19aa2ab051cb8bb426b797c5e309648c8bf1e86ca2",
+      "user_message": "2026-10-09 user response immediately following the proposed nine-slide storyboard",
+      "user_quote": "進めて。演題はTSV密度マップを用いた縮約モデルによる3DIC の熱設計最適化の研究"
+    }
+  },
+  "notes": "2026-10-09に提示した9枚のストーリーボードに対する本人の明示承認に基づく。数値実験と図の再生成を含まない。説明確認前は草稿。Marp CLIによるPDF変換はホスト上の一時ファイル権限およびブラウザ連携で失敗したため、PDFを成果物へ含めない。"
+}
