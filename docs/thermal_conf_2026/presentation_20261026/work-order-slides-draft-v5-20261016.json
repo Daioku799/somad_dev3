@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-presentation-main-draft-v5-20261016",
+  "scope": {
+    "objective": "本編第4稿のスライド2・3を本人指定の導入文へ変更し、スライド2の概念画像を縮小、スライド3右側へ3D-IC図と本研究モデルのXY材料分布を縦配置する",
+    "task_refs": ["thermal-conf-2026: introduction wording and figure revision"],
+    "decisions": {
+      "D1": "スライド2は、IC積層による高密度化・高性能化、高密度化に伴う高温部と動作不良、設計による最高温度抑制の必要性を順に示す",
+      "D2": "スライド2の生成概念図は補助的に小さく配置し、実解析モデルではないという注記を維持する",
+      "D3": "スライド3は、TSVが信号経路に加えて熱輸送へ影響すること、配置をパラメータ化すると膨大な配置候補の評価が必要になること、高速評価法を考えるという目的を順に示す",
+      "D4": "用語はTSV（through-silicon via）とし、誤記のthermal throgh viaは採用しない",
+      "D5": "スライド3右側に3d_ic.jpgと、fig1_model_parameterization.png中央のXY材料分布を切り出した図を縦2段で配置する",
+      "D6": "3d_ic.jpgの原出典と利用条件は未確認であることを記録し、外部配布前の確認事項とする",
+      "D7": "本編の残り8枚、研究結果、数値、留保は第4稿から変更しない",
+      "D8": "第4稿を保持し、第5稿を別ファイルとして作成する。発表者本人の説明確認前は草稿とする"
+    },
+    "unresolved": [],
+    "references": [
+      {"path": "docs/thermal_conf_2026/presentation_20261026/slides_draft_v4.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/source-notes-v4.yml"},
+      {"path": "docs/熱工学コンファレンス2026_U00303 (1).pdf"},
+      {"path": "docs/thermal_conf_2026/manuscript_1page.md"},
+      {"path": "docs/PROGRESS_REPORT_2026-09-03.md"},
+      {"path": "docs/thermal_conf_2026/derived/verification_summary.tsv"},
+      {"path": "docs/thermal_conf_2026/derived/field_comparison_case.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/optimize.log"},
+      {"path": "docs/thermal_conf_2026/figures/fig1_model_parameterization.png"},
+      {"path": "docs/thermal_conf_2026/figures/fig3_field_comparison.png"},
+      {"path": "docs/thermal_conf_2026/figures/3d_ic.jpg"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/intro_3dic_thermal_v4.png"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft_v5.md",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-v5.yml",
+          "docs/thermal_conf_2026/presentation_20261026/model_xy_v5.png",
+          "docs/thermal_conf_2026/presentation_20261026/figure-manifest-v5.json"
+        ],
+        "commands": [
+          ["convert", "docs/thermal_conf_2026/figures/fig1_model_parameterization.png", "-crop", "2100x2100+2100+0", "+repage", "docs/thermal_conf_2026/presentation_20261026/model_xy_v5.png"]
+        ]
+      }
+    },
+    "presentation": {
+      "claims": {
+        "C1": {"text": "ICの積層によりさらなる高密度化・高性能化を図る一方、高密度化によって高温部が生じ動作不良の原因となるため、設計によって最高温度を抑える工夫が必要である", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf"]},
+        "C2": {"text": "層を貫通するTSVは信号経路に加えて熱輸送にも影響し、TSV配置をパラメータとすると膨大な配置候補の評価が必要になるため、様々なTSV配置を高速にシミュレーションする方法を検討する", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf"]},
+        "C3": {"text": "POD–RBF ROMは1,728,000点の温度場をPOD基底係数で表し、本研究では24モード、累積寄与率0.999782を採用した", "evidence": ["runs/paper_final_20260824T0140JST/rom/build_rom_summary.txt", "runs/paper_final_20260824T0140JST/rom/pod_spectrum.tsv"]},
+        "C4": {"text": "TSV配置を各セル0〜9本の4×4密度マップとして表し、ROMへの入力を固定長16成分とした", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/manuscript_1page.md"]},
+        "C5": {"text": "424配置をROM構築300、モデル選定42、独立評価42、未学習TSV本数の補間評価40に分けた", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"]},
+        "C6": {"text": "独立評価42配置で最高温度MAE 0.0950 K、300 Kからの温度上昇基準の温度場相対L2誤差0.493%を得た", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"]},
+        "C7": {"text": "TSV本数36〜60の25水準、各400リスタートで約9.40×10^7回のROM評価を89.1分で行った", "evidence": ["runs/paper_final_20260824T0140JST/optimize.log"]},
+        "C8": {"text": "ROMで選んだ配置はFVMでも同一本数の一様配置より低温となり、N=36、48、60で最高温度を1.355、1.376、1.119 K低減した", "evidence": ["docs/熱工学コンファレンス2026_U00303 (1).pdf", "docs/thermal_conf_2026/derived/verification_summary.tsv"]},
+        "C9": {"text": "結論は固定した非一様発熱分布と解析条件における候補選別までであり、大域最適性や条件外への一般化は主張しない", "evidence": ["docs/thermal_conf_2026/manuscript_1page.md", "docs/PROGRESS_REPORT_2026-09-03.md"]}
+      },
+      "figures": {
+        "F0A": {
+          "inputs": ["docs/thermal_conf_2026/presentation_20261026/intro_3dic_thermal_v4.png"],
+          "series": ["conceptual 3D-IC stack", "vertical copper TSVs", "localized hotspots", "upward heat flow"],
+          "transform": "第4稿の生成概念図を無変更で縮小表示する。解析モデルまたは解析結果とは扱わない",
+          "axes": {"x": "none", "y": "none", "units": "none (conceptual illustration)"},
+          "claims": ["C1"]
+        },
+        "F0C": {
+          "inputs": ["docs/thermal_conf_2026/figures/3d_ic.jpg"],
+          "series": ["stacked silicon tiers", "schematic copper TSVs"],
+          "transform": "既存JPEGを無変更で表示する。原出典・利用条件は未確認",
+          "axes": {"x": "none", "y": "none", "units": "none (conceptual illustration)"},
+          "claims": ["C2"]
+        },
+        "F0D": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig1_model_parameterization.png"],
+          "series": ["XY material map at z = 0.347 mm"],
+          "transform": "6300×2100画像の中央パネルを2100×2100+2100+0で矩形切出し。値、色、軸、単位は変更しない",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "color": "Material ID [-]"},
+          "claims": ["C2", "C4"]
+        },
+        "F1": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig1_model_parameterization.png"],
+          "series": ["4×4 TSV density map", "XY material map", "YZ cross-section"],
+          "transform": "既存図を無変更で再利用する",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "z": "Position Z [mm]", "density": "TSV density [-]"},
+          "claims": ["C4"]
+        },
+        "F2": {
+          "inputs": ["docs/thermal_conf_2026/figures/fig3_field_comparison.png", "docs/thermal_conf_2026/derived/field_comparison_case.tsv"],
+          "series": ["FVM temperature field", "ROM temperature field", "ROM minus FVM signed error"],
+          "transform": "test中でTmax誤差最大のn60_123について既存図を無変更で再利用する",
+          "axes": {"x": "Position X [mm]", "y": "Position Y [mm]", "temperature": "Temperature [K]", "error": "ROM − FVM [K]"},
+          "claims": ["C6"]
+        },
+        "F3": {
+          "inputs": ["runs/paper_final_20260824T0140JST/rom/verification_candidates.tsv"],
+          "series": ["searched N=48 cell counts", "uniform N=48 cell counts"],
+          "transform": "counts列を行優先で4×4へ整形し、Marp内HTMLグリッドとして同一色尺度0〜9本で並べる。集計・正規化なし",
+          "axes": {"x": "Density-cell column [-]", "y": "Density-cell row [-]", "color": "TSV count per cell [-]"},
+          "claims": ["C8"]
+        }
+      }
+    }
+  },
+  "state": {"phase": "ready"},
+  "approvals": {
+    "slides": {
+      "scope_hash": "18e4909dd1ca067f103d09c8c5ab4b72e56c43d948f659ca90125157a1d5ac23",
+      "user_message": "2026-10-16 user instruction for slides 2 and 3",
+      "user_quote": "スライド2の文を次の内容にしたい。...画像は/home/foo/somad_dev3/docs/thermal_conf_2026/figures/3d_ic.jpgと、本研究モデルのxy平面図を右縦に並べられる？"
+    }
+  },
+  "notes": "スライド2・3だけを変更する第5稿。3d_ic.jpgの原出典と利用条件は未確認のため、学会での外部投影・配布前に確認が必要。説明確認前は草稿。"
+}

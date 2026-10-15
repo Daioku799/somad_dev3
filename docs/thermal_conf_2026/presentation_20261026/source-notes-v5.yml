@@ -1,0 +1,42 @@
+report_date: 2026-10-26
+status: draft_v5_before_presenter_explanation_confirmation
+scope: main_deck_only_slides_2_and_3_revised
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v4.md
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v5-20261016.json
+manifest: docs/thermal_conf_2026/presentation_20261026/figure-manifest-v5.json
+revision_approval:
+  date: 2026-10-16
+  summary: スライド2・3の文章と画像配置に関する本人指定。
+content_changes:
+  slide_2:
+    - IC積層による高密度化・高性能化を導入とする。
+    - 高密度化による高温部と動作不良を問題として示す。
+    - 設計による最高温度抑制の必要性を主要メッセージとする。
+    - 第4稿の生成概念図を右36%へ縮小表示する。
+  slide_3:
+    - TSVの正式表記をthrough-silicon viaとする。
+    - TSVが信号経路に加えて熱輸送へ影響することを示す。
+    - TSV配置の組合せ増加から高速シミュレーションの目的へ接続する。
+    - 3d_ic.jpgと本研究モデルのXY材料分布を右側に縦配置する。
+figures:
+  slide_2_concept:
+    path: docs/thermal_conf_2026/presentation_20261026/intro_3dic_thermal_v4.png
+    sha256: 61e52398dc2b16a550f2192eb62a913e0f3ee9e80778d4e907f5939f70978be6
+    note: 生成概念図。実解析モデルおよび解析結果ではない。
+  slide_3_stack:
+    path: docs/thermal_conf_2026/figures/3d_ic.jpg
+    sha256: 76dcc0c1cd108ecb74ab707aef3b8fd7b151d2db79259b6009c3e37d1974bd50
+    note: 本人指定の既存画像。原出典と利用条件は未確認であり、外部投影・配布前に確認する。
+  slide_3_xy:
+    path: docs/thermal_conf_2026/presentation_20261026/model_xy_v5.png
+    sha256: ce1284162c27232c63d2ba2cf0eb1f7c6f08ccf77a19429f136b48b8fc8c7856
+    source: docs/thermal_conf_2026/figures/fig1_model_parameterization.png
+    transform: 6300×2100画像の中央を2100×2100+2100+0で矩形切出し。値、色、軸、単位の変更なし。
+    note: 一様N=48に対するz=0.347 mmのXY材料分布。黄色がTSV、赤色が発熱ブロック。
+unchanged:
+  - スライド4〜10の研究主張、数値、図、留保。
+  - 本編10枚構成と9分50秒の時間配分。
+limitations:
+  - 3d_ic.jpgの原出典・利用条件は未確認。
+  - 生成画像は導入用概念図であり、研究データではない。
+  - 発表者本人の説明確認前は草稿。
