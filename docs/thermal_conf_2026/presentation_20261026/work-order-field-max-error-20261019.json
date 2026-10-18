@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-field-max-error-20261019",
+  "scope": {
+    "objective": "既存のROM（rom_model.jld2）と既存のFVM温度場を用い、独立評価42配置について温度場全体の点ごとの最大誤差の分布を算出し、補助スライド用の図を作る",
+    "task_refs": [
+      "thermal-conf-2026: backup-slide evaluation of ROM field max error"
+    ],
+    "decisions": {
+      "D1": "対象は独立評価（split=test）の42配置のみ。モデル選定用42配置は含めない",
+      "D2": "各配置で内部セル全体の|T_ROM − T_FVM|の最大値と99パーセンタイルを算出する",
+      "D3": "K単位に加え、その配置のFVM最大温度上昇（Tmax_FVM − 300 K）で割った割合[%]も出す",
+      "D4": "比較範囲は既存の相対L2評価（evaluate_accuracy）と同じ内部セル全体。ROMは保存済みモデルを読み込み、再学習しない",
+      "D5": "既存の報告値（test Tmax MAE 0.0949608303 K、温度上昇基準の相対L2 0.4933772932%）を再現できることを照合し、再現できなければ結果を採用しない",
+      "D6": "図は補助スライド用とし、本編スライド7は最高温度の誤差を主指標として維持する",
+      "D7": "結果は新しい数値であり、発表への掲載は結果確認後に本人が改めて判断する"
+    },
+    "unresolved": [],
+    "references": [
+      {
+        "path": "runs/paper_final_20260824T0140JST/rom/rom_model.jld2"
+      },
+      {
+        "path": "runs/paper_final_20260824T0140JST/rom/holdout_accuracy.tsv"
+      },
+      {
+        "path": "runs/paper_final_20260824T0140JST/common.jl"
+      },
+      {
+        "path": "H2-rom/src/PipelineROM/builder.jl"
+      }
+    ],
+    "operations": {
+      "analysis": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/analyze_field_max_error_test.jl",
+          "docs/thermal_conf_2026/derived/field_max_error_test.tsv",
+          "docs/thermal_conf_2026/presentation_20261026/field_max_error_test.png",
+          "docs/thermal_conf_2026/presentation_20261026/work-order-field-max-error-20261019.json"
+        ],
+        "commands": [
+          [
+            "julia",
+            "--project=H2-rom",
+            "docs/thermal_conf_2026/presentation_20261026/analyze_field_max_error_test.jl"
+          ]
+        ]
+      }
+    }
+  },
+  "state": {
+    "phase": "executed",
+    "result_summary": "既存報告値（MAE 0.0949608303 K、L2上昇 0.4933772932%）を完全再現。最大誤差 mean 0.439 K（0.281〜0.679 K、温度上昇比 1.47〜4.49%）、99パーセンタイル mean 0.130 K（0.088〜0.232 K）。最大誤差の位置は42件中39件が z≈0.195〜0.205 mm の薄い層、xyは最大発熱ブロック（x,y=0.3〜0.5 mm）の縁付近。掲載可否は本人判断待ち。"
+  },
+  "approvals": {
+    "analysis": {
+      "user_message": "2026-10-19 提示した初期案（対象42配置、最大値と99パーセンタイル、温度上昇での正規化、内部セル全体、分布図）で、AIが計算を実行することの明示依頼",
+      "user_quote": "実行して"
+    }
+  },
+  "notes": "新規FVM、ROMの再学習、探索は行わない。runディレクトリには書き込まない。"
+}
