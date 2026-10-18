@@ -428,15 +428,14 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 </div>
 
 <div class="acc-result">
-<div class="acc-head">FVM最高温度（<em>N</em> = 48）</div>
+<div class="acc-head">FVM最高温度</div>
 <div>探索候補：<strong>315.618 K</strong></div>
 <div>一様配置：316.994 K</div>
 <div>差：<strong>1.376 K</strong>（温度上昇の<strong>8.1 %</strong>）</div>
-<div class="acc-note">N = 36：1.355 K（7.1 %）、N = 60：1.119 K（7.3 %）</div>
 </div>
 
 <div class="acc-result rom-fvm">
-<div class="acc-head">ROMの予測との差（<em>N</em> = 48）</div>
+<div class="acc-head">ROMの予測との差</div>
 <div>探索候補：0.035 K　一様配置：0.002 K</div>
 </div>
 
