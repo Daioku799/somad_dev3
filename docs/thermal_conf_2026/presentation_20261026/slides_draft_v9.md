@@ -71,6 +71,13 @@ style: |
   .result { padding:13px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:23px; line-height:1.5; }
   .summary { flex:1; min-height:125px; padding:17px 14px; border-radius:10px; background:white; border-top:7px solid #741b47; text-align:center; }
   .method-note { padding:10px 16px; background:#f7f7f8; border-left:5px solid #741b47; font-size:21px; line-height:1.4; }
+  .model-row { display:grid; grid-template-columns:1.05fr 0.95fr; gap:18px; align-items:start; }
+  .model-row ul { margin:0; padding-left:1.1em; }
+  .model-row .method-note { margin-top:14px; }
+  .model-figs { text-align:center; }
+  .model-figs img { display:block; margin:0 auto 2px; }
+  img.model-xy { height:240px; }
+  img.model-yz { width:440px; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
 
@@ -141,20 +148,21 @@ ICを積層すると、垂直方向にも素子を配置でき、さらなる高
 
 # 解析モデル
 
-<div class="two-col" style="grid-template-columns:1.05fr 0.95fr;gap:18px;align-items:start;">
+<div class="model-row">
 <div>
-<ul style="margin:0;padding-left:1.1em;">
-<li>1.2 mm角・厚さ0.6 mmの<strong>3層積層モデル</strong></li>
-<li>各Si層に<strong>発熱ブロック4個</strong><br>総発熱量<strong>0.384 W</strong></li>
-<li>上面：周囲<strong>300 K</strong>への対流<br>側面・下面：断熱</li>
-<li>中央1 mm角がTSV実装領域<br>（TSV配置は3層共通）</li>
-<li>FVM：240×240×30セル</li>
-</ul>
-<div class="method-note" style="margin-top:14px;">黄：Cu TSV　灰：Si　赤：発熱ブロック<br>紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB</div>
+
+- 1.2 mm角・厚さ0.6 mmの**3層積層モデル**
+- 各Si層に**発熱ブロック4個**<br>総発熱量**0.384 W**
+- 上面：周囲**300 K**への対流<br>側面・下面：断熱
+- 中央1 mm角がTSV実装領域<br>（TSV配置は3層共通）
+- FVM：240×240×30セル
+
+<div class="method-note">黄：Cu TSV　灰：Si　赤：発熱ブロック<br>紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB</div>
+
 </div>
-<div style="text-align:center;">
-  <img src="model_xy_uniform_N48_v9.png" style="height:240px;display:block;margin:0 auto;">
-  <img src="model_yz_uniform_N48_v9.png" style="width:440px;display:block;margin:2px auto 0;">
+<div class="model-figs">
+  <img class="model-xy" src="model_xy_uniform_N48_v9.png">
+  <img class="model-yz" src="model_yz_uniform_N48_v9.png">
   <div class="plot-caption">上：XY断面　下：YZ断面（一様配置 N=48）</div>
 </div>
 </div>
