@@ -6,7 +6,6 @@ paginate: true
 size: 16:9
 title: TSV密度マップを用いた縮約モデルによる3DIC の熱設計最適化の研究
 author: 大屋 蒼真
-footer: 熱工学コンファレンス2026 / B11 / 本編第11稿
 style: |
   section {
     font-family: "Noto Sans CJK JP", "Yu Gothic", "Hiragino Sans", sans-serif;
@@ -103,7 +102,6 @@ style: |
 ---
 
 <!-- _class: lead -->
-<!-- _footer: "" -->
 
 # TSV密度マップを用いた縮約モデルによる<br>3DIC の熱設計最適化の研究
 
