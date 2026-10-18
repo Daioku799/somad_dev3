@@ -108,7 +108,8 @@ style: |
   .rom-flow { margin:10px 0 8px; }
   .rom-legend { font-size:23px; line-height:1.6; }
   .rom-legend mjx-container { font-size:23px; }
-  .rom-metrics { margin:6px 0 0; }
+  .rom-def { font-size:22px; line-height:1.5; margin-top:8px; }
+  .rom-def div + div { margin-top:4px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -246,8 +247,9 @@ $$
 </div>
 <div class="eq-legend rom-legend">
 
-$\phi_j$：空間パターン（$r$ = 24個）
-$a_j$：係数（密度マップ $\boldsymbol{\mu}$ から予測）
+$\phi_j$：空間パターン
+$a_j$：係数
+$r$：パターン数
 
 </div>
 </div>
@@ -259,10 +261,9 @@ $a_j$：係数（密度マップ $\boldsymbol{\mu}$ から予測）
   <div class="node accent"><strong>出力</strong><br>三次元温度場</div>
 </div>
 
-<div class="metric-row compact-metrics rom-metrics">
-  <div class="metric"><strong>1,728,000</strong><br><span class="small">個の温度値</span></div>
-  <div class="arrow">→</div>
-  <div class="metric"><strong>24</strong><br><span class="small">個の係数</span></div>
+<div class="method-note rom-def">
+<div><strong>POD</strong>：多数の温度場から、変化の大きい順に空間パターンを取り出す<br>　→ 1,728,000点の温度場を24個の係数で表現</div>
+<div><strong>RBF補間</strong>：学習配置との密度マップの近さに応じて係数を補間</div>
 </div>
 
 <!--
