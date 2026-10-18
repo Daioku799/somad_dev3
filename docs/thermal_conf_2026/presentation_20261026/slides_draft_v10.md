@@ -89,7 +89,10 @@ style: |
   .acc-head { font-weight:700; color:#741b47; }
   .acc-note { font-size:19px; color:#59616b; line-height:1.3; }
   .trade-fig { text-align:center; margin-top:2px; }
-  img.trade-plot { width:960px; }
+  img.trade-plot { width:540px; }
+  .trade-row { display:grid; grid-template-columns:0.92fr 1.08fr; gap:22px; align-items:center; }
+  .trade-row ul { margin:8px 0 0; padding-left:1.1em; font-size:24px; }
+  .trade-row .acc-note { margin-top:10px; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
 
@@ -355,24 +358,36 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 # TSV本数と最高温度の近似トレードオフ
 
-各TSV本数で得た低温候補と、同じ本数の一様配置を比較しました。
-
-<div class="trade-fig">
+<div class="trade-row">
+<div>
   <img class="trade-plot" src="tmax_vs_count_v10.png">
 </div>
+<div>
 
-<div class="plot-caption">ROMによる予測値（N=36〜60の25水準）</div>
+**横軸**：TSV本数 *N*<br>**縦軸**：ROMが予測した最高温度
 
-> **同じTSV本数でも、配置探索によって一様配置より低温な候補が得られました。**
+- 灰：一様配置　青：探索で得た低温候補
+- *N* = 36〜60の**25水準**（ROM予測値）
+- 同じ本数で、配置による最高温度の違いを見る
 
-<small>本数別局所探索で得た候補を並べた近似トレードオフです。大域最適解または真のパレートフロントを示すものではありません。</small>
+<div class="acc-result">
+<div class="acc-head">結果</div>
+<div>全25水準で探索候補が一様配置より低温</div>
+<div>差：<strong>1.09〜1.57 K</strong></div>
+</div>
+
+<div class="acc-note">本数ごとの局所探索の結果であり、大域最適解ではありません。</div>
+
+</div>
+</div>
 
 <!--
-目安 0:50。
-横軸がTSV本数、縦軸が最高温度で、どちらもROMによる予測値です。
-灰色が一様配置、青色が各本数で探索された低温候補です。
-本数を増やすほど最高温度が低下するとともに、同じ本数でも探索候補は一様配置より低温になっています。
-この曲線は各本数の局所探索結果を並べたもので、真のパレートフロントではありません。
+目安 0:55。
+横軸がTSV本数、縦軸がROMが予測した最高温度です。
+灰色が一様配置、青が各本数で探索して得た低温候補で、36本から60本までの25水準を示しています。
+同じ本数で配置を変えると、最高温度がどれだけ下がるかを見る図です。
+全25水準で探索候補が一様配置より低温で、その差は1.09から1.57ケルビンでした。
+これは本数ごとの局所探索の結果で、大域最適解ではありません。
 次に、選んだ候補をFVMで確認した結果を示します。
 -->
 ---
