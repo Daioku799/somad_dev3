@@ -104,6 +104,9 @@ style: |
   img.fvm-img { width:270px; display:block; margin:0 auto 4px; }
   .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
   .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
+  .compress { text-align:center; font-size:23px; margin-top:10px; padding:8px 14px; background:#f6edf2; border-radius:8px; }
+  .rom-flow { margin:10px 0 8px; }
+  .rom-note { font-size:20px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -213,25 +216,25 @@ TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が
   <img class="dens-xy" src="material_xy_random_N48_v6.png">
 </div>
 
+<div class="compress">入力：TSV座標 2<em>N</em> 個（<em>N</em> = 36〜60 で 72〜120 個）→ 密度マップ <strong>16 個</strong>に圧縮（<em>N</em> によらず一定）</div>
+
 
 <!--
 目安 0:45。
 個々のTSV座標をそのまま設計変数にすると、TSV本数とともに入力が増え、学習と探索が難しくなります。
 そこでTSV実装領域を4掛ける4に分け、各セルのTSV本数を固定長16成分の密度マップとして表しました。
+本数が36から60本なら、座標は72から120個ですが、これを本数によらず16個に圧縮します。
 左が48本のランダム配置の密度マップ、右がそこから展開した実際のTSV配置です。セルの数字と、その中のTSVの本数が対応しています。
 この16個を入力として温度場を予測するモデルを、次に説明します。
 -->
 
 ---
 
-# 縮約モデル（ROM）
+# 縮約モデル（POD–RBF ROM）
 
-複数のFVM温度場から、温度分布の変化を表す**主要な空間パターン**を抽出
+FVM温度場 **300配置**（*N* = 36, 48, 60 各100）から**主要な空間パターン**をPODで抽出
 
-
-未知配置の温度場は、各パターンに係数を掛けた**重ね合わせ**で近似
-
-<div class="eq-row" style="margin-top:22px;">
+<div class="eq-row">
 <div class="eq-main">
 
 $$
@@ -244,52 +247,28 @@ $$
 $\mathbf{x}$：位置　$\boldsymbol{\mu}$：TSV配置（密度マップ）
 $T$：温度場　$\overline{T}$：平均温度場
 $\phi_j$：$j$番目の空間パターン
-$a_j$：パターン$j$の係数　$r$：パターン数
+$a_j$：パターン$j$の係数　$r$：パターン数（24）
 
 </div>
 </div>
 
-<div class="metric-row compact-metrics">
-  <div class="metric"><strong>1,728,000</strong><br><span class="small">個の温度値</span></div>
-  <div class="arrow">→</div>
-  <div class="metric"><strong>24</strong><br><span class="small">個の係数</span></div>
+<div class="flow compact-flow rom-flow">
+  <div class="node"><strong>入力</strong><br>密度マップ16個</div><div class="arrow">→</div>
+  <div class="node">RBF補間で<br>係数 <em>a<sub>j</sub></em> 24個を予測</div><div class="arrow">→</div>
+  <div class="node">空間パターンの<br>重ね合わせ</div><div class="arrow">→</div>
+  <div class="node accent"><strong>出力</strong><br>三次元温度場</div>
 </div>
+
+<div class="method-note rom-note">温度値 1,728,000 個 → 係数 24 個で表現<br>パターン数とRBFの条件は、構築用とは別の42配置で決定</div>
 
 <!--
-目安 1:05。
-複数のFVM温度場から、温度分布の変化を表す主要な空間パターンをPODで抽出します。
-未知配置の温度場は、平均温度場に各パターンを係数付きで重ね合わせることで近似します。
-本研究ではパターン数を24とし、約173万個の温度値を24個の係数で表します。
-この係数を、前のスライドの密度マップから求めます。次に、その構築方法を説明します。
--->
-
----
-
-# ROMの構築方法
-
-3種類のTSV本数についてFVMで計算した**300配置の温度場**でROMを構築
-
-<div class="split-row">
-  <div class="split"><strong>100</strong><br>N=36</div>
-  <div class="split"><strong>100</strong><br>N=48</div>
-  <div class="split"><strong>100</strong><br>N=60</div>
-</div>
-
-<div class="flow compact-flow" style="margin-top:25px;">
-  <div class="node">FVM温度場<br>300配置</div><div class="arrow">→</div>
-  <div class="node accent">POD基底<br>24モード</div><div class="arrow">→</div>
-  <div class="node">密度マップから<br>RBFで係数予測</div><div class="arrow">→</div>
-  <div class="node">三次元温度場を<br>再構成</div>
-</div>
-
-<div class="method-note">24モードとRBF条件は、構築用とは別の<strong>モデル選定42配置</strong>で決定</div>
-
-<!--
-目安 0:55。
-ROM構築には、TSV本数36、48、60の各100配置、合計300配置のFVM温度場を使用しました。
-これらからPOD基底を構築し、密度マップから24個の係数をRBFで予測して温度場を再構成します。
-モード数とRBFの条件は、構築用とは別の42配置で選定しました。
-ここまでは構築方法であり、次に独立したデータで精度を確認します。
+目安 1:20。
+TSV本数36、48、60の各100配置、合計300配置のFVM温度場から、温度分布の変化を表す主要な空間パターンをPODで抽出します。
+温度場は、平均温度場に各パターンを係数付きで重ね合わせて近似します。パターン数は24です。
+予測では、前のスライドの16個の密度マップを入力とし、RBF補間で24個の係数を求め、パターンを重ね合わせて三次元温度場を出力します。
+これにより、約173万個の温度値を24個の係数で表します。これをPOD–RBF ROMと呼びます。
+パターン数とRBFの条件は、構築用とは別の42配置で選定しました。
+次に、構築に使っていない配置で精度を確認します。
 -->
 
 ---
