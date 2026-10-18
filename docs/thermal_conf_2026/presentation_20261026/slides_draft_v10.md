@@ -88,6 +88,8 @@ style: |
   .acc-result { margin-top:18px; padding:12px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:25px; line-height:1.6; }
   .acc-head { font-weight:700; color:#741b47; }
   .acc-note { font-size:19px; color:#59616b; line-height:1.3; }
+  .trade-fig { text-align:center; margin-top:2px; }
+  img.trade-plot { width:960px; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
 
@@ -355,25 +357,24 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 各TSV本数で得た低温候補と、同じ本数の一様配置を比較しました。
 
-<div style="text-align:center;margin-top:3px;">
-  <img src="tmax_vs_count_v7.png" style="width:1040px;max-height:470px;">
+<div class="trade-fig">
+  <img class="trade-plot" src="tmax_vs_count_v10.png">
 </div>
 
-<div class="plot-caption">線・小点：ROM予測値（N=36〜60）　　三角・星：FVM確認値（N=36、48、60）</div>
+<div class="plot-caption">ROMによる予測値（N=36〜60の25水準）</div>
 
 > **同じTSV本数でも、配置探索によって一様配置より低温な候補が得られました。**
 
 <small>本数別局所探索で得た候補を並べた近似トレードオフです。大域最適解または真のパレートフロントを示すものではありません。</small>
 
 <!--
-目安 0:55。
-横軸がTSV本数、縦軸が最高温度です。
-灰色が一様配置、青色が各本数で探索された低温候補で、線と小さい点はROM予測値です。
+目安 0:50。
+横軸がTSV本数、縦軸が最高温度で、どちらもROMによる予測値です。
+灰色が一様配置、青色が各本数で探索された低温候補です。
 本数を増やすほど最高温度が低下するとともに、同じ本数でも探索候補は一様配置より低温になっています。
-三角と星で示した36、48、60本についてはFVMで再計算しました。
 この曲線は各本数の局所探索結果を並べたもので、真のパレートフロントではありません。
+次に、選んだ候補をFVMで確認した結果を示します。
 -->
-
 ---
 
 # 探索候補のFVM再検証
