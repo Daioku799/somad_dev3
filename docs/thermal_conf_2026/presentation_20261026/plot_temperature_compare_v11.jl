@@ -3,6 +3,7 @@ ENV["GKSwstype"] = "100"
 # スライド11用：探索候補（best_N48）と一様配置（uniform_N48）のFVM温度場（XY断面）。
 # 既存のFVM再検証snapshotの theta をそのまま描く（新規計算なし）。
 # 断面は両配置の全体最高温度がある高さ（最下層Si層の発熱層）。色尺度は2枚で共通。
+# 発熱ブロックの輪郭は描かない（2026-10-19本人指示）。
 
 using JLD2
 using Plots
@@ -55,11 +56,6 @@ function main()
                     titlefontsize = 13, guidefontsize = 11, tickfontsize = 10,
                     colorbar_titlefontsize = 11, fontfamily = "DejaVu Sans", framestyle = :box,
                     size = (760, 640), dpi = 300, background_color = :white)
-        # 発熱ブロックの輪郭（0.2 mm角、中心 0.4/0.8 mm）
-        for x0 in (0.3, 0.7), y0 in (0.3, 0.7)
-            plot!(p, [x0, x0 + 0.2, x0 + 0.2, x0, x0], [y0, y0, y0 + 0.2, y0 + 0.2, y0];
-                  color = :white, linestyle = :dash, linewidth = 1.5, label = "")
-        end
         path = joinpath(OUT_DIR, out)
         savefig(p, path)
         println(out, " sha256 = ", file_sha256(path))

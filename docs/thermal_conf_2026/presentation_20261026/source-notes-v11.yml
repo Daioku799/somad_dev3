@@ -17,7 +17,7 @@ edits_2026-10-19b (本人指示):
   - スライド10の軸・凡例を箇条書きから外し、「横軸｜灰」「縦軸｜青」の2×2配置に。
 footer: 2026-10-19本人指示でフッタ（学会名・セッション・稿番号）を全スライドから削除。ページ番号は維持。版はファイル名で区別。
 slide_11_density_maps (2026-10-19 本人指示): HTMLの4×4グリッドを、スライド5と同じ描画仕様のプロットに置換（plot_density_compare_v11.jl → density_map_best_N48_v11.png, density_map_uniform_N48_v11.png）。countsはverification_candidates.tsvから読み、verify/{best,uniform}_N48/snapshot.jld2のdensity_mu×9と一致を確認。これによりv7以来の上下反転も解消（下段がy小）。
-slide_11_temperature (2026-10-19 本人指示): 棒グラフ（fvm_reduction_v7.png）を削除。FVM温度場XY断面を追加（plot_temperature_compare_v11.jl → temperature_{best,uniform}_N48_v11.png）。入力はverify/{best,uniform}_N48/snapshot.jld2のtheta（新規計算なし）。断面は両配置の全体最高温度の高さ（内部z index 10、z = 0.1975 mm、最下層Si層の発熱層）。両配置の最高温度は verification_summary.tsv と1e-6 K以内で一致を確認。色尺度は2枚共通（310.843〜316.994 K）。発熱ブロック輪郭（0.3〜0.5/0.7〜0.9 mm）を破線で重ねた。3本数の低減量は数値で本文に記載。配置は左から探索候補・一様配置（各列：上 密度マップ、下 温度場）、右に説明と結果。
+slide_11_temperature (2026-10-19 本人指示): 棒グラフ（fvm_reduction_v7.png）を削除。FVM温度場XY断面を追加（plot_temperature_compare_v11.jl → temperature_{best,uniform}_N48_v11.png）。入力はverify/{best,uniform}_N48/snapshot.jld2のtheta（新規計算なし）。断面は両配置の全体最高温度の高さ（内部z index 10、z = 0.1975 mm、最下層Si層の発熱層）。両配置の最高温度は verification_summary.tsv と1e-6 K以内で一致を確認。色尺度は2枚共通（310.843〜316.994 K）。発熱ブロック輪郭の破線は本人指示で削除。3本数の低減量は数値で本文に記載。配置は左から探索候補・一様配置（各列：上 密度マップ、下 温度場）、右に説明と結果。
 render_validation: VS Codeプレビュー相当（style属性除去）で全12枚を描画。スライド11下端の注記とフッタの重なりはv7からの既知事項で未対応（本人が後で対応と指示）。
 known_unchanged:
   - タイトルの「3DIC の」表記（提出題目は3D-IC）。
