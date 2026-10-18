@@ -18,6 +18,9 @@ edits_2026-10-19b (本人指示):
 footer: 2026-10-19本人指示でフッタ（学会名・セッション・稿番号）を全スライドから削除。ページ番号は維持。版はファイル名で区別。
 slide_11_density_maps (2026-10-19 本人指示): HTMLの4×4グリッドを、スライド5と同じ描画仕様のプロットに置換（plot_density_compare_v11.jl → density_map_best_N48_v11.png, density_map_uniform_N48_v11.png）。countsはverification_candidates.tsvから読み、verify/{best,uniform}_N48/snapshot.jld2のdensity_mu×9と一致を確認。これによりv7以来の上下反転も解消（下段がy小）。
 slide_11_temperature (2026-10-19 本人指示): 棒グラフ（fvm_reduction_v7.png）を削除。FVM温度場XY断面を追加（plot_temperature_compare_v11.jl → temperature_{best,uniform}_N48_v11.png）。入力はverify/{best,uniform}_N48/snapshot.jld2のtheta（新規計算なし）。断面は両配置の全体最高温度の高さ（内部z index 10、z = 0.1975 mm、最下層Si層の発熱層）。両配置の最高温度は verification_summary.tsv と1e-6 K以内で一致を確認。色尺度は2枚共通（310.843〜316.994 K）。発熱ブロック輪郭の破線は本人指示で削除。3本数の低減量は数値で本文に記載。配置は左から探索候補・一様配置（各列：上 密度マップ、下 温度場）、右に説明と結果。
+normalization (2026-10-19 本人承認): 改善量の割合 = 低減量 ÷ 一様配置の温度上昇（一様配置のFVM最高温度 − 300 K）。N=36: 1.355/18.954 = 7.1 %、N=48: 1.376/16.994 = 8.1 %、N=60: 1.119/15.286 = 7.3 %（verification_summary.tsvから算出）。スライド11の結果欄とまとめに記載。
+slide_11_rom_gap (2026-10-19 本人承認): 結論文「FVM再計算でも…低温」を削除し、ROM予測とFVMの差（N=48：探索候補 0.035 K、一様配置 0.002 K）を記載。N=36ではROM予測の差1.567 KがFVMで1.355 K（ROMが約0.21 K過大）である旨をノートの質疑用メモに記録。
+slide_12_wording: まとめの「独立評価のTmax MAE」をスライド8の用語に合わせ「最高温度の平均誤差」に変更。
 render_validation: VS Codeプレビュー相当（style属性除去）で全12枚を描画。スライド11下端の注記とフッタの重なりはv7からの既知事項で未対応（本人が後で対応と指示）。
 known_unchanged:
   - タイトルの「3DIC の」表記（提出題目は3D-IC）。

@@ -103,6 +103,7 @@ style: |
   .fvm-col .map-title { font-size:21px; margin-bottom:2px; }
   img.fvm-img { width:270px; display:block; margin:0 auto 4px; }
   .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
+  .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -430,13 +431,16 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 <div class="acc-head">FVM最高温度（<em>N</em> = 48）</div>
 <div>探索候補：<strong>315.618 K</strong></div>
 <div>一様配置：316.994 K</div>
-<div>差：<strong>1.376 K</strong></div>
-<div class="acc-note">N = 36：1.355 K、N = 60：1.119 K</div>
+<div>差：<strong>1.376 K</strong>（温度上昇の<strong>8.1 %</strong>）</div>
+<div class="acc-note">N = 36：1.355 K（7.1 %）、N = 60：1.119 K（7.3 %）</div>
 </div>
 
-> **FVM再計算でも、一様配置より1.119〜1.376 K低温**
+<div class="acc-result rom-fvm">
+<div class="acc-head">ROMの予測との差（<em>N</em> = 48）</div>
+<div>探索候補：0.035 K　一様配置：0.002 K</div>
+</div>
 
-<div class="acc-note">固定した発熱分布・解析条件での低温候補</div>
+<div class="acc-note">温度上昇：一様配置の最高温度 − 300 K<br>固定した発熱分布・解析条件での低温候補</div>
 
 </div>
 </div>
@@ -447,7 +451,10 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 上が密度マップ、下がFVMで計算した、最も温度の高い最下層の発熱層の温度分布です。
 一様配置では左下の発熱ブロックが最も高温です。探索候補では、TSVがこのブロックの周りに集まっています。
 両者をFVMで再計算すると、低温候補は315.618ケルビン、一様配置は316.994ケルビンでした。
-36、48、60本の3水準では、一様配置に対する低減量はそれぞれ1.355、1.376、1.119ケルビンでした。
+差は1.376ケルビンで、一様配置の温度上昇、つまり最高温度と周囲温度300ケルビンの差の8.1パーセントにあたります。
+36本と60本では、それぞれ1.355ケルビン、1.119ケルビンで、7.1パーセントと7.3パーセントでした。
+ROMの予測とFVMの差は、48本では探索候補で0.035ケルビン、一様配置で0.002ケルビンでした。
+（質疑用メモ：36本ではROMが予測した差1.567ケルビンに対しFVMは1.355ケルビンで、ROMが約0.21ケルビン大きく見積もっていた。60本はROM 1.104ケルビン、FVM 1.119ケルビン。）
 したがってROM上だけでなく、FVMでも候補選別の効果を確認できました。
 ただし、得られたのは低温候補であり、大域最適性を保証するものではありません。
 -->
@@ -462,9 +469,9 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 <div class="flow" style="align-items:stretch;">
   <div class="summary"><strong>300配置</strong><br><span class="small">FVM温度場から<br>ROMを構築</span></div>
-  <div class="summary"><strong>0.0950 K</strong><br><span class="small">独立評価の<br>Tmax MAE</span></div>
+  <div class="summary"><strong>0.0950 K</strong><br><span class="small">最高温度の<br>平均誤差</span></div>
   <div class="summary"><strong>25水準</strong><br><span class="small">N=36〜60を<br>本数別に探索</span></div>
-  <div class="summary"><strong>1.119–1.376 K</strong><br><span class="small">FVM確認済み<br>低減量</span></div>
+  <div class="summary"><strong>1.119–1.376 K</strong><br><span class="small">FVM確認済み低減量<br>（温度上昇の7.1〜8.1 %）</span></div>
 </div>
 
 **密度マップ → ROM構築・精度確認 → 本数別探索 → FVM再確認**
@@ -477,6 +484,6 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 300配置のFVM温度場からPOD–RBF ROMを構築しました。
 独立評価42配置の最高温度を平均0.0950ケルビンの誤差で予測しました。
 このROMを使って36本から60本までの25水準を本数別に探索しました。
-選んだ候補はFVMでも一様配置より1.119から1.376ケルビン低温でした。
+選んだ候補はFVMでも一様配置より1.119から1.376ケルビン、温度上昇の7.1から8.1パーセント低温でした。
 以上から、固定条件の範囲で、ROMをFVMで再計算すべき低温候補の選別に利用できました。
 -->
