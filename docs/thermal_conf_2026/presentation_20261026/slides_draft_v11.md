@@ -213,11 +213,6 @@ TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が
   <img class="dens-xy" src="material_xy_random_N48_v6.png">
 </div>
 
-<div class="flow compact-flow">
-  <div class="node">TSV座標<br><em>N</em>本 × (<em>x</em>, <em>y</em>) ＝ 2<em>N</em>個</div><div class="arrow">→</div>
-  <div class="node">4×4セルごとに<br>本数を集計</div><div class="arrow">→</div>
-  <div class="node accent">密度マップ<br>16個（<em>N</em>によらず一定）</div>
-</div>
 
 <!--
 目安 0:45。
@@ -233,11 +228,6 @@ TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が
 
 複数のFVM温度場から、温度分布の変化を表す**主要な空間パターン**を抽出
 
-<div class="flow compact-flow">
-  <div class="node">複数の<br>FVM温度場</div><div class="arrow">→</div>
-  <div class="node accent">ROMによる<br>パターン抽出</div><div class="arrow">→</div>
-  <div class="node">主要な<br>空間パターン</div>
-</div>
 
 未知配置の温度場は、各パターンに係数を掛けた**重ね合わせ**で近似
 
