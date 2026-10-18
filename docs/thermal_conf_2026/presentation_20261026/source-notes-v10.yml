@@ -1,0 +1,11 @@
+report_date: 2026-10-19
+status: draft_v10_before_presenter_explanation_confirmation
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v9.md
+base_notes: docs/thermal_conf_2026/presentation_20261026/source-notes-v9.yml
+changes_from_v9:
+  slide_5_density_map: 2026-10-19の本人承認により、YZ断面（material_yz_random_N48_v6.png）を削除。層構成はスライド4で示すため。密度マップと同一配置のXY材料分布を矢印（展開）でつないで並べ、各310 pxに拡大。流れ図（2N個→4×4集計→16個）は維持。スタイルはCSSクラスで指定（VS Codeプレビューがstyle属性を反映しないため）。
+  notes: スライド5の目安を0:55→0:45。目安合計10:05（発表10分に対し約5秒超過）。
+figures: 変更なし。v9までと同じ既存画像を使用。
+render_validation:
+  slide_5: headless Firefoxでstyle属性を除去した状態（VS Codeプレビュー相当）で1280×720に描画し、はみ出しがないことを確認。
+pending_tasks: source-notes-v9.ymlのpending_tasksを引き継ぐ。
