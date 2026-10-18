@@ -89,10 +89,12 @@ style: |
   .acc-head { font-weight:700; color:#741b47; }
   .acc-note { font-size:19px; color:#59616b; line-height:1.3; }
   .trade-fig { text-align:center; margin-top:2px; }
-  img.trade-plot { width:540px; }
-  .trade-row { display:grid; grid-template-columns:0.92fr 1.08fr; gap:22px; align-items:center; }
-  .trade-row ul { margin:8px 0 0; padding-left:1.1em; font-size:24px; }
-  .trade-row .acc-note { margin-top:10px; }
+  img.trade-plot { width:1100px; }
+  .trade-row { display:grid; grid-template-columns:1.15fr 0.85fr; gap:20px; align-items:start; margin-top:6px; }
+  .trade-row ul { margin:0; padding-left:1.1em; font-size:22px; }
+  .trade-row li { margin:3px 0; }
+  .trade-row .acc-result { margin-top:0; font-size:23px; line-height:1.5; padding:8px 16px; }
+  .trade-row .acc-note { margin-top:6px; font-size:18px; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
 
@@ -358,25 +360,27 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 # TSV本数と最高温度の近似トレードオフ
 
-<div class="trade-row">
-<div>
+<div class="trade-fig">
   <img class="trade-plot" src="tmax_vs_count_v10.png">
 </div>
+
+<div class="trade-row">
 <div>
 
-**横軸**：TSV本数 *N*<br>**縦軸**：ROMが予測した最高温度
-
+- **横軸**：TSV本数 *N*　**縦軸**：ROMが予測した最高温度
 - 灰：一様配置　青：探索で得た低温候補
 - *N* = 36〜60の**25水準**（ROM予測値）
 - 同じ本数で、配置による最高温度の違いを見る
+
+</div>
+<div>
 
 <div class="acc-result">
 <div class="acc-head">結果</div>
 <div>全25水準で探索候補が一様配置より低温</div>
 <div>差：<strong>1.09〜1.57 K</strong></div>
 </div>
-
-<div class="acc-note">本数ごとの局所探索の結果であり、大域最適解ではありません。</div>
+<div class="acc-note">本数ごとの局所探索の結果（大域最適解ではない）</div>
 
 </div>
 </div>

@@ -2,7 +2,7 @@ ENV["GKSwstype"] = "100"
 
 # 発表v10用：TSV本数と最高温度（ROM予測値の2系列のみ）。
 # v7（plot_experiment_results_v7.jl の tradeoff_plot）と同じ入力・処理で、
-# FVM確認値（三角・星）の重ね描きを除き、右に説明文を置く2列配置に合わせて縦横比を変えた。
+# FVM確認値（三角・星）の重ね描きを除き、図を上に横長で置き、説明文を下に置く配置に合わせて縦横比を変えた。
 
 using Plots
 using SHA
@@ -32,8 +32,8 @@ function main()
              xticks = 36:4:60, guidefontsize = 16, tickfontsize = 14,
              legendfontsize = 13, legend = :topright, gridalpha = 0.20,
              framestyle = :box, fontfamily = "DejaVu Sans",
-             size = (640, 500), dpi = 300, background_color = :white,
-             left_margin = 4Plots.mm, bottom_margin = 4Plots.mm)
+             size = (1150, 330), dpi = 300, background_color = :white,
+             left_margin = 8Plots.mm, bottom_margin = 9Plots.mm)
     plot!(p, budgets, uniform; color = GREY, linewidth = 3.0, marker = :circle,
           markersize = 3.8, label = "Uniform")
     plot!(p, budgets, best; color = BLUE, linewidth = 3.0, marker = :circle,
