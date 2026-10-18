@@ -82,6 +82,12 @@ style: |
   img.dens-map { height:310px; }
   img.dens-xy { height:310px; }
   .dens-arrow { text-align:center; line-height:1.1; }
+  .acc-row { display:grid; grid-template-columns:1.12fr 0.88fr; gap:22px; align-items:center; }
+  img.acc-plot { height:470px; }
+  .acc-row ul { margin:6px 0 0; padding-left:1.1em; font-size:24px; }
+  .acc-result { margin-top:18px; padding:12px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:25px; line-height:1.6; }
+  .acc-head { font-weight:700; color:#741b47; }
+  .acc-note { font-size:19px; color:#59616b; line-height:1.3; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
 
@@ -285,27 +291,35 @@ ROM構築には、TSV本数36、48、60の各100配置、合計300配置のFVM�
 
 # ROMの精度検証結果
 
-<div class="two-col" style="grid-template-columns:1.18fr 0.82fr;gap:20px;">
-  <div>
-    <img src="rom_accuracy_independent_v7.png" style="width:690px;max-height:500px;">
-  </div>
-  <div>
-    <div class="result" style="margin-bottom:14px;">ROM構築・モデル選定に使用していない<br><strong>独立評価42配置</strong></div>
-    <div class="metric" style="margin:10px auto;"><strong>0.0950 K</strong><br><span class="small">最高温度MAE</span></div>
-    <div class="metric" style="margin:10px auto;"><strong>0.493%</strong><br><span class="small">温度場相対L2誤差</span><br><span style="font-size:15px;color:#59616b;">300 Kからの温度上昇基準</span></div>
-    <div class="method-note" style="margin-top:12px;">未学習本数 N=42、54の40配置<br>最高温度MAE：<strong>0.0812 K</strong></div>
-  </div>
+<div class="acc-row">
+<div>
+  <img class="acc-plot" src="rom_accuracy_independent_v7.png">
+</div>
+<div>
+
+**横軸**：FVMの最高温度<br>**縦軸**：ROMの最高温度
+
+- ROMの構築にもモデル選定にも使っていない**42配置**で評価
+- 破線（y = x）からの距離が、FVMとROMの最高温度の誤差を表す
+
+<div class="acc-result">
+<div class="acc-head">結果</div>
+<div>最高温度の平均誤差：<strong>0.0950 K</strong></div>
+<div>温度場の2乗平均誤差：<strong>0.493 %</strong></div>
+<div class="acc-note">（300 Kからの温度上昇に対する比）</div>
+</div>
+
+</div>
 </div>
 
 <!--
-目安 1:05。
-ROM構築とモデル選定に使用していない独立評価42配置で、FVMとROMの最高温度を比較しました。
-点が破線に近いほど両者が一致しています。
-最高温度の平均絶対誤差は0.0950ケルビン、温度上昇基準の温度場相対L2誤差は0.493パーセントでした。
-また、構築に含めていないTSV本数42、54の40配置でも、最高温度MAEは0.0812ケルビンでした。
+目安 1:00。
+ROMの構築にもモデル選定にも使っていない42配置で、FVMとROMの最高温度を比較しました。
+横軸がFVM、縦軸がROMの最高温度で、破線からの距離が両者の誤差を表します。
+最高温度の誤差は平均0.0950ケルビンでした。
+温度場全体でも、2乗平均の誤差は300ケルビンからの温度上昇の0.493パーセントでした。
 このROMを配置探索へ使用します。
 -->
-
 ---
 
 # 最高温度を目的とした配置探索
