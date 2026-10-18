@@ -1,0 +1,18 @@
+report_date: 2026-10-19
+status: draft_v11_before_presenter_explanation_confirmation
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v10.md
+base_notes: docs/thermal_conf_2026/presentation_20261026/source-notes-v10.yml
+style_rule (2026-10-19 本人承認):
+  - スライド本文は体言止め・だ／である調の短い文。1項目1事実。
+  - 因果・流れは「↓」「→」でつなぐ。用語は「用語：説明」形式。
+  - 主語と結果は省かない。逆接「しかし」は問題提起の要所のみ。
+  - ノート（読み上げ原稿）はです・ます調のまま。
+changes_from_v10:
+  slide_2: 本文を矢印つなぎの箇条書きに再構成（高密度化→高温部・動作不良／TSVの定義と熱輸送→配置の工夫で最高温度を下げられる／しかし組合せは膨大）。結論文を「TSV配置を高速に評価し、低温な配置を探す」に短縮。出典注記を2行に短縮（NISTの出典は保持）。ノートに対応文を追加。
+  slides_3_5_6_7_8_9_11_12: 本文・注記・結論文のです・ます調を体言止め・だ／である調に変更。数値・主張・図は不変。
+render_validation: VS Codeプレビュー相当（style属性除去）で全12枚を描画。スライド11下端の注記とフッタの重なりはv7からの既知事項で未対応（本人が後で対応と指示）。
+known_unchanged:
+  - タイトルの「3DIC の」表記（提出題目は3D-IC）。
+  - スライド6流れ図の「ROMによるパターン抽出」（PODの明記なし）。
+  - スライド11の4×4グリッドの上下向き（スライド5と逆）。
+pending_tasks: source-notes-v9.ymlのpending_tasksを引き継ぐ。
