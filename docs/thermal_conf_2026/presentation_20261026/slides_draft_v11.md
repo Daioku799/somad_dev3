@@ -98,6 +98,11 @@ style: |
   .bg-sub { font-size:20px; color:#59616b; margin:0 0 2px; }
   .axis-grid { display:grid; grid-template-columns:auto auto; column-gap:28px; row-gap:2px; font-size:22px; margin-bottom:6px; justify-content:start; }
   img.cmp-map { height:235px; display:block; }
+  .fvm-row { display:grid; grid-template-columns:270px 270px 1fr; gap:16px; align-items:start; }
+  .fvm-col { text-align:center; }
+  .fvm-col .map-title { font-size:21px; margin-bottom:2px; }
+  img.fvm-img { width:270px; display:block; margin:0 auto 4px; }
+  .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -403,37 +408,44 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 # 探索候補のFVM再検証
 
-<div class="two-col" style="grid-template-columns:1.05fr 0.95fr;gap:24px;align-items:start;">
-  <div>
-    <div class="map-pair">
-      <div>
-        <div class="map-title">探索で得た低温候補</div>
-        <img class="cmp-map" src="density_map_best_N48_v11.png">
-      </div>
-      <div>
-        <div class="map-title">一様配置</div>
-        <img class="cmp-map" src="density_map_uniform_N48_v11.png">
-      </div>
-    </div>
-    <div class="result" style="margin-top:22px;">
-      N=48のFVM最高温度<br>
-      低温候補：<strong>315.618 K</strong><br>
-      一様配置：316.994 K
-    </div>
-  </div>
-  <div style="text-align:center;">
-    <img src="fvm_reduction_v7.png" style="width:500px;max-height:470px;">
-  </div>
+<div class="fvm-row">
+<div class="fvm-col">
+  <div class="map-title">探索で得た低温候補</div>
+  <img class="fvm-img" src="density_map_best_N48_v11.png">
+  <img class="fvm-img" src="temperature_best_N48_v11.png">
+</div>
+<div class="fvm-col">
+  <div class="map-title">一様配置</div>
+  <img class="fvm-img" src="density_map_uniform_N48_v11.png">
+  <img class="fvm-img" src="temperature_uniform_N48_v11.png">
+</div>
+<div>
+
+<div class="fvm-desc">
+<div><strong>上</strong>：密度マップ（<em>N</em> = 48）</div>
+<div><strong>下</strong>：FVM温度場（最下層Si層の発熱層）<br>色尺度共通、破線：発熱ブロック</div>
+</div>
+
+<div class="acc-result">
+<div class="acc-head">FVM最高温度（<em>N</em> = 48）</div>
+<div>探索候補：<strong>315.618 K</strong></div>
+<div>一様配置：316.994 K</div>
+<div>差：<strong>1.376 K</strong></div>
+<div class="acc-note">N = 36：1.355 K、N = 60：1.119 K</div>
 </div>
 
 > **FVM再計算でも、一様配置より1.119〜1.376 K低温**
 
-<small>数字はセルごとのTSV本数。固定した発熱分布・解析条件での低温候補</small>
+<div class="acc-note">固定した発熱分布・解析条件での低温候補</div>
+
+</div>
+</div>
 
 <!--
 目安 1:10。
-左は48本の場合のセル別TSV本数です。
-探索で得た低温候補では、一様配置とは異なりTSVが偏って配置されています。
+48本の場合について、左が探索で得た低温候補、中央が一様配置です。
+上が密度マップ、下がFVMで計算した、最も温度の高い最下層の発熱層の温度分布で、破線が発熱ブロックです。
+一様配置では左下の発熱ブロックが最も高温です。探索候補では、TSVがこのブロックの周りに集まっています。
 両者をFVMで再計算すると、低温候補は315.618ケルビン、一様配置は316.994ケルビンでした。
 36、48、60本の3水準では、一様配置に対する低減量はそれぞれ1.355、1.376、1.119ケルビンでした。
 したがってROM上だけでなく、FVMでも候補選別の効果を確認できました。
