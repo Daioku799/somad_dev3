@@ -95,6 +95,8 @@ style: |
   .trade-row li { margin:3px 0; }
   .trade-row .acc-result { margin-top:0; font-size:23px; line-height:1.5; padding:8px 16px; }
   .trade-row .acc-note { margin-top:6px; font-size:18px; }
+  .bg-step { font-size:30px; line-height:1.45; margin:6px 0; }
+  .bg-sub { font-size:20px; color:#59616b; margin:0 0 2px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -121,30 +123,22 @@ style: |
 ![bg right:36% vertical contain](intro_3dic_thermal_v4.png)
 ![bg contain](../figures/3d_ic.jpg)
 
-ICの積層による**高密度化・高性能化**
+<div class="bg-step">ICの立体集積による<strong>熱問題</strong>が課題</div>
 <div class="down">↓</div>
-
-高温部が発生し、**動作不良の原因**に
-
-**TSV**（through-silicon via）：層を貫通する配線<br>信号だけでなく、**チップ内の熱輸送**にも影響
+<div class="bg-step">チップ内の熱輸送に影響する<strong>TSV</strong>の<br><strong>配置の最適化</strong>が必要</div>
+<div class="bg-sub">TSV（through-silicon via）：層を貫通する配線</div>
 <div class="down">↓</div>
-
-TSV配置の工夫で最高温度を下げられる
-
-しかし、**TSV配置の組合せは膨大**
 
 > **TSV配置を高速に評価し、低温な配置を探す**
 
 <small>右上：生成概念図（本研究の解析結果ではない）<br>右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg</small>
 
 <!--
-目安 0:50。
-ICを積層すると、垂直方向にも素子を配置でき、さらなる高密度化と高性能化を図れます。
-一方、高密度化によって高温部が生じると、動作不良の原因となります。
-層を貫通するTSVは信号経路として使われますが、同時にチップ内の熱輸送にも影響します。
-そのため、TSV配置を工夫すれば最高温度を下げられます。
-しかし、TSV配置の組合せは膨大です。
-そこで、様々なTSV配置を高速に評価し、低温な配置を探すことを目指します。
+目安 0:45。
+ICを立体的に積層すると高密度化・高性能化を図れますが、高温部が生じて動作不良の原因となる、熱の問題が課題です。
+層を貫通するTSVは信号経路であると同時に、チップ内の熱輸送にも影響します。
+そのため、TSVの配置を最適化して最高温度を下げることが必要です。
+ただし配置の組合せは膨大なので、本研究ではTSV配置を高速に評価し、低温な配置を探します。
 -->
 
 ---
