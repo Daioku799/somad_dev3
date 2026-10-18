@@ -13,11 +13,12 @@ slide_order:
   - 6〜11 v7のスライド6〜11と同じ
 changes_from_v7:
   slide_2: v7のスライド2と3の本文を統合。model_xy_v5.pngを削除し、生成概念図とNIST概念図を右側に縦に並べる。出典注記は従来どおり。
-  slide_3: ①入力を減らす→②近似モデル（別データで精度確認）→③探索→④FVMで確認を矢印で示し、結果「FVMでも同じTSV本数の一様配置より約1.1〜1.4 K低温」を1行示す。
+  slide_3: ①入力を減らす→②近似モデル（別データで精度確認）→③探索→④FVMで確認を矢印で示し、結果「FVMでも同じTSV本数の一様配置より低温」を1行示す。温度の水準が未提示の段階で絶対値は伝わらないため、2026-10-19の本人判断で数値は出さない。
   slides_4_5: TSV密度マップとROMの順を入れ替え。密度マップ本文の「ROMへの入力」を「温度予測モデルへの入力」に変更し、ノートのつなぎを修正。
   notes: 累積時間の誤記9:55を、各目安の合計9:45に修正。
+  style: small要素をブロック表示にし、注記の行間を17px×1.3に詰めた（2026-10-19の本人依頼）。
 claim_trace:
-  intro_result: verification_summary.tsvによる一様配置からの低減量1.355、1.376、1.119 K（v7のC7）を約1.1〜1.4 Kと丸めて表記。
+  intro_result: v7のC7（FVMでも一様配置より低温）を定性的に表記。数値は本編スライド10で示す。
 figure_sources: v7と同じ（source-notes-v7.ymlを参照）。model_xy_v5.pngは使用しない。
 render_validation:
   marp_core_html:
@@ -29,6 +30,8 @@ render_validation:
   page_image_review:
     status: not_completed_due_to_environment
     note: スライド2（本文統合）と3（4段の流れ図）は、はみ出しの目視確認が必要。
+pending_tasks:
+  - 改善量は絶対温度[K]ではなく、3D-ICの温度スケール（例：周囲温度からの温度上昇）に対する割合など正規化した量で示す方向で、後日本人が着手する。正規化の定義は未決で、新しい表現は本人承認が必要。
 limitations:
   - スライド4以降の主張、数値、図はv7から変更していない。
   - 発表者本人の説明確認前は草稿。

@@ -29,7 +29,7 @@ style: |
     line-height: 1.35;
   }
   blockquote p { margin: 0; }
-  small { color: #59616b; font-size: 17px; line-height: 1.35; }
+  small { display: block; color: #59616b; font-size: 17px; line-height: 1.3; }
   img { max-height: 475px; }
   .lead { background: linear-gradient(150deg, #741b47 0 43%, #ffffff 43% 100%); }
   .lead h1 { color: white; font-size: 47px; width: 75%; }
@@ -128,7 +128,7 @@ ICを積層すると、垂直方向にも素子を配置でき、さらなる高
   <div class="node"><strong>④ 確認</strong><br>選んだ候補を<br>FVMで再計算</div>
 </div>
 
-> **結果：選んだ候補は、FVMでも同じTSV本数の一様配置より約1.1〜1.4 K低温でした。**
+> **結果：選んだ候補は、FVMでも同じTSV本数の一様配置より低温でした。**
 
 <!--
 目安 0:55。
@@ -136,7 +136,7 @@ ICを積層すると、垂直方向にも素子を配置でき、さらなる高
 まず、TSV配置を16個の数で表し、入力を減らします。
 次に、限られた数のFVM計算から、温度場を高速に予測する近似モデル、縮約モデルを作り、別のデータで精度を確認します。
 そのモデルで多数の配置を評価して低温な候補を選び、最後に選んだ候補をFVMで再計算して確認しました。
-結果として、選んだ候補はFVMでも同じ本数の一様配置より約1.1から1.4ケルビン低温でした。
+結果として、選んだ候補はFVMでも同じ本数の一様配置より低温でした。
 まず、TSV配置を16個の数で表す方法から説明します。
 -->
 
