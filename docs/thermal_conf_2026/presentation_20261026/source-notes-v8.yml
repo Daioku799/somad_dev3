@@ -1,0 +1,55 @@
+report_date: 2026-10-18
+status: draft_v8_before_presenter_explanation_confirmation
+scope: delivery_revision_of_v7_without_claim_changes
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v7.md
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v8-20261018.json
+delivery_guideline: https://www.graco.c.u-tokyo.ac.jp/labs/morihata/presentation_memo.htm
+changes_from_v7:
+  title: 「3DIC の」を提出題目どおり「3D-ICの」に修正。フッタを本編第8稿に更新。
+  slide_3: 導入で要旨（密度マップ入力のROMで候補を選びFVMで確認、一様配置より1.12〜1.38 K低温）を示す。
+  slide_4: POD（固有直交分解）を明記し、流れ図を「PODによるパターン抽出」に変更。
+  slide_6: 中心文、入力（密度マップ16成分）と出力（三次元温度場）、RBF補間の直感的説明を追加。解析条件を20pxへ。
+  slide_7: 未学習本数のMAE 0.0812 Kを質疑用の補足スライドへ移動。
+  slide_8: 注記を20pxにし、「ROM予測Tmax」を「ROMが予測する最高温度」に変更。
+  slide_9: 再描画した図を使用。留保を20pxの図説明へ。
+  slide_10: N=48探索候補の4×4グリッドを上下反転し、スライド5と同じ向き（上が+Y）に修正。
+  slide_11: 「Tmax MAE」を「最高温度MAE」に変更。結論範囲の注記を20pxへ。
+  backup_slide: 「補足：構築に含めないTSV本数での精度」を追加（本編の後、ページ番号なし）。
+  notes: 時間目安の合計を9:45に修正。
+orientation_check:
+  finding: v7スライド10のグリッドはcounts[1:4]を上段に置いていた。
+  evidence:
+    - plot_density_example_v6.jlはcountsを行優先で4×4に整形し、1行目をY座標の小さい下段に描く。
+    - material_xy_random_N48_v6.png（FVM入力snapshotのXY材料分布）で、右下セル5本、左から1列目下から2段目6本が密度マップと一致することを目視確認した。
+  fix: v8では1行目（3,9,0,1）を最下段に置き、上が+Y方向となるよう表示した。値と色尺度は不変。
+figure_sources:
+  rom_accuracy_independent_v8:
+    script: docs/thermal_conf_2026/presentation_20261026/plot_experiment_results_v8.jl
+    input: runs/paper_final_20260824T0140JST/rom/holdout_predictions.tsv
+    transform: v7と同じ（split=testの42配置を無集計で散布、y=xを重ねる）。文字サイズと凡例文言のみ変更。
+  tmax_vs_count_v8:
+    script: docs/thermal_conf_2026/presentation_20261026/plot_experiment_results_v8.jl
+    inputs:
+      - runs/paper_final_20260824T0140JST/rom/budget_sweep.tsv
+      - docs/thermal_conf_2026/derived/verification_summary.tsv
+    transform: v7と同じ（補間・平滑化・正規化なし）。一様配置の記号を四角に変え、線端に系列名を直接記載。
+  fvm_reduction_v8:
+    script: docs/thermal_conf_2026/presentation_20261026/plot_experiment_results_v8.jl
+    input: docs/thermal_conf_2026/derived/verification_summary.tsv
+    transform: v7と同じ（uniformのFVM TmaxからbestのFVM Tmaxを減算）。文字サイズのみ変更。
+render_validation:
+  marp_core_html:
+    status: passed
+    checks:
+      - スライド12枚（本編11枚と補足1枚）。
+      - 数式のMathJax merrorは0件。
+      - v8の図3枚の参照とファイルの存在を確認。
+  page_image_review:
+    status: not_completed_due_to_environment
+    reason: Marp CLIのブラウザ起動が完了せず、ページ画像化できなかった。
+    note: 図3枚は個別画像として目視確認済み。スライド3と6は文字量が増えたため、はみ出しの確認が必要。
+unresolved:
+  - スライド3に密度マップの組合せ数を載せるか（本人判断待ち）。
+limitations:
+  - 主張、数値、系列、処理はv7から変更していない。
+  - 発表者本人の説明確認前は草稿。

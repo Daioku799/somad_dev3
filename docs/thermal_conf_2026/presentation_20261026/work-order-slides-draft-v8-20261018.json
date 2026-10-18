@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-slides-v8-20261018",
+  "scope": {
+    "objective": "森畑研「良い発表をするために」を伝え方の基準として行ったv7レビューの方針に従い、主張・系列・処理を変えずにv7の伝え方を改訂したv8を別ファイルとして作成する",
+    "task_refs": [
+      "thermal-conf-2026: revise slides v7 by presentation-memo review"
+    ],
+    "decisions": {
+      "D1": "導入（スライド3）で手法と結果の要旨を示す。結果は提出PDFの表現1.12〜1.38 Kを用いる",
+      "D2": "スライド4でPOD（固有直交分解）の名前を出し、流れ図を『PODによるパターン抽出』とする",
+      "D3": "スライド6に中心文、入力（密度マップ16成分）と出力（三次元温度場）、RBF補間の直感的説明を置く。Gaussian、ε、λは本編に載せず質疑用とする",
+      "D4": "未学習本数40配置のTmax MAE 0.0812 Kはスライド7から質疑用の補足スライドへ移す（v7 D4からの変更。主張・数値は不変）",
+      "D5": "題目の表記を提出題目どおり『3D-IC』に直し、本文の『Tmax』は『最高温度』へ統一する（図の軸ラベルは除く）",
+      "D6": "重要な留保を17pxの注記から20pxの読める文字へ上げる。出典・生成画像の注記は従来どおり",
+      "D7": "スライド10のN=48セル別本数グリッドを、スライド5の図と同じ向き（上が+Y方向）に直す",
+      "D8": "図はv7と同じ入力・系列・変換で再描画し、文字サイズ、一様配置系列の記号（四角）、線端の直接ラベルだけを変える",
+      "D9": "v7とv7の図は保持し、v8を別ファイルとして作成する。説明確認前は草稿とする"
+    },
+    "unresolved": [
+      "スライド3に密度マップの組合せ数（各セル0〜9本・16セルでN=48のとき約4.0×10^13通り）を載せるか。提出資料にない記述のため本人判断待ち",
+      "全ページの画像レビュー。Marp CLIのブラウザ起動が完了せず、ページ画像化できなかった"
+    ],
+    "references": [
+      {"path": "docs/thermal_conf_2026/presentation_20261026/slides_draft_v7.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v7-20261018.json"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/claim_evidence_matrix.md"},
+      {"path": "docs/thermal_conf_2026/manuscript_draft.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/plot_density_example_v6.jl"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/material_xy_random_N48_v6.png"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/holdout_predictions.tsv"},
+      {"path": "runs/paper_final_20260824T0140JST/rom/budget_sweep.tsv"},
+      {"path": "docs/thermal_conf_2026/derived/verification_summary.tsv"},
+      {"url": "https://www.graco.c.u-tokyo.ac.jp/labs/morihata/presentation_memo.htm"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft_v8.md",
+          "docs/thermal_conf_2026/presentation_20261026/plot_experiment_results_v8.jl",
+          "docs/thermal_conf_2026/presentation_20261026/rom_accuracy_independent_v8.png",
+          "docs/thermal_conf_2026/presentation_20261026/tmax_vs_count_v8.png",
+          "docs/thermal_conf_2026/presentation_20261026/fvm_reduction_v8.png",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-v8.yml",
+          "docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v8-20261018.json"
+        ],
+        "commands": [
+          ["julia", "--project=H2-rom", "docs/thermal_conf_2026/presentation_20261026/plot_experiment_results_v8.jl"]
+        ]
+      }
+    },
+    "presentation": {
+      "claims": "v7作業票のC1〜C8をそのまま用いる。新しい主張は追加しない",
+      "figures": "v7作業票のF1〜F4と同じ入力・系列・変換。F4は表示の上下だけをスライド5の物理座標の向きに合わせる"
+    }
+  },
+  "state": {
+    "phase": "draft_ready_for_presenter_review"
+  },
+  "approvals": {
+    "slides": {
+      "user_message": "2026-10-18 森畑研の発表メモを基準にしたv7再レビューの方針で改訂版を作成する依頼",
+      "user_quote": "その方針でv7を作成。"
+    }
+  },
+  "notes": "本人の依頼は『v7を作成』だったが、既存成果物を上書きしない運用方針に従い、v7を保持してv8として作成した。新規FVM、ROM学習、探索は実行していない。"
+}
