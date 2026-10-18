@@ -76,7 +76,7 @@ style: |
   .model-row .method-note { margin-top:14px; }
   .model-figs { text-align:center; }
   .model-figs img { display:block; margin:0 auto 2px; }
-  img.model-xy { height:240px; }
+  img.model-xy { height:268px; margin-top:-28px !important; }
   img.model-yz { width:440px; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
