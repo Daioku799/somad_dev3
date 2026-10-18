@@ -71,7 +71,7 @@ style: |
   .result { padding:13px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:23px; line-height:1.5; }
   .summary { flex:1; min-height:125px; padding:17px 14px; border-radius:10px; background:white; border-top:7px solid #741b47; text-align:center; }
   .method-note { padding:10px 16px; background:#f7f7f8; border-left:5px solid #741b47; font-size:21px; line-height:1.4; }
-  .model-row { display:grid; grid-template-columns:1.05fr 0.95fr; gap:18px; align-items:start; }
+  .model-row { display:grid; grid-template-columns:0.95fr 1.05fr; gap:22px; align-items:start; }
   .model-row ul { margin:0; padding-left:1.1em; }
   .model-row .method-note { margin-top:14px; }
   .model-figs { text-align:center; }
@@ -97,6 +97,7 @@ style: |
   .trade-row .acc-note { margin-top:6px; font-size:18px; }
   .bg-step { font-size:30px; line-height:1.45; margin:6px 0; }
   .bg-sub { font-size:20px; color:#59616b; margin:0 0 2px; }
+  .axis-grid { display:grid; grid-template-columns:auto auto; column-gap:28px; row-gap:2px; font-size:22px; margin-bottom:6px; justify-content:start; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -131,7 +132,7 @@ style: |
 
 > **TSV配置を高速に評価し、低温な配置を探す**
 
-<small>右上：生成概念図（本研究の解析結果ではない）<br>右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg</small>
+<small>右上：3D-ICイメージ図<br>右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg</small>
 
 <!--
 目安 0:45。
@@ -168,6 +169,11 @@ ICを立体的に積層すると高密度化・高性能化を図れますが、
 # 解析モデル
 
 <div class="model-row">
+<div class="model-figs">
+  <img class="model-xy" src="model_xy_uniform_N48_v9.png">
+  <img class="model-yz" src="model_yz_uniform_N48_v9.png">
+  <div class="plot-caption">上：XY断面　下：YZ断面（一様配置 N=48）</div>
+</div>
 <div>
 
 - 1.2 mm角・厚さ0.6 mmの**3層積層モデル**
@@ -178,11 +184,6 @@ ICを立体的に積層すると高密度化・高性能化を図れますが、
 
 <div class="method-note">黄：Cu TSV　灰：Si　赤：発熱ブロック<br>紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB</div>
 
-</div>
-<div class="model-figs">
-  <img class="model-xy" src="model_xy_uniform_N48_v9.png">
-  <img class="model-yz" src="model_yz_uniform_N48_v9.png">
-  <div class="plot-caption">上：XY断面　下：YZ断面（一様配置 N=48）</div>
 </div>
 </div>
 
@@ -369,8 +370,11 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 <div class="trade-row">
 <div>
 
-- **横軸**：TSV本数 *N*　**縦軸**：ROMが予測した最高温度
-- 灰：一様配置　青：探索で得た低温候補
+<div class="axis-grid">
+<div><strong>横軸</strong>：TSV本数 <em>N</em></div><div><strong>灰</strong>：一様配置</div>
+<div><strong>縦軸</strong>：ROMが予測した最高温度</div><div><strong>青</strong>：探索で得た低温候補</div>
+</div>
+
 - *N* = 36〜60の**25水準**（ROM予測値）
 - 同じ本数で、配置による最高温度の違いを見る
 
