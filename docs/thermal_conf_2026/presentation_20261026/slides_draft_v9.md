@@ -141,22 +141,21 @@ ICを積層すると、垂直方向にも素子を配置でき、さらなる高
 
 # 解析モデル
 
-<div class="two-col" style="grid-template-columns:0.95fr 1.05fr;gap:22px;align-items:start;">
+<div class="two-col" style="grid-template-columns:1.05fr 0.95fr;gap:18px;align-items:start;">
 <div>
-
-- 1.2 mm角・厚さ0.6 mmの**3層積層モデル**
-- 各Si層に**発熱ブロック4個**、総発熱量**0.384 W**
-- 上面：周囲**300 K**への対流、側面・下面：断熱
-- 中央1 mm角がTSV実装領域（3層共通配置）
-- FVM：240×240×30セル
-
-<div class="method-note" style="margin-top:14px;">黄：Cu TSV　灰：Si　赤：発熱ブロック　紫：バンプ<br>緑：樹脂　青：Alスプレッダ　橙：PCB</div>
-
+<ul style="margin:0;padding-left:1.1em;">
+<li>1.2 mm角・厚さ0.6 mmの<strong>3層積層モデル</strong></li>
+<li>各Si層に<strong>発熱ブロック4個</strong><br>総発熱量<strong>0.384 W</strong></li>
+<li>上面：周囲<strong>300 K</strong>への対流<br>側面・下面：断熱</li>
+<li>中央1 mm角がTSV実装領域<br>（TSV配置は3層共通）</li>
+<li>FVM：240×240×30セル</li>
+</ul>
+<div class="method-note" style="margin-top:14px;">黄：Cu TSV　灰：Si　赤：発熱ブロック<br>紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB</div>
 </div>
 <div style="text-align:center;">
-  <img src="model_xy_v5.png" style="height:255px;">
-  <img src="model_yz_uniform_N48_v9.png" style="width:470px;margin-top:4px;">
-  <div class="plot-caption">上：XY断面（z = 0.347 mm）　下：YZ断面（x = 0.222 mm）<br>一様配置 N=48 の例</div>
+  <img src="model_xy_uniform_N48_v9.png" style="height:240px;display:block;margin:0 auto;">
+  <img src="model_yz_uniform_N48_v9.png" style="width:440px;display:block;margin:2px auto 0;">
+  <div class="plot-caption">上：XY断面　下：YZ断面（一様配置 N=48）</div>
 </div>
 </div>
 
