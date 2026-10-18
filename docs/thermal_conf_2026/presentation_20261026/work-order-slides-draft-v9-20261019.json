@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "thermal-conf-2026-slides-v9-20261019",
+  "scope": {
+    "objective": "v7を土台に、導入を『背景1枚＋研究の流れ1枚』へ再構成し、本編のTSV密度マップとROMの順を入れ替えたv9を別ファイルとして作成する",
+    "task_refs": [
+      "thermal-conf-2026: restructure introduction of slides v7"
+    ],
+    "decisions": {
+      "D1": "v7のスライド2（3D-ICの熱問題）と3（設計初期における配置評価）を1枚に統合し、本研究モデルのXY材料分布（model_xy_v5.png）を削除する。生成概念図とNIST概念図は右側に縦に並べて残す",
+      "D2": "新しいスライド3『本研究の流れ』で、理論を用いない言葉により①入力を減らす→②近似モデル（別データで精度確認）→③探索→④FVMで確認を矢印で示す",
+      "D3": "流れの各段では『最適配置』『大域最適』を用いず、『低温な候補を選ぶ』と表現する",
+      "D4": "導入の要旨として結果を1行示す：FVMでも同じTSV本数の一様配置より約1.1〜1.4 K低温",
+      "D5": "本編の順を研究の流れに合わせ、TSV密度マップ→縮約モデル（ROM）→ROMの構築方法とする。入れ替えに伴い、密度マップの本文の『ROMへの入力』を『温度予測モデルへの入力』とし、両スライドのノートのつなぎを修正する",
+      "D6": "ノートの累積時間の誤記（9:55）を各目安の合計9:45に直す",
+      "D7": "スライド4以降の主張・図・数値はv7から変更しない。v7とv8は保持する。説明確認前は草稿とする"
+    },
+    "unresolved": [
+      "全ページの画像レビュー。Marp CLIのブラウザ起動が完了しないため未実施"
+    ],
+    "references": [
+      {"path": "docs/thermal_conf_2026/presentation_20261026/slides_draft_v7.md"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v7-20261018.json"},
+      {"path": "docs/thermal_conf_2026/presentation_20261026/submitted_claims.md"},
+      {"path": "docs/thermal_conf_2026/derived/verification_summary.tsv"},
+      {"url": "https://www.graco.c.u-tokyo.ac.jp/labs/morihata/presentation_memo.htm"}
+    ],
+    "operations": {
+      "slides": {
+        "write_files": [
+          "docs/thermal_conf_2026/presentation_20261026/slides_draft_v9.md",
+          "docs/thermal_conf_2026/presentation_20261026/source-notes-v9.yml",
+          "docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v9-20261019.json"
+        ],
+        "commands": []
+      }
+    },
+    "presentation": {
+      "claims": "v7作業票のC1〜C8をそのまま用いる。導入の結果1行はC7（1.119〜1.376 K）を約1.1〜1.4 Kと丸めたもの",
+      "figures": "v7の図をそのまま用いる。model_xy_v5.pngは使用しない"
+    }
+  },
+  "state": {
+    "phase": "draft_ready_for_presenter_review"
+  },
+  "approvals": {
+    "slides": {
+      "user_message": "2026-10-19 導入の再構成案と、提示した4点（『最適化』の表現、案B：本編の順の入れ替え、結果1行の追加、画像の扱い）の承認、および別ファイルでの作成依頼",
+      "user_quote": "全て承認。別ファイルで作成。"
+    }
+  },
+  "notes": "新規FVM、ROM学習、探索、図の再描画は実行していない。"
+}

@@ -1,0 +1,34 @@
+report_date: 2026-10-19
+status: draft_v9_before_presenter_explanation_confirmation
+scope: introduction_restructure_of_v7
+derived_from: docs/thermal_conf_2026/presentation_20261026/slides_draft_v7.md
+work_order: docs/thermal_conf_2026/presentation_20261026/work-order-slides-draft-v9-20261019.json
+delivery_guideline: https://www.graco.c.u-tokyo.ac.jp/labs/morihata/presentation_memo.htm
+slide_order:
+  - 1 タイトル（v7と同じ）
+  - 2 3D-ICの熱問題とTSV配置（v7のスライド2と3を統合）
+  - 3 本研究の流れ（新規）
+  - 4 TSV密度マップ（v7のスライド5）
+  - 5 縮約モデル（ROM）（v7のスライド4）
+  - 6〜11 v7のスライド6〜11と同じ
+changes_from_v7:
+  slide_2: v7のスライド2と3の本文を統合。model_xy_v5.pngを削除し、生成概念図とNIST概念図を右側に縦に並べる。出典注記は従来どおり。
+  slide_3: ①入力を減らす→②近似モデル（別データで精度確認）→③探索→④FVMで確認を矢印で示し、結果「FVMでも同じTSV本数の一様配置より約1.1〜1.4 K低温」を1行示す。
+  slides_4_5: TSV密度マップとROMの順を入れ替え。密度マップ本文の「ROMへの入力」を「温度予測モデルへの入力」に変更し、ノートのつなぎを修正。
+  notes: 累積時間の誤記9:55を、各目安の合計9:45に修正。
+claim_trace:
+  intro_result: verification_summary.tsvによる一様配置からの低減量1.355、1.376、1.119 K（v7のC7）を約1.1〜1.4 Kと丸めて表記。
+figure_sources: v7と同じ（source-notes-v7.ymlを参照）。model_xy_v5.pngは使用しない。
+render_validation:
+  marp_core_html:
+    status: passed
+    checks:
+      - スライド11枚。
+      - 数式のMathJax merrorは0件。
+      - 参照画像8件の存在を確認。
+  page_image_review:
+    status: not_completed_due_to_environment
+    note: スライド2（本文統合）と3（4段の流れ図）は、はみ出しの目視確認が必要。
+limitations:
+  - スライド4以降の主張、数値、図はv7から変更していない。
+  - 発表者本人の説明確認前は草稿。
