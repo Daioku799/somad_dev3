@@ -97,6 +97,7 @@ style: |
   .bg-step { font-size:30px; line-height:1.45; margin:6px 0; }
   .bg-sub { font-size:20px; color:#59616b; margin:0 0 2px; }
   .axis-grid { display:grid; grid-template-columns:auto auto; column-gap:28px; row-gap:2px; font-size:22px; margin-bottom:6px; justify-content:start; }
+  img.cmp-map { height:235px; display:block; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -406,22 +407,12 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
   <div>
     <div class="map-pair">
       <div>
-        <div class="map-title">探索で得た低温候補（N=48）</div>
-        <div class="density-grid">
-          <div class="cell d3">3</div><div class="cell d9">9</div><div class="cell d0">0</div><div class="cell d1">1</div>
-          <div class="cell d9">9</div><div class="cell d9">9</div><div class="cell d8">8</div><div class="cell d0">0</div>
-          <div class="cell d4">4</div><div class="cell d0">0</div><div class="cell d1">1</div><div class="cell d0">0</div>
-          <div class="cell d0">0</div><div class="cell d1">1</div><div class="cell d0">0</div><div class="cell d3">3</div>
-        </div>
+        <div class="map-title">探索で得た低温候補</div>
+        <img class="cmp-map" src="density_map_best_N48_v11.png">
       </div>
       <div>
-        <div class="map-title">一様配置（N=48）</div>
-        <div class="density-grid">
-          <div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div>
-          <div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div>
-          <div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div>
-          <div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div><div class="cell d3">3</div>
-        </div>
+        <div class="map-title">一様配置</div>
+        <img class="cmp-map" src="density_map_uniform_N48_v11.png">
       </div>
     </div>
     <div class="result" style="margin-top:22px;">

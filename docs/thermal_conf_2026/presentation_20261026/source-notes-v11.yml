@@ -16,9 +16,9 @@ edits_2026-10-19b (本人指示):
   - スライド4の図を左、箇条書きを右へ（スライド8・10の図先行の並びに合わせる）。
   - スライド10の軸・凡例を箇条書きから外し、「横軸｜灰」「縦軸｜青」の2×2配置に。
 footer: 2026-10-19本人指示でフッタ（学会名・セッション・稿番号）を全スライドから削除。ページ番号は維持。版はファイル名で区別。
+slide_11_density_maps (2026-10-19 本人指示): HTMLの4×4グリッドを、スライド5と同じ描画仕様のプロットに置換（plot_density_compare_v11.jl → density_map_best_N48_v11.png, density_map_uniform_N48_v11.png）。countsはverification_candidates.tsvから読み、verify/{best,uniform}_N48/snapshot.jld2のdensity_mu×9と一致を確認。これによりv7以来の上下反転も解消（下段がy小）。
 render_validation: VS Codeプレビュー相当（style属性除去）で全12枚を描画。スライド11下端の注記とフッタの重なりはv7からの既知事項で未対応（本人が後で対応と指示）。
 known_unchanged:
   - タイトルの「3DIC の」表記（提出題目は3D-IC）。
   - スライド6流れ図の「ROMによるパターン抽出」（PODの明記なし）。
-  - スライド11の4×4グリッドの上下向き（スライド5と逆）。
 pending_tasks: source-notes-v9.ymlのpending_tasksを引き継ぐ。
