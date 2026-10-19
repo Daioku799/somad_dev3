@@ -325,8 +325,6 @@ ROMの構築に使っていない42配置で、FVMとROMの最高温度を比較
 <div class="loop-back">改善がなくなるまで繰り返す</div>
 </div>
 
-<div class="search-note">近傍：TSVを1本、別のセルへ移した配置（16 × 15 = 最大240通り）</div>
-
 <div class="search-multi">このサイクルを<strong>400個の初期配置</strong>で行い、最も低温な配置を採用</div>
 
 <!--
