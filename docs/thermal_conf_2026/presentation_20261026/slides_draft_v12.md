@@ -337,7 +337,7 @@ TSV本数は一回の探索中では固定し、36本から60本までの25水�
 
 ---
 
-# TSV本数と最高温度の近似トレードオフ
+# TSV本数ごとの探索結果
 
 <div class="trade-fig">
   <img class="trade-plot" src="tmax_vs_count_v10.png">
