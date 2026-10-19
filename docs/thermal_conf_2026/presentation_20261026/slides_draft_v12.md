@@ -105,7 +105,7 @@ style: |
   .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
   .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
   .compress { text-align:center; font-size:23px; margin-top:10px; padding:8px 14px; background:#f6edf2; border-radius:8px; }
-  .rom-flow { margin:16px 0 8px; align-items:center; }
+  .rom-coef { margin-top:18px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
   .rom-legend { font-size:23px; line-height:1.6; }
   .rom-legend mjx-container { font-size:23px; }
   .rom-def { font-size:22px; line-height:1.5; margin-top:8px; }
@@ -255,12 +255,7 @@ $r$：パターン数
 </div>
 </div>
 
-<div class="flow compact-flow rom-flow">
-  <div class="node"><strong>入力</strong><br>密度マップ16個</div><div class="arrow">→</div>
-  <div class="node">RBF補間で<br>係数 <em>a<sub>j</sub></em> を予測<br><span class="small">（近い密度マップの<br>係数から補間）</span></div><div class="arrow">→</div>
-  <div class="node">空間パターンの<br>重ね合わせ</div><div class="arrow">→</div>
-  <div class="node accent"><strong>出力</strong><br>三次元温度場</div>
-</div>
+<div class="rom-coef">重ね合わせの係数 <em>a<sub>j</sub></em> は、密度マップ <strong>μ</strong>（16個）から<strong>RBF補間</strong>によって予測</div>
 
 
 <!--
