@@ -110,6 +110,9 @@ style: |
   .rom-legend mjx-container { font-size:23px; }
   .rom-def { font-size:22px; line-height:1.5; margin-top:8px; }
   .rom-def div + div { margin-top:4px; }
+  .step-flow { align-items:stretch; margin-top:20px; }
+  .step-flow .arrow { align-self:center; }
+  .step-flow .node { font-size:22px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -157,20 +160,18 @@ ICを立体的に積層すると高密度化・高性能化を図れますが、
 
 # 本研究の流れ
 
-膨大なTSV配置から低温な配置を見つけるための4段階
-
-<div class="flow compact-flow" style="margin-top:26px;align-items:stretch;">
-  <div class="node"><strong>① 入力を減らす</strong><br>TSV配置を<br>16個の数で表す</div><div class="arrow" style="align-self:center;">→</div>
-  <div class="node accent"><strong>② 近似モデル</strong><br>限られた数の<br>FVM計算から<br>温度場を高速に予測<br><span class="small">（別データで精度を確認）</span></div><div class="arrow" style="align-self:center;">→</div>
-  <div class="node"><strong>③ 探索</strong><br>モデルで多数の<br>配置を評価し<br>低温な候補を選ぶ</div><div class="arrow" style="align-self:center;">→</div>
+<div class="flow compact-flow step-flow">
+  <div class="node"><strong>① 入力を減らす</strong><br>TSV配置を<br>密度マップ<br>（16個の値）に圧縮</div><div class="arrow">→</div>
+  <div class="node accent"><strong>② 近似モデル</strong><br>限られた数の<br>FVM計算から<br>温度場を高速に予測</div><div class="arrow">→</div>
+  <div class="node"><strong>③ 探索</strong><br>多数の配置を評価し<br>低温な候補を選ぶ</div><div class="arrow">→</div>
   <div class="node"><strong>④ 確認</strong><br>選んだ候補を<br>FVMで再計算</div>
 </div>
 
 <!--
-目安 0:45。
-膨大な配置の中から低温な配置を見つけるため、本研究は4つの段階で進めました。
-まず、TSV配置を16個の数で表し、入力を減らします。
-次に、限られた数のFVM計算から、温度場を高速に予測する近似モデル、縮約モデルを作り、別のデータで精度を確認します。
+目安 0:40。
+本研究は4つの段階で進めました。
+まず、TSV配置を密度マップという16個の値に圧縮し、入力を減らします。
+次に、限られた数のFVM計算から、温度場を高速に予測する近似モデル、縮約モデルを作ります。
 そのモデルで多数の配置を評価して低温な候補を選び、最後に選んだ候補をFVMで再計算して確認しました。
 まず、解析に用いたモデルを示します。
 -->
