@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""slides_draft_v12.md の内容を、大学テンプレート（4:3）上の編集可能なPPTXとして再構成する。
+"""slides_draft_v12.md の内容を、大学テンプレート（16:9）上の編集可能なPPTXとして再構成する。
 
 標準ライブラリとPillowだけを使い、テンプレートのXMLを直接組み立てる。
 テキスト・図形・矢印・数式はPowerPointで編集可能なオブジェクト、図は既存PNG。
@@ -18,7 +18,7 @@ from xml.sax.saxutils import escape
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
-TEMPLATE = Path("/home/foo/slide/TYPE-1_A_type_4-6_JA.pptx")
+TEMPLATE = Path("/home/foo/slide/templates/TYPE-1_A_type_16-9_JA.pptx")
 SOURCE_MD = HERE / "slides_draft_v12.md"
 OUT = HERE / "slides_v12.pptx"
 
@@ -136,11 +136,11 @@ class Slide:
                  f'bIns="{b}" rtlCol="0" anchor="{anchor}"><a:noAutofit/></a:bodyPr><a:lstStyle/>'
                  f'{"".join(paras)}</p:txBody></p:sp>')
 
-    def title(self, text, sz=26):
+    def title(self, text, sz=28):
         i = self.nid()
         self.add(f'<p:sp><p:nvSpPr><p:cNvPr id="{i}" name="Title {i}"/><p:cNvSpPr><a:spLocks noGrp="1"/>'
                  f'</p:cNvSpPr><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm>'
-                 f'<a:off x="{emu(0.45)}" y="{emu(0.98)}"/><a:ext cx="{emu(9.1)}" cy="{emu(0.62)}"/></a:xfrm>'
+                 f'<a:off x="{emu(0.6)}" y="{emu(0.98)}"/><a:ext cx="{emu(12.13)}" cy="{emu(0.66)}"/></a:xfrm>'
                  f'</p:spPr><p:txBody><a:bodyPr anchor="ctr"><a:normAutofit/></a:bodyPr><a:lstStyle/>'
                  f'{para(text, sz=sz, color=MAROON, bold=True)}</p:txBody></p:sp>')
 
@@ -258,28 +258,31 @@ def notes_xml(text):
             f'</p:clrMapOvr></p:notes>')
 
 
-# ---------------------------------------------------------------- スライド
+# ---------------------------------------------------------------- スライド（16:9、13.33 × 7.5 in）
 F = HERE
 FIG = HERE.parent / "figures"
+W = 13.333
+L, R = 0.6, 12.73          # 本文の左右端
+CW = R - L
 
 
 def s_title():
     s = Slide(1)
     i = s.nid()
     s.add(f'<p:sp><p:nvSpPr><p:cNvPr id="{i}" name="Title {i}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-          f'<p:nvPr><p:ph type="ctrTitle"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="{emu(0.5)}" y="{emu(1.35)}"/>'
-          f'<a:ext cx="{emu(9.0)}" cy="{emu(1.45)}"/></a:xfrm></p:spPr><p:txBody><a:bodyPr anchor="ctr"><a:normAutofit/>'
+          f'<p:nvPr><p:ph type="ctrTitle"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="{emu(0.8)}" y="{emu(1.3)}"/>'
+          f'<a:ext cx="{emu(11.73)}" cy="{emu(1.5)}"/></a:xfrm></p:spPr><p:txBody><a:bodyPr anchor="ctr"><a:normAutofit/>'
           f'</a:bodyPr><a:lstStyle/>'
-          f'{para("TSV密度マップを用いた縮約モデルによる" + chr(10) + "3D-ICの熱設計最適化の研究", sz=28, color="FFFFFF", bold=True, align="ctr", line=115)}'
+          f'{para("TSV密度マップを用いた縮約モデルによる" + chr(10) + "3D-ICの熱設計最適化の研究", sz=32, color="FFFFFF", bold=True, align="ctr", line=115)}'
           f'</p:txBody></p:sp>')
     i = s.nid()
     s.add(f'<p:sp><p:nvSpPr><p:cNvPr id="{i}" name="Subtitle {i}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-          f'<p:nvPr><p:ph type="subTitle" idx="1"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="{emu(0.5)}" y="{emu(3.0)}"/>'
-          f'<a:ext cx="{emu(9.0)}" cy="{emu(0.6)}"/></a:xfrm></p:spPr><p:txBody><a:bodyPr anchor="ctr"><a:normAutofit/>'
-          f'</a:bodyPr><a:lstStyle/>{para("熱工学コンファレンス2026　B11", sz=18, color="FFFFFF", align="ctr")}'
+          f'<p:nvPr><p:ph type="subTitle" idx="1"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="{emu(0.8)}" y="{emu(3.0)}"/>'
+          f'<a:ext cx="{emu(11.73)}" cy="{emu(0.6)}"/></a:xfrm></p:spPr><p:txBody><a:bodyPr anchor="ctr"><a:normAutofit/>'
+          f'</a:bodyPr><a:lstStyle/>{para("熱工学コンファレンス2026　B11", sz=20, color="FFFFFF", align="ctr")}'
           f'</p:txBody></p:sp>')
-    s.box(0.5, 4.55, 9.0, 0.9, [para("大屋 蒼真・小野 謙二", sz=20, align="ctr"),
-                                para("九州大学", sz=16, align="ctr", before=4)], name="Authors")
+    s.box(0.8, 4.5, 11.73, 1.0, [para("大屋 蒼真・小野 謙二", sz=22, align="ctr"),
+                                 para("九州大学", sz=18, align="ctr", before=4)], name="Authors")
     return s
 
 
@@ -287,17 +290,17 @@ def s_background():
     s = Slide(4)
     s.title("3D-ICの熱問題とTSV配置")
     s.slide_number()
-    s.box(0.5, 1.95, 5.6, 0.6, [para("ICの立体集積による**熱問題**が課題", sz=20)])
-    s.arrow(1.0, 2.6, 1.0, 3.15, color=MAROON)
-    s.box(0.5, 3.2, 5.6, 0.95, [para("チップ内の熱輸送に影響する**TSV**の\n**配置の最適化**が必要", sz=20, line=115)])
-    s.box(0.5, 4.2, 5.6, 0.4, [para("TSV（through-silicon via）：層を貫通する配線", sz=13, color=GRAY)])
-    s.box(0.5, 5.0, 5.6, 0.7, [para("TSV配置を高速に評価し、低温な配置を探す", sz=19, bold=True, color=ACCENT)],
-          fill=TINT, anchor="ctr", inset=(0.15, 0.05, 0.1, 0.05), name="Conclusion")
-    s.picture(F / "intro_3dic_thermal_v4.png", 6.35, 1.75, w=3.25, name="3D-IC image")
-    s.picture(FIG / "3d_ic.jpg", 6.45, 4.25, w=3.05, name="NIST TSV figure")
-    s.box(0.5, 6.55, 5.8, 0.55, [para("右上：3D-ICイメージ図", sz=10, color=GRAY),
-                                 para("右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg", sz=10, color=GRAY)],
+    s.box(L, 2.0, 7.6, 0.65, [para("ICの立体集積による**熱問題**が課題", sz=24)])
+    s.arrow(1.15, 2.75, 1.15, 3.35, color=MAROON)
+    s.box(L, 3.4, 7.6, 1.1, [para("チップ内の熱輸送に影響する**TSV**の\n**配置の最適化**が必要", sz=24, line=115)])
+    s.box(L, 4.55, 7.6, 0.45, [para("TSV（through-silicon via）：層を貫通する配線", sz=15, color=GRAY)])
+    s.box(L, 5.3, 7.6, 0.8, [para("TSV配置を高速に評価し、低温な配置を探す", sz=22, bold=True, color=ACCENT)],
+          fill=TINT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Conclusion")
+    s.box(L, 6.55, 7.6, 0.6, [para("右上：3D-ICイメージ図", sz=11, color=GRAY),
+                              para("右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg", sz=11, color=GRAY)],
           name="Source")
+    s.picture(F / "intro_3dic_thermal_v4.png", 8.55, 1.05, w=4.4, name="3D-IC image")
+    s.picture(FIG / "3d_ic.jpg", 8.75, 3.75, w=4.0, name="NIST TSV figure")
     return s
 
 
@@ -305,18 +308,19 @@ def s_flow():
     s = Slide(4)
     s.title("本研究の流れ")
     s.slide_number()
-    steps = [("① 入力を減らす", "膨大な\n配置パラメータ\nを圧縮", None),
-             ("② 近似モデル", "事前の計算\nによって\n温度場を\n高速に予測", TINT),
-             ("③ 探索", "多数の配置\nを評価し\n低温な候補\nを選ぶ", None),
-             ("④ 確認", "選んだ候補を\nFVM\n（有限体積法）\nで再計算", None)]
-    w, gap, x0, y, h = 2.05, 0.28, 0.48, 2.7, 2.2
+    steps = [("① 入力を減らす", "膨大な配置\nパラメータを圧縮", None),
+             ("② 近似モデル", "事前の計算によって\n温度場を高速に予測", TINT),
+             ("③ 探索", "多数の配置を評価し\n低温な候補を選ぶ", None),
+             ("④ 確認", "選んだ候補を\nFVM（有限体積法）\nで再計算", None)]
+    w, gap, y, h = 2.75, 0.4, 2.75, 2.1
+    x0 = (W - (4 * w + 3 * gap)) / 2
     for k, (head, body, fill) in enumerate(steps):
         x = x0 + k * (w + gap)
-        s.box(x, y, w, h, [para(head, sz=15, bold=True, color=ACCENT, align="ctr"),
-                           para(body, sz=14, align="ctr", before=6, line=110)],
+        s.box(x, y, w, h, [para(head, sz=18, bold=True, color=ACCENT, align="ctr"),
+                           para(body, sz=16, align="ctr", before=6, line=110)],
               fill=fill or "FFFFFF", line=MAROON, geom="roundRect", anchor="ctr", textbox=False, name="Step")
         if k < 3:
-            s.arrow(x + w + 0.06, y + h / 2, x + w + gap - 0.06, y + h / 2)
+            s.arrow(x + w + 0.07, y + h / 2, x + w + gap - 0.07, y + h / 2)
     return s
 
 
@@ -324,17 +328,18 @@ def s_model():
     s = Slide(4)
     s.title("解析モデル")
     s.slide_number()
-    s.picture(F / "model_xy_uniform_N48_v9.png", 0.75, 1.75, h=2.75, name="Model XY")
-    s.picture(F / "model_yz_uniform_N48_v9.png", 0.45, 4.6, w=4.1, name="Model YZ")
-    s.box(0.45, 6.85, 4.1, 0.35, [para("上：XY断面　下：YZ断面（一様配置 *N* = 48）", sz=11, color=GRAY, align="ctr")])
-    s.box(4.85, 1.85, 4.75, 3.6, [
-        para("1.2 mm角・厚さ0.6 mmの\n**3層積層モデル**", sz=16, bullet=True),
-        para("各Si層に**発熱ブロック4個**\n総発熱量**0.384 W**", sz=16, bullet=True, before=8),
-        para("上面：周囲**300 K**への対流\n側面・下面：断熱", sz=16, bullet=True, before=8),
-        para("中央1 mm角がTSV実装領域\n（TSV配置は3層共通）", sz=16, bullet=True, before=8),
-        para("FVM：240×240×30セル", sz=16, bullet=True, before=8)])
-    s.box(4.85, 5.6, 4.75, 0.85, [para("黄：Cu TSV　灰：Si　赤：発熱ブロック\n紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB",
-                                        sz=12, line=120)], fill="F5F5F6", anchor="ctr", name="Legend")
+    s.picture(F / "model_xy_uniform_N48_v9.png", 1.35, 1.7, h=2.8, name="Model XY")
+    s.picture(F / "model_yz_uniform_N48_v9.png", 0.6, 4.55, w=4.6, name="Model YZ")
+    s.box(0.6, 7.05, 4.6, 0.35, [para("上：XY断面　下：YZ断面（一様配置 *N* = 48）", sz=12, color=GRAY, align="ctr")])
+    s.box(5.9, 1.85, 6.8, 3.6, [
+        para("1.2 mm角・厚さ0.6 mmの**3層積層モデル**", sz=20, bullet=True),
+        para("各Si層に**発熱ブロック4個**\n総発熱量**0.384 W**", sz=20, bullet=True, before=10),
+        para("上面：周囲**300 K**への対流\n側面・下面：断熱", sz=20, bullet=True, before=10),
+        para("中央1 mm角がTSV実装領域\n（TSV配置は3層共通）", sz=20, bullet=True, before=10),
+        para("FVM：240×240×30セル", sz=20, bullet=True, before=10)])
+    s.box(5.9, 5.75, 6.8, 0.95, [para("黄：Cu TSV　灰：Si　赤：発熱ブロック\n紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB",
+                                      sz=15, line=120)], fill="F5F5F6", anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05),
+          name="Legend")
     return s
 
 
@@ -342,13 +347,13 @@ def s_density():
     s = Slide(4)
     s.title("TSV密度マップ")
     s.slide_number()
-    s.box(0.5, 1.75, 9.0, 0.85, [para("TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が増加", sz=17),
-                                 para("→ TSV実装領域を4×4に分割し、**各セルのTSV本数**を入力とする", sz=17, before=4)])
-    s.picture(F / "density_map_random_N48_v6.png", 0.55, 2.8, h=3.35, name="Density map")
-    s.arrow(4.72, 4.4, 5.32, 4.4)
-    s.box(4.55, 4.5, 0.95, 0.4, [para("展開", sz=13, color=GRAY, align="ctr")])
-    s.picture(F / "material_xy_random_N48_v6.png", 5.55, 2.8, h=3.35, name="Expanded layout")
-    s.box(0.5, 6.35, 9.0, 0.6, [para("入力：TSV座標 2*N* 個 → 密度マップ **16 個**に圧縮（*N* によらず一定）", sz=17, align="ctr")],
+    s.box(L, 1.75, CW, 0.95, [para("TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が増加", sz=20),
+                              para("→ TSV実装領域を4×4に分割し、**各セルのTSV本数**を入力とする", sz=20, before=4)])
+    dw, _ = s.picture(F / "density_map_random_N48_v6.png", 1.7, 2.85, h=3.4, name="Density map")
+    s.arrow(1.7 + dw + 0.25, 4.45, 1.7 + dw + 1.05, 4.45)
+    s.box(1.7 + dw + 0.15, 4.55, 1.0, 0.4, [para("展開", sz=15, color=GRAY, align="ctr")])
+    s.picture(F / "material_xy_random_N48_v6.png", 1.7 + dw + 1.3, 2.85, h=3.4, name="Expanded layout")
+    s.box(L, 6.45, CW, 0.65, [para("入力：TSV座標 2*N* 個 → 密度マップ **16 個**に圧縮（*N* によらず一定）", sz=20, align="ctr")],
           fill=TINT, geom="roundRect", anchor="ctr", textbox=False, name="Compression")
     return s
 
@@ -357,14 +362,14 @@ def s_rom():
     s = Slide(4)
     s.title("縮約モデル（ROM）")
     s.slide_number()
-    s.box(0.5, 1.75, 9.0, 1.05, [para("FVM（有限体積法）で**300配置**の温度場を計算し、\n**主要な空間パターン24個**をPODで抽出", sz=18, line=115),
-                                 para("POD：多数の温度場から、変化への寄与が大きい順に空間パターンを取り出す手法", sz=13, color=GRAY, before=6)])
-    s.raw(rom_equation(0.5, 3.15, 6.0, 1.3))
-    s.box(6.75, 3.15, 2.75, 1.3, [para("*ϕ*{_j}：空間パターン", sz=16), para("*a*{_j}：係数", sz=16, before=4),
-                                  para("*r*：パターン数", sz=16, before=4)],
-          fill="F5F5F6", anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Symbols")
-    s.box(0.5, 4.95, 9.0, 0.75, [para("重ね合わせの係数 *a*{_j} は、密度マップ **μ**（16個）から**RBF補間**によって予測", sz=17)],
-          fill=TINT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Coefficient")
+    s.box(L, 1.75, CW, 1.2, [para("FVM（有限体積法）で**300配置**の温度場を計算し、**主要な空間パターン24個**をPODで抽出", sz=20, line=115),
+                             para("POD：多数の温度場から、変化への寄与が大きい順に空間パターンを取り出す手法", sz=15, color=GRAY, before=6)])
+    s.raw(rom_equation(1.2, 3.2, 7.6, 1.5))
+    s.box(9.3, 3.25, 3.4, 1.4, [para("*ϕ*{_j}：空間パターン", sz=18), para("*a*{_j}：係数", sz=18, before=4),
+                                para("*r*：パターン数", sz=18, before=4)],
+          fill="F5F5F6", anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Symbols")
+    s.box(L, 5.2, CW, 0.8, [para("重ね合わせの係数 *a*{_j} は、密度マップ **μ**（16個）から**RBF補間**によって予測", sz=20)],
+          fill=TINT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Coefficient")
     return s
 
 
@@ -372,17 +377,18 @@ def s_accuracy():
     s = Slide(4)
     s.title("ROMの精度検証結果")
     s.slide_number()
-    s.picture(F / "rom_accuracy_independent_v7.png", 0.3, 1.85, w=5.2, name="Accuracy plot")
-    s.box(5.55, 1.95, 4.1, 2.4, [
-        para("**横軸**：FVMの最高温度\n**縦軸**：ROMの最高温度", sz=15, emph=MAROON, line=115),
-        para("ROMの構築に使っていない**42配置**で評価", sz=15, bullet=True, before=10),
-        para("破線（y = x）からの距離＝FVMとROMの最高温度の誤差", sz=15, bullet=True, before=6)])
-    s.box(5.55, 4.5, 4.1, 1.75, [
-        para("結果", sz=15, bold=True, color=MAROON),
-        para("最高温度の平均誤差：**0.0950 K**", sz=15, before=4),
-        para("温度場の2乗平均誤差：**0.493 %**", sz=15, before=4),
-        para("（300 Kからの温度上昇に対する比）", sz=11, color=GRAY, before=2)],
-          fill=RESULT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Result")
+    s.picture(F / "rom_accuracy_independent_v7.png", 0.45, 1.7, h=5.45, name="Accuracy plot")
+    x, w = 7.75, 5.0
+    s.box(x, 2.0, w, 2.3, [
+        para("**横軸**：FVMの最高温度\n**縦軸**：ROMの最高温度", sz=19, emph=MAROON, line=115),
+        para("ROMの構築に使っていない\n**42配置**で評価", sz=19, bullet=True, before=12),
+        para("破線（y = x）からの距離＝\nFVMとROMの最高温度の誤差", sz=19, bullet=True, before=6)])
+    s.box(x, 4.55, w, 1.95, [
+        para("結果", sz=19, bold=True, color=MAROON),
+        para("最高温度の平均誤差：**0.0950 K**", sz=19, before=4),
+        para("温度場の2乗平均誤差：**0.493 %**", sz=19, before=4),
+        para("（300 Kからの温度上昇に対する比）", sz=13, color=GRAY, before=2)],
+          fill=RESULT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Result")
     return s
 
 
@@ -390,23 +396,24 @@ def s_search():
     s = Slide(4)
     s.title("最適配置の探索")
     s.slide_number()
-    s.box(0.5, 1.75, 9.0, 0.5, [para("各TSV本数（*N* = 36〜60）を固定し、ROMが予測する最高温度を最小化", sz=17)])
-    w, h, y = 2.4, 1.25, 2.75
-    xs = [0.6, 3.8, 7.0]
+    s.box(L, 1.75, CW, 0.55, [para("各TSV本数（*N* = 36〜60）を固定し、ROMが予測する最高温度を最小化", sz=20)])
+    w, h, y, gap = 3.0, 1.4, 2.8, 0.9
+    x0 = (W - (3 * w + 2 * gap)) / 2
+    xs = [x0 + k * (w + gap) for k in range(3)]
     texts = [("初期配置", None), ("近傍の配置を\n最大240個\nROMで評価", TINT), ("最良の配置を\n新たな出発点に更新", None)]
     for x, (t, fill) in zip(xs, texts):
-        s.box(x, y, w if x != 7.0 else 2.45, h, [para(t, sz=15, align="ctr", line=110)], fill=fill or "FFFFFF",
+        s.box(x, y, w, h, [para(t, sz=18, align="ctr", line=110)], fill=fill or "FFFFFF",
               line=MAROON, geom="roundRect", anchor="ctr", textbox=False, name="Step")
-    s.arrow(xs[0] + w + 0.08, y + h / 2, xs[1] - 0.08, y + h / 2)
-    s.arrow(xs[1] + w + 0.08, y + h / 2, xs[2] - 0.08, y + h / 2)
+    for k in range(2):
+        s.arrow(xs[k] + w + 0.1, y + h / 2, xs[k + 1] - 0.1, y + h / 2)
     # 更新 → 評価へ戻るU字の矢印
-    bx3, bx2, yb, yl = xs[2] + 1.22, xs[1] + 1.2, y + h, y + h + 0.55
+    bx3, bx2, yb, yl = xs[2] + w / 2, xs[1] + w / 2, y + h, y + h + 0.6
     s.arrow(bx3, yb, bx3, yl, color=MAROON, head=False, name="Loop")
     s.arrow(bx3, yl, bx2, yl, color=MAROON, head=False, name="Loop")
     s.arrow(bx2, yl, bx2, yb + 0.02, color=MAROON, name="Loop")
-    s.box(bx2, yl + 0.05, bx3 - bx2, 0.4, [para("改善がなくなるまで繰り返す", sz=14, color=MAROON, align="ctr")])
-    s.box(0.5, 5.6, 9.0, 0.7, [para("このサイクルを**400個の初期配置**で行い、最も低温な配置を採用", sz=17)],
-          fill=TINT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Multistart")
+    s.box(bx2, yl + 0.05, bx3 - bx2, 0.45, [para("改善がなくなるまで繰り返す", sz=17, color=MAROON, align="ctr")])
+    s.box(L, 5.75, CW, 0.75, [para("このサイクルを**400個の初期配置**で行い、最も低温な配置を採用", sz=20)],
+          fill=TINT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Multistart")
     return s
 
 
@@ -414,20 +421,20 @@ def s_results():
     s = Slide(4)
     s.title("TSV本数ごとの探索結果")
     s.slide_number()
-    s.picture(F / "tmax_vs_count_v10.png", 0.4, 1.7, w=9.2, name="Results plot")
-    s.box(0.5, 4.5, 2.75, 0.75, [para("**横軸**：TSV本数 *N*", sz=14, emph=MAROON),
-                                 para("**縦軸**：ROM予測の最高温度", sz=14, emph=MAROON, before=2)])
-    s.box(3.25, 4.5, 2.4, 0.75, [para("**灰**：一様配置", sz=14, emph=MAROON),
-                                 para("**青**：探索した低温候補", sz=14, emph=MAROON, before=2)])
-    s.box(0.5, 5.35, 5.1, 1.0, [
-        para("*N* = 36〜60の**25水準**（ROM予測値）", sz=14, bullet=True),
-        para("同じ本数で、配置による最高温度の違いを見る", sz=14, bullet=True, before=4)])
-    s.box(5.7, 4.6, 3.9, 1.45, [
-        para("結果", sz=15, bold=True, color=MAROON),
-        para("全25水準で探索候補が\n一様配置より低温", sz=15, before=4),
-        para("差：**1.09〜1.57 K**", sz=15, before=4)],
-          fill=RESULT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Result")
-    s.box(5.7, 6.1, 3.9, 0.45, [para("本数ごとの局所探索の結果（大域最適解ではない）", sz=11, color=GRAY)])
+    s.picture(F / "tmax_vs_count_v10.png", L, 1.7, w=CW, name="Results plot")
+    s.box(L, 5.35, 4.1, 0.8, [para("**横軸**：TSV本数 *N*", sz=17, emph=MAROON),
+                              para("**縦軸**：ROMが予測した最高温度", sz=17, emph=MAROON, before=2)])
+    s.box(L + 4.2, 5.35, 3.2, 0.8, [para("**灰**：一様配置", sz=17, emph=MAROON),
+                                    para("**青**：探索で得た低温候補", sz=17, emph=MAROON, before=2)])
+    s.box(L, 6.2, 7.2, 0.95, [
+        para("*N* = 36〜60の**25水準**（ROM予測値）", sz=17, bullet=True),
+        para("同じ本数で、配置による最高温度の違いを見る", sz=17, bullet=True, before=3)])
+    s.box(8.2, 5.3, 4.53, 1.45, [
+        para("結果", sz=18, bold=True, color=MAROON),
+        para("全25水準で探索候補が\n一様配置より低温", sz=17, before=3),
+        para("差：**1.09〜1.57 K**", sz=17, before=3)],
+          fill=RESULT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Result")
+    s.box(8.2, 6.75, 4.53, 0.4, [para("本数ごとの局所探索の結果（大域最適解ではない）", sz=13, color=GRAY)])
     return s
 
 
@@ -435,29 +442,28 @@ def s_fvm():
     s = Slide(4)
     s.title("探索候補のFVM再検証")
     s.slide_number()
-    cw = 2.55
+    cw = 2.95
     for k, (head, dm, tm) in enumerate([("探索で得た低温候補", "density_map_best_N48_v11.png", "temperature_best_N48_v11.png"),
                                        ("一様配置", "density_map_uniform_N48_v11.png", "temperature_uniform_N48_v11.png")]):
-        x = 0.35 + k * (cw + 0.12)
-        s.box(x, 1.7, cw, 0.4, [para(head, sz=14, bold=True, align="ctr")])
-        s.picture(F / dm, x, 2.12, w=cw, name="Density map")
-        s.picture(F / tm, x, 2.12 + cw * 1920 / 2280 + 0.08, w=cw, name="FVM temperature")
-    rx, rw = 5.75, 3.9
-    s.box(rx, 1.75, rw, 0.85, [para("**上**：密度マップ（*N* = 48）", sz=13, emph=MAROON),
-                               para("**下**：FVM温度場（最下層Si層の発熱層）", sz=13, emph=MAROON, before=2)])
-    s.box(rx, 2.75, rw, 1.75, [
-        para("FVM最高温度", sz=14, bold=True, color=MAROON),
-        para("探索候補：**315.618 K**", sz=14, before=3),
-        para("一様配置：316.994 K", sz=14, before=3),
-        para("差：**1.376 K**（温度上昇の**8.1 %**）", sz=14, before=3)],
-          fill=RESULT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Result")
-    s.box(rx, 4.65, rw, 1.2, [
-        para("ROMの予測との差", sz=14, bold=True, color=MAROON),
-        para("探索候補：0.035 K", sz=14, before=3),
-        para("一様配置：0.002 K", sz=14, before=1)],
-          fill=TINT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="ROM gap")
-    s.box(rx, 5.95, rw, 0.7, [para("温度上昇：一様配置の最高温度 − 300 K", sz=11, color=GRAY),
-                              para("固定した発熱分布・解析条件での低温候補", sz=11, color=GRAY, before=2)])
+        x = 0.5 + k * (cw + 0.15)
+        s.box(x, 1.65, cw, 0.4, [para(head, sz=16, bold=True, align="ctr")])
+        _, ih = s.picture(F / dm, x, 2.07, w=cw, name="Density map")
+        s.picture(F / tm, x, 2.07 + ih + 0.08, w=cw, name="FVM temperature")
+    rx, rw = 6.85, 5.88
+    s.box(rx, 1.8, rw, 0.85, [para("**上**：密度マップ（*N* = 48）", sz=17, emph=MAROON),
+                              para("**下**：FVM温度場（最下層Si層の発熱層）", sz=17, emph=MAROON, before=2)])
+    s.box(rx, 2.85, rw, 1.95, [
+        para("FVM最高温度", sz=18, bold=True, color=MAROON),
+        para("探索候補：**315.618 K**", sz=18, before=3),
+        para("一様配置：316.994 K", sz=18, before=3),
+        para("差：**1.376 K**（温度上昇の**8.1 %**）", sz=18, before=3)],
+          fill=RESULT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Result")
+    s.box(rx, 5.0, rw, 1.0, [
+        para("ROMの予測との差", sz=18, bold=True, color=MAROON),
+        para("探索候補：0.035 K　一様配置：0.002 K", sz=18, before=3)],
+          fill=TINT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="ROM gap")
+    s.box(rx, 6.2, rw, 0.75, [para("温度上昇：一様配置の最高温度 − 300 K", sz=13, color=GRAY),
+                              para("固定した発熱分布・解析条件での低温候補", sz=13, color=GRAY, before=2)])
     return s
 
 
@@ -465,21 +471,22 @@ def s_summary():
     s = Slide(4)
     s.title("まとめ")
     s.slide_number()
-    s.box(0.5, 1.75, 9.0, 0.95, [para("密度マップを入力とするROMで、FVMで再計算すべき\n低温配置の候補を選別できた", sz=19, bold=True, color=ACCENT, line=115)],
-          fill=TINT, anchor="ctr", inset=(0.18, 0.05, 0.1, 0.05), name="Conclusion")
-    s.box(0.5, 2.9, 9.0, 1.9, [
-        para("TSV配置を密度マップ（16個の値）に圧縮", sz=16, bullet=True),
-        para("FVM 300配置の温度場からROMを構築", sz=16, bullet=True, before=5),
-        para("*N* = 36〜60の25水準を、各400初期配置から探索", sz=16, bullet=True, before=5),
-        para("選んだ候補をFVMで再計算", sz=16, bullet=True, before=5)])
-    boxes = [("ROMの最高温度の\n平均誤差", "0.095 K"),
-             ("FVMで確認した最高温度の\n低減（温度上昇比）", "7.1〜8.1 %"),
+    s.box(L, 1.75, CW, 0.8, [para("密度マップを入力とするROMで、FVMで再計算すべき低温配置の候補を選別できた", sz=22, bold=True, color=ACCENT)],
+          fill=TINT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Conclusion")
+    s.box(L, 2.8, CW, 2.0, [
+        para("TSV配置を密度マップ（16個の値）に圧縮", sz=19, bullet=True),
+        para("FVM 300配置の温度場からROMを構築", sz=19, bullet=True, before=6),
+        para("*N* = 36〜60の25水準を、各400初期配置から探索", sz=19, bullet=True, before=6),
+        para("選んだ候補をFVMで再計算", sz=19, bullet=True, before=6)])
+    boxes = [("ROMの最高温度の平均誤差", "0.095 K"),
+             ("FVMで確認した最高温度の低減\n（温度上昇比）", "7.1〜8.1 %"),
              ("ROMとFVMの差\n（*N* = 48）", "0.035 K")]
-    w, gap = 2.85, 0.225
+    gap = 0.3
+    w = (CW - 2 * gap) / 3
     for k, (label, value) in enumerate(boxes):
-        x = 0.5 + k * (w + gap)
-        s.box(x, 5.0, w, 1.6, [para(label, sz=13, align="ctr", line=110),
-                               para(value, sz=24, bold=True, color=ACCENT, align="ctr", before=8)],
+        x = L + k * (w + gap)
+        s.box(x, 5.0, w, 1.75, [para(label, sz=16, align="ctr", line=110),
+                                para(value, sz=30, bold=True, color=ACCENT, align="ctr", before=6)],
               fill="FFFFFF", line=MAROON, geom="roundRect", anchor="ctr", textbox=False, name="Result")
     return s
 

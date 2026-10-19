@@ -27,8 +27,8 @@ render_validation: スライド5・6をVS Codeプレビュー相当（style属�
 pending_tasks: source-notes-v9.ymlのpending_tasksを引き継ぐ。
 pptx_export (2026-10-19 本人承認):
   output: docs/thermal_conf_2026/presentation_20261026/slides_v12.pptx（未コミット、build_pptx_v12.pyで再生成可）
-  template: /home/foo/slide/TYPE-1_A_type_4-6_JA.pptx（九州大学テンプレート、4:3）
+  template: /home/foo/slide/templates/TYPE-1_A_type_16-9_JA.pptx（九州大学テンプレート、16:9。2026-10-19本人指示で4:3版から差し替え。両テンプレートは本人指示で /home/foo/slide/templates/ へ移動）
   method: テンプレートのXMLを直接組み立て（標準ライブラリ＋Pillow）。本文・図形・矢印・数式（OMML）は編集可能、図は既存PNG、ノートはv12の各スライドのコメントから転記。
   font: テーマの見出し・本文フォントと全テキストをMeiryoに設定（数式はCambria Math）。
-  changes_vs_md: 4:3に合わせて各スライドを再配置。タイトルの「3DIC の」を「3D-IC」に修正。フッタ文字は置かない（ページ番号は維持）。
+  changes_vs_md: 16:9（13.33×7.5 in）でMarp版の配置を踏襲して再配置。タイトルの「3DIC の」を「3D-IC」に修正。フッタ文字は置かない（ページ番号は維持）。
   validation: skillのvalidate.py（--original付き）PASS。LibreOfficeで全11枚を描画し、はみ出し・不自然な折り返しを修正。環境にMeiryoがないため描画は代替フォントで、実機での文字幅は要確認。
