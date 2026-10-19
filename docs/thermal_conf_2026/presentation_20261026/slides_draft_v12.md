@@ -121,10 +121,10 @@ style: |
   .loop-back { color:#741b47; font-size:22px; margin:4px 0 0 516px; width:400px; text-align:center; }
   .search-note { font-size:21px; color:#59616b; text-align:center; margin-top:18px; }
   .search-multi { margin-top:20px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
-  .sum-row { display:grid; grid-template-columns:1.12fr 1fr; gap:22px; align-items:center; margin-top:10px; }
+  .sum-row { margin-top:10px; }
   .sum-row ul { margin:0; padding-left:1.1em; font-size:23px; }
   .sum-row li { margin:6px 0; }
-  .sum-boxes { display:flex; gap:12px; }
+  .sum-boxes { display:flex; gap:16px; margin-top:14px; }
   .sum-boxes .summary { min-height:0; padding:12px 8px; }
   .sum-boxes .summary strong { font-size:30px; }
   .sum-scope { margin-top:18px; font-size:20px; color:#59616b; }
@@ -453,8 +453,8 @@ ROMの予測とFVMの差は、48本では探索候補で0.035ケルビン、一�
 
 </div>
 <div class="sum-boxes">
-  <div class="summary"><strong>0.095 K</strong><br><span class="small">ROMの最高温度の<br>平均誤差</span></div>
-  <div class="summary"><strong>7.1〜8.1 %</strong><br><span class="small">FVMで確認した<br>最高温度の低減<br>（温度上昇比）</span></div>
+  <div class="summary"><strong>0.095 K</strong><br><span class="small">ROMの最高温度の平均誤差</span></div>
+  <div class="summary"><strong>7.1〜8.1 %</strong><br><span class="small">FVMで確認した最高温度の低減<br>（温度上昇比）</span></div>
   <div class="summary"><strong>0.035 K</strong><br><span class="small">ROMとFVMの差<br>（<em>N</em> = 48）</span></div>
 </div>
 </div>
