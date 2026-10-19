@@ -121,6 +121,13 @@ style: |
   .loop-back { color:#741b47; font-size:22px; margin:4px 0 0 516px; width:400px; text-align:center; }
   .search-note { font-size:21px; color:#59616b; text-align:center; margin-top:18px; }
   .search-multi { margin-top:20px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
+  .sum-row { display:grid; grid-template-columns:1.12fr 1fr; gap:22px; align-items:center; margin-top:10px; }
+  .sum-row ul { margin:0; padding-left:1.1em; font-size:23px; }
+  .sum-row li { margin:6px 0; }
+  .sum-boxes { display:flex; gap:12px; }
+  .sum-boxes .summary { min-height:0; padding:12px 8px; }
+  .sum-boxes .summary strong { font-size:30px; }
+  .sum-scope { margin-top:18px; font-size:20px; color:#59616b; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -150,7 +157,7 @@ style: |
 <div class="down">↓</div>
 <div class="bg-step">チップ内の熱輸送に影響する<strong>TSV</strong>の<br><strong>配置の最適化</strong>が必要</div>
 <div class="bg-sub">TSV（through-silicon via）：層を貫通する配線</div>
-<div class="down">↓</div>
+<div class="down">　</div>
 
 > **TSV配置を高速に評価し、低温な配置を探す**
 
@@ -431,29 +438,35 @@ ROMの予測とFVMの差は、48本では探索候補で0.035ケルビン、一�
 
 ---
 
-<!-- _class: lead -->
 
 # まとめ
 
-> **POD–RBF ROMを、FVMで再計算すべき低温配置候補の選別に利用できた**
+> **密度マップを入力とするROMで、FVMで再計算すべき低温配置の候補を選別できた**
 
-<div class="flow" style="align-items:stretch;">
-  <div class="summary"><strong>300配置</strong><br><span class="small">FVM温度場から<br>ROMを構築</span></div>
-  <div class="summary"><strong>0.0950 K</strong><br><span class="small">最高温度の<br>平均誤差</span></div>
-  <div class="summary"><strong>25水準</strong><br><span class="small">N=36〜60を<br>本数別に探索</span></div>
-  <div class="summary"><strong>1.119–1.376 K</strong><br><span class="small">FVM確認済み低減量<br>（温度上昇の7.1〜8.1 %）</span></div>
+<div class="sum-row">
+<div>
+
+- TSV配置を密度マップ（16個の値）に圧縮
+- FVM 300配置の温度場からROMを構築
+- *N* = 36〜60の25水準を、各400初期配置から探索
+- 選んだ候補をFVMで再計算
+
+</div>
+<div class="sum-boxes">
+  <div class="summary"><strong>0.095 K</strong><br><span class="small">ROMの最高温度の<br>平均誤差</span></div>
+  <div class="summary"><strong>7.1〜8.1 %</strong><br><span class="small">FVMで確認した<br>最高温度の低減<br>（温度上昇比）</span></div>
+  <div class="summary"><strong>0.035 K</strong><br><span class="small">ROMとFVMの差<br>（<em>N</em> = 48）</span></div>
+</div>
 </div>
 
-**密度マップ → ROM構築・精度確認 → 本数別探索 → FVM再確認**
-
-<small>結論の範囲：固定した非一様発熱分布、境界条件、TSV径、3層共通配置。ROMはFVMの完全な代替ではない</small>
+<div class="sum-scope">範囲：固定した発熱分布・境界条件・TSV径、3層共通の配置。ROMはFVMの完全な代替ではない</div>
 
 <!--
-目安 0:40。累積約10:05。
+目安 0:40。累積約9:40。
 まとめです。
-300配置のFVM温度場からPOD–RBF ROMを構築しました。
-独立評価42配置の最高温度を平均0.0950ケルビンの誤差で予測しました。
-このROMを使って36本から60本までの25水準を本数別に探索しました。
-選んだ候補はFVMでも一様配置より1.119から1.376ケルビン、温度上昇の7.1から8.1パーセント低温でした。
+TSV配置を16個の密度マップに圧縮し、FVMで計算した300配置の温度場からROMを構築しました。
+ROMは、構築に使っていない配置の最高温度を平均0.095ケルビンの誤差で予測しました。
+このROMで36本から60本までの25水準を、それぞれ400個の初期配置から探索しました。
+選んだ候補をFVMで再計算すると、一様配置より最高温度が温度上昇の7.1から8.1パーセント低く、48本の探索候補ではROMとFVMの差は0.035ケルビンでした。
 以上から、固定条件の範囲で、ROMをFVMで再計算すべき低温候補の選別に利用できました。
 -->
