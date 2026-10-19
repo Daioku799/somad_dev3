@@ -127,6 +127,7 @@ style: |
   .sum-boxes { display:flex; gap:16px; margin-top:14px; }
   .sum-boxes .summary { min-height:0; padding:12px 8px; }
   .sum-boxes .summary strong { font-size:30px; }
+  .sum-boxes .summary .small { display:block; min-height:58px; line-height:1.4; }
   .sum-scope { margin-top:18px; font-size:20px; color:#59616b; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
@@ -453,13 +454,11 @@ ROMの予測とFVMの差は、48本では探索候補で0.035ケルビン、一�
 
 </div>
 <div class="sum-boxes">
-  <div class="summary"><strong>0.095 K</strong><br><span class="small">ROMの最高温度の平均誤差</span></div>
-  <div class="summary"><strong>7.1〜8.1 %</strong><br><span class="small">FVMで確認した最高温度の低減<br>（温度上昇比）</span></div>
-  <div class="summary"><strong>0.035 K</strong><br><span class="small">ROMとFVMの差<br>（<em>N</em> = 48）</span></div>
+  <div class="summary"><span class="small">ROMの最高温度の平均誤差</span><strong>0.095 K</strong></div>
+  <div class="summary"><span class="small">FVMで確認した最高温度の低減<br>（温度上昇比）</span><strong>7.1〜8.1 %</strong></div>
+  <div class="summary"><span class="small">ROMとFVMの差<br>（<em>N</em> = 48）</span><strong>0.035 K</strong></div>
 </div>
 </div>
-
-<div class="sum-scope">範囲：固定した発熱分布・境界条件・TSV径、3層共通の配置。ROMはFVMの完全な代替ではない</div>
 
 <!--
 目安 0:40。累積約9:40。
