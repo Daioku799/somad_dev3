@@ -24,6 +24,7 @@ OUT = HERE / "slides_v12.pptx"
 
 EMU = 914400
 FONT = "Meiryo"
+FOOTER = "大屋 蒼真（九州大学）"
 MAROON = "6D0029"      # テンプレートの帯の色
 ACCENT = "A13D22"      # 強調（v12と同じ）
 TEXT = "25272B"
@@ -150,6 +151,16 @@ class Slide:
                  f'</p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter" idx="11"/></p:nvPr></p:nvSpPr><p:spPr/>'
                  f'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="{{B6F15528-21DE-4FAA-801E-634DDDAF4B2B}}" '
                  f'type="slidenum"><a:rPr lang="en-US" altLang="ja-JP"/><a:t>‹#›</a:t></a:fld></a:p></p:txBody></p:sp>')
+
+    def footer(self, text=None):
+        """テンプレートの帯のフッタ欄（idx 10）。書式はレイアウトに従う。"""
+        text = FOOTER if text is None else text
+        i = self.nid()
+        self.add(f'<p:sp><p:nvSpPr><p:cNvPr id="{i}" name="Footer {i}"/><p:cNvSpPr><a:spLocks noGrp="1"/>'
+                 f'</p:cNvSpPr><p:nvPr><p:ph type="ftr" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr><p:spPr/>'
+                 f'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="ja-JP" altLang="en-US" dirty="0">'
+                 f'<a:latin typeface="{FONT}"/><a:ea typeface="{FONT}"/></a:rPr><a:t>{escape(text)}</a:t></a:r></a:p>'
+                 f'</p:txBody></p:sp>')
 
     def arrow(self, x1, y1, x2, y2, color=LINE_GRAY, w=2.25, head=True, name="Arrow"):
         i = self.nid()
@@ -290,6 +301,7 @@ def s_background():
     s = Slide(4)
     s.title("3D-ICの熱問題とTSV配置")
     s.slide_number()
+    s.footer()
     s.box(L, 2.0, 7.6, 0.65, [para("ICの立体集積による**熱問題**が課題", sz=24)])
     s.arrow(1.15, 2.75, 1.15, 3.35, color=MAROON)
     s.box(L, 3.4, 7.6, 1.1, [para("チップ内の熱輸送に影響する**TSV**の\n**配置の最適化**が必要", sz=24, line=115)])
@@ -308,6 +320,7 @@ def s_flow():
     s = Slide(4)
     s.title("本研究の流れ")
     s.slide_number()
+    s.footer()
     steps = [("① 入力を減らす", "膨大な配置\nパラメータを圧縮", None),
              ("② 近似モデル", "事前の計算によって\n温度場を高速に予測", TINT),
              ("③ 探索", "多数の配置を評価し\n低温な候補を選ぶ", None),
@@ -328,6 +341,7 @@ def s_model():
     s = Slide(4)
     s.title("解析モデル")
     s.slide_number()
+    s.footer()
     s.picture(F / "model_xy_uniform_N48_v9.png", 1.35, 1.7, h=2.8, name="Model XY")
     s.picture(F / "model_yz_uniform_N48_v9.png", 0.6, 4.55, w=4.6, name="Model YZ")
     s.box(0.6, 7.05, 4.6, 0.35, [para("上：XY断面　下：YZ断面（一様配置 *N* = 48）", sz=12, color=GRAY, align="ctr")])
@@ -347,6 +361,7 @@ def s_density():
     s = Slide(4)
     s.title("TSV密度マップ")
     s.slide_number()
+    s.footer()
     s.box(L, 1.75, CW, 0.95, [para("TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が増加", sz=20),
                               para("→ TSV実装領域を4×4に分割し、**各セルのTSV本数**を入力とする", sz=20, before=4)])
     dw, _ = s.picture(F / "density_map_random_N48_v6.png", 1.7, 2.85, h=3.4, name="Density map")
@@ -362,6 +377,7 @@ def s_rom():
     s = Slide(4)
     s.title("縮約モデル（ROM）")
     s.slide_number()
+    s.footer()
     s.box(L, 1.75, CW, 1.2, [para("FVM（有限体積法）で**300配置**の温度場を計算し、**主要な空間パターン24個**をPODで抽出", sz=20, line=115),
                              para("POD：多数の温度場から、変化への寄与が大きい順に空間パターンを取り出す手法", sz=15, color=GRAY, before=6)])
     s.raw(rom_equation(1.2, 3.2, 7.6, 1.5))
@@ -377,6 +393,7 @@ def s_accuracy():
     s = Slide(4)
     s.title("ROMの精度検証結果")
     s.slide_number()
+    s.footer()
     s.picture(F / "rom_accuracy_independent_v7.png", 0.45, 1.7, h=5.45, name="Accuracy plot")
     x, w = 7.75, 5.0
     s.box(x, 2.0, w, 2.3, [
@@ -396,6 +413,7 @@ def s_search():
     s = Slide(4)
     s.title("最適配置の探索")
     s.slide_number()
+    s.footer()
     s.box(L, 1.75, CW, 0.55, [para("各TSV本数（*N* = 36〜60）を固定し、ROMが予測する最高温度を最小化", sz=20)])
     w, h, y, gap = 3.0, 1.4, 2.8, 0.9
     x0 = (W - (3 * w + 2 * gap)) / 2
@@ -421,6 +439,7 @@ def s_results():
     s = Slide(4)
     s.title("TSV本数ごとの探索結果")
     s.slide_number()
+    s.footer()
     s.picture(F / "tmax_vs_count_v10.png", L, 1.7, w=CW, name="Results plot")
     s.box(L, 5.35, 4.1, 0.8, [para("**横軸**：TSV本数 *N*", sz=17, emph=MAROON),
                               para("**縦軸**：ROMが予測した最高温度", sz=17, emph=MAROON, before=2)])
@@ -442,6 +461,7 @@ def s_fvm():
     s = Slide(4)
     s.title("探索候補のFVM再検証")
     s.slide_number()
+    s.footer()
     cw = 2.95
     for k, (head, dm, tm) in enumerate([("探索で得た低温候補", "density_map_best_N48_v11.png", "temperature_best_N48_v11.png"),
                                        ("一様配置", "density_map_uniform_N48_v11.png", "temperature_uniform_N48_v11.png")]):
@@ -471,6 +491,7 @@ def s_summary():
     s = Slide(4)
     s.title("まとめ")
     s.slide_number()
+    s.footer()
     s.box(L, 1.75, CW, 0.8, [para("密度マップを入力とするROMで、FVMで再計算すべき低温配置の候補を選別できた", sz=22, bold=True, color=ACCENT)],
           fill=TINT, anchor="ctr", inset=(0.2, 0.05, 0.1, 0.05), name="Conclusion")
     s.box(L, 2.8, CW, 2.0, [
