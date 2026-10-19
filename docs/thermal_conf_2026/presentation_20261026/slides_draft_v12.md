@@ -105,7 +105,7 @@ style: |
   .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
   .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
   .compress { text-align:center; font-size:23px; margin-top:10px; padding:8px 14px; background:#f6edf2; border-radius:8px; }
-  .rom-flow { margin:10px 0 8px; }
+  .rom-flow { margin:16px 0 8px; align-items:center; }
   .rom-legend { font-size:23px; line-height:1.6; }
   .rom-legend mjx-container { font-size:23px; }
   .rom-def { font-size:22px; line-height:1.5; margin-top:8px; }
@@ -236,7 +236,7 @@ TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が
 
 # 縮約モデル（POD–RBF ROM）
 
-FVM温度場 **300配置**から**主要な空間パターン**をPODで抽出
+FVM温度場 **300配置**から、**主要な空間パターン24個**をPODで抽出<br>→ 1,728,000セル（240×240×30）の温度場を、パターンの重ね合わせで表現
 
 <div class="eq-row">
 <div class="eq-main">
@@ -257,15 +257,11 @@ $r$：パターン数
 
 <div class="flow compact-flow rom-flow">
   <div class="node"><strong>入力</strong><br>密度マップ16個</div><div class="arrow">→</div>
-  <div class="node">RBF補間で<br>係数 <em>a<sub>j</sub></em> 24個を予測</div><div class="arrow">→</div>
+  <div class="node">RBF補間で<br>係数 <em>a<sub>j</sub></em> を予測<br><span class="small">（近い密度マップの<br>係数から補間）</span></div><div class="arrow">→</div>
   <div class="node">空間パターンの<br>重ね合わせ</div><div class="arrow">→</div>
   <div class="node accent"><strong>出力</strong><br>三次元温度場</div>
 </div>
 
-<div class="method-note rom-def">
-<div><strong>POD</strong>：多数の温度場から、変化の大きい順に空間パターンを取り出す<br>　→ 1,728,000セル（FVM：240×240×30）の温度場を、24個の主要な空間パターンの重ね合わせで表現</div>
-<div><strong>RBF補間</strong>：学習配置との密度マップの近さに応じて係数を補間</div>
-</div>
 
 <!--
 目安 1:20。
