@@ -161,8 +161,8 @@ ICを立体的に積層すると高密度化・高性能化を図れますが、
 # 本研究の流れ
 
 <div class="flow compact-flow step-flow">
-  <div class="node"><strong>① 入力を減らす</strong><br>TSV配置を<br>密度マップ<br>（16個の値）に圧縮</div><div class="arrow">→</div>
-  <div class="node accent"><strong>② 近似モデル</strong><br>限られた数の<br>FVM計算から<br>温度場を高速に予測</div><div class="arrow">→</div>
+  <div class="node"><strong>① 入力を減らす</strong><br>膨大な配置<br>パラメータを<br>密度マップに圧縮</div><div class="arrow">→</div>
+  <div class="node accent"><strong>② 近似モデル</strong><br>300配置の<br>FVM結果で構築し<br>未計算の配置の<br>温度場を高速に予測</div><div class="arrow">→</div>
   <div class="node"><strong>③ 探索</strong><br>多数の配置を評価し<br>低温な候補を選ぶ</div><div class="arrow">→</div>
   <div class="node"><strong>④ 確認</strong><br>選んだ候補を<br>FVMで再計算</div>
 </div>
@@ -170,8 +170,8 @@ ICを立体的に積層すると高密度化・高性能化を図れますが、
 <!--
 目安 0:40。
 本研究は4つの段階で進めました。
-まず、TSV配置を密度マップという16個の値に圧縮し、入力を減らします。
-次に、限られた数のFVM計算から、温度場を高速に予測する近似モデル、縮約モデルを作ります。
+まず、膨大な配置パラメータを、密度マップという16個の値に圧縮し、入力を減らします。
+次に、事前にFVMで計算した300配置の結果から近似モデル、縮約モデルを作り、まだ計算していない配置の温度場を高速に予測します。
 そのモデルで多数の配置を評価して低温な候補を選び、最後に選んだ候補をFVMで再計算して確認しました。
 まず、解析に用いたモデルを示します。
 -->
