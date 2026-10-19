@@ -114,6 +114,13 @@ style: |
   .step-flow { align-items:stretch; margin-top:20px; }
   .step-flow .arrow { align-self:center; }
   .step-flow .node { font-size:22px; }
+  .search-flow { margin:22px 0 0; }
+  .search-flow .node { width:230px; box-sizing:border-box; min-width:0; }
+  .loop-line { position:relative; margin:0 0 0 574px; width:285px; height:28px; border:2px solid #741b47; border-top:none; }
+  .loop-line::before { content:"▲"; position:absolute; left:-10px; top:-12px; color:#741b47; font-size:16px; line-height:1; }
+  .loop-back { color:#741b47; font-size:22px; margin:4px 0 0 516px; width:400px; text-align:center; }
+  .search-note { font-size:21px; color:#59616b; text-align:center; margin-top:18px; }
+  .search-multi { margin-top:20px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
   .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
   .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
 ---
@@ -306,28 +313,27 @@ ROMの構築に使っていない42配置で、FVMとROMの最高温度を比較
 
 # 最高温度を目的とした配置探索
 
-各TSV本数を固定し、ROMが予測する最高温度を目的に<br>**マルチスタート離散局所探索**を実施
+各TSV本数（*N* = 36〜60）を固定し、ROMが予測する最高温度を最小化
 
-<div class="flow compact-flow" style="margin-top:26px;">
+<div class="search-cycle">
+<div class="flow compact-flow search-flow">
   <div class="node">初期配置</div><div class="arrow">→</div>
-  <div class="node">TSVを1本<br>別セルへ移動</div><div class="arrow">→</div>
-  <div class="node accent">最大240近傍を<br>ROMで評価</div><div class="arrow">→</div>
-  <div class="node">最も低温な<br>配置へ更新</div><div class="arrow">↺</div>
+  <div class="node accent">近傍の配置を<br>最大240個<br>ROMで評価</div><div class="arrow">→</div>
+  <div class="node">最良の配置を<br>新たな出発点に更新</div>
+</div>
+<div class="loop-line"></div>
+<div class="loop-back">改善がなくなるまで繰り返す</div>
 </div>
 
-<div class="metric-row" style="margin-top:34px;">
-  <div class="metric"><strong>25</strong><br><span class="small">本数水準<br>N=36〜60</span></div>
-  <div class="metric"><strong>400</strong><br><span class="small">初期配置／各N</span></div>
-  <div class="metric"><strong>1</strong><br><span class="small">近傍で移動する<br>TSV本数</span></div>
-</div>
+<div class="search-note">近傍：TSVを1本、別のセルへ移した配置（16 × 15 = 最大240通り）</div>
 
-<small>改善する近傍がなくなるまで反復。各 <em>N</em> の400初期配置から得た候補のうち、ROMが予測する最高温度が最も低い配置を採用</small>
+<div class="search-multi">このサイクルを<strong>400個の初期配置</strong>で行い、最も低温な配置を採用</div>
 
 <!--
 目安 0:55。
 目的関数はROMが予測する最高温度です。
 TSV本数は一回の探索中では固定し、36本から60本までの25水準を別々に探索しました。
-一つのTSVを別のセルへ移す最大240近傍を評価し、最も温度が下がる配置へ更新します。
+初期配置から、TSVを1本別のセルへ移した近傍の配置を最大240個、ROMで評価し、最も温度が下がる配置を新たな出発点にします。
 これを改善がなくなるまで繰り返し、各本数について400個の初期配置から得た中で最も低温な候補を選びました。
 -->
 
