@@ -105,6 +105,7 @@ style: |
   .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
   .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
   .compress { text-align:center; font-size:23px; margin-top:10px; padding:8px 14px; background:#f6edf2; border-radius:8px; }
+  .rom-pod { font-size:22px; color:#59616b; }
   .rom-coef { margin-top:18px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
   .rom-legend { font-size:23px; line-height:1.6; }
   .rom-legend mjx-container { font-size:23px; }
@@ -236,7 +237,7 @@ TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が
 
 # 縮約モデル（POD–RBF ROM）
 
-FVM温度場 **300配置**から、**主要な空間パターン24個**をPODで抽出<br>→ 1,728,000セル（240×240×30）の温度場を、パターンの重ね合わせで表現
+FVM（有限体積法）で**300配置**の温度場を計算し、**主要な空間パターン24個**をPODで抽出<br><span class="rom-pod">POD：多数の温度場から、変化への寄与が大きい順に空間パターンを取り出す手法</span>
 
 <div class="eq-row">
 <div class="eq-main">
