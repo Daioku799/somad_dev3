@@ -1,0 +1,47 @@
+report_date: 2026-10-20
+status: backup_slides_v1_layout_draft
+scope: 補助スライド（質疑用）。本編 v12 とは別ファイル。
+file: docs/thermal_conf_2026/presentation_20261026/backup_slides_v1.md
+style: slides_draft_v12.md のフロントマター CSS を流用し、補助用クラス（b1-*, b2-*, b-*）を追加。
+new_computation: none（既存の保存データの描画と集計のみ）
+figure_script: plot_backup_v1.jl（julia --project=H2-rom）
+slides:
+  B1_density_to_coordinates:
+    source: H2-main-ext/src/ComponentGenerator/Layout.jl（expand_coordinates, get_cell_capacities）
+    facts: 実装領域 1.0 mm 角（端から0.1 mm）、4×4、1セル250 µm、最小ピッチ80 µm → 候補3×3＝9点、n = round(μ×9)、セル中心に近い順に n 点。
+    check: random_N48 の材料分布（verify/random_N48/snapshot.jld2、z = 0.3425 mm）で全16セルの本数が一致。
+    caveat: 中心からの距離が同じ候補の間の順番はセルにより異なる（浮動小数点の丸めで決まる固定順）。スライドでは「中心→上下左右→四隅」までを示す。
+    figures: [density_map_random_N48_v6.png, backup_cell_rule_v1.png, backup_cell_examples_v1.png]
+  B2_resolution:
+    baseline: runs/paper_final_20260824T0140JST/rom/baseline_comparison.tsv（test MAE：const 1.461, count 0.372, cells 0.146, ROM 0.095 K）
+    prior_study: /home/foo/slide/20260806進捗報告_説明スライドあり.md 実験1A（平均L2：2×2 0.43353 %、4×4 0.07651 %、8×8 0.09686 %、16×16 0.09706 %）。60×60×30格子の旧条件、参考値。
+  B3_pod_svd:
+    source: H2-rom/src/PODEngine/solver.jl（平均場を引いてSVD、係数＝基底への射影）
+  B4_cumulative:
+    source: rom/pod_spectrum.tsv（r=1 0.962355、r=24 0.999782）
+    caveat: 累積寄与率は保持した60基底（ric_threshold 0.9999 で打ち切り）の σ² 合計に対する比。原稿の 0.999782 も同じ定義。
+  B5_rbf:
+    source: H2-rom/src/ROMInterpolator/interpolator.jl, scaler.jl（min-max 正規化、exp(-(ε r)^2)、W = Y/(Φ+λI)）
+  B6_selection:
+    source: rom/rbf_grid.tsv（192通り、検証用42配置の Tmax MAE）、H2-rom/src/PipelineROM/builder.jl select_settings（MAE最小を採用）
+    adopted: r=24, ε=0.05, λ=1e-6, validation MAE 0.071747 K, test MAE 0.094961 K
+    caveat: ε=0.05 は候補の最小値（境界）。
+  B7_timing:
+    fvm: pipeline.log（424件、平均400.3 s、255〜528 s、16並列、2026-08-24 01:54〜04:53）
+    rom_build: build_rom.log（所要3.3分、選定2.8分）
+    search: optimize.log（20スレッド、89.1分、1水準平均3321.1 s、合計評価93,972,549回）
+    per_eval: 3321.1 s × 25水準 / 93,972,549 ≈ 0.88 ms（1スレッド）
+    restricted_rows: optimize.log「限定行と全行の一致：最大差 2.274e-13 K（84件）」
+    caveat: FVMの収束判定（ログ ε=1e-4、原稿 1e-6）の食い違いは未解決のためスライドに記載しない。
+  B8_validity:
+    grid: docs/PAPER_PLAN_2026-08-23.md §3.23、grid480.log（4配置、差0.0140〜0.0164 K、幅2.7914/2.7931 K、順位一致）
+    interp: rom/interp_validation.tsv（N=42 0.0898 K、N=54 0.0726 K、学習本数ホールドアウト 0.0834 K）
+  B9_field_max_error:
+    source: ../derived/field_max_error_test.tsv, field_max_error_test.png（work-order-field-max-error-20261019.json）
+    facts: 最大 0.281〜0.679 K（上昇の1.47〜4.49 %）、99%点 0.088〜0.232 K、最大誤差位置 iz=10/11 が39件、iz=28 が3件
+render_validation:
+  method: marp-core（inline style 除去）→ headless Firefox 1280×720
+  result: 9枚すべて、はみ出しなし（2026-10-20）
+pending:
+  - B10（探索の経緯・局所解）は任意のため未作成。
+  - PPTX化は Marp の内容確定後。
