@@ -1,0 +1,478 @@
+---
+marp: true
+math: mathjax
+theme: default
+paginate: true
+size: 16:9
+title: TSV密度マップを用いた縮約モデルによる3DIC の熱設計最適化の研究
+author: 大屋 蒼真
+style: |
+  section {
+    font-family: "Noto Sans CJK JP", "Yu Gothic", "Hiragino Sans", sans-serif;
+    font-size: 27px;
+    color: #25272b;
+    background: #ffffff;
+    padding: 48px 66px 40px;
+  }
+  h1 { margin: 0 0 18px; color: #741b47; font-size: 47px; line-height: 1.16; }
+  h2 { color: #741b47; font-size: 31px; }
+  p { margin: 10px 0; line-height: 1.45; }
+  li { margin: 7px 0; }
+  strong { color: #a13d22; }
+  blockquote {
+    margin: 15px 0;
+    padding: 9px 17px;
+    border-left: 7px solid #741b47;
+    background: #f6edf2;
+    font-size: 28px;
+    line-height: 1.35;
+  }
+  blockquote p { margin: 0; }
+  small { display: block; color: #59616b; font-size: 17px; line-height: 1.3; }
+  img { max-height: 475px; }
+  .lead { background: linear-gradient(150deg, #741b47 0 43%, #ffffff 43% 100%); }
+  .lead h1 { color: white; font-size: 47px; width: 75%; }
+  .lead h3 { color: white; }
+  .flow { display:flex; align-items:center; justify-content:center; gap:10px; margin:22px 0; }
+  .node { min-width:155px; padding:17px 12px; border:2px solid #741b47; border-radius:10px; background:white; text-align:center; font-size:23px; }
+  .node.accent { background:#f6edf2; }
+  .arrow { color:#68707a; font-size:35px; }
+  mjx-container[display="true"] { font-size: 28px; margin: 2px 0 !important; }
+  .compact-flow { margin: 4px 0; }
+  .compact-flow .node { min-width: 205px; padding: 10px 11px; font-size: 21px; }
+  .panel-row { display:flex; align-items:flex-end; justify-content:center; gap:18px; margin:6px 0 2px; }
+  .panel-row img { display:block; }
+  .panel-density { height:300px; }
+  .panel-xy { height:215px; }
+  .panel-yz { height:150px; }
+  .eq-row { display:flex; align-items:center; justify-content:center; gap:28px; }
+  .eq-legend { padding: 6px 14px; border-left: 4px solid #741b47; background: #f7f7f8; font-size: 19px; line-height: 1.5; }
+  .eq-legend p { margin: 0; }
+  .eq-legend mjx-container { font-size: 19px; }
+  .compact-metrics { margin: 2px 0 6px; }
+  .compact-metrics .metric { padding: 4px 12px; }
+  .compact-metrics .metric strong { font-size: 31px; }
+  .metric-row { display:flex; justify-content:center; gap:22px; margin:18px 0; }
+  .metric { min-width:220px; padding:15px 12px; border:2px solid #741b47; border-radius:10px; background:white; text-align:center; }
+  .metric strong { font-size:39px; }
+  .small { font-size:20px; }
+  .split-row { display:flex; justify-content:center; gap:16px; margin:17px 0; }
+  .split { width:230px; padding:14px 9px; border-radius:9px; text-align:center; background:#f3f4f6; border-top:7px solid #741b47; }
+  .split strong { font-size:36px; color:#741b47; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:30px; align-items:center; }
+  .map-pair { display:flex; gap:25px; justify-content:center; align-items:start; }
+  .map-title { text-align:center; font-weight:700; margin-bottom:7px; }
+  .density-grid { display:grid; grid-template-columns:repeat(4,49px); grid-template-rows:repeat(4,49px); gap:3px; }
+  .cell { display:flex; align-items:center; justify-content:center; font-weight:700; border:1px solid #d7dbe0; }
+  .d0 { background:#f7fbff; color:#333; } .d1 { background:#deebf7; color:#333; }
+  .d3 { background:#9ecae1; color:#222; } .d4 { background:#6baed6; color:white; }
+  .d8 { background:#2171b5; color:white; } .d9 { background:#084594; color:white; }
+  .result { padding:13px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:23px; line-height:1.5; }
+  .summary { flex:1; min-height:125px; padding:17px 14px; border-radius:10px; background:white; border-top:7px solid #741b47; text-align:center; }
+  .method-note { padding:10px 16px; background:#f7f7f8; border-left:5px solid #741b47; font-size:21px; line-height:1.4; }
+  .model-row { display:grid; grid-template-columns:0.95fr 1.05fr; gap:22px; align-items:start; }
+  .model-row ul { margin:0; padding-left:1.1em; }
+  .model-row .method-note { margin-top:14px; }
+  .model-figs { text-align:center; }
+  .model-figs img { display:block; margin:0 auto 2px; }
+  img.model-xy { height:268px; margin-top:-28px !important; }
+  img.model-yz { width:440px; }
+  .dens-row { align-items:center; gap:22px; margin:12px 0 6px; }
+  img.dens-map { height:310px; }
+  img.dens-xy { height:310px; }
+  .dens-arrow { text-align:center; line-height:1.1; }
+  .acc-row { display:grid; grid-template-columns:1.12fr 0.88fr; gap:22px; align-items:center; }
+  img.acc-plot { height:470px; }
+  .acc-row ul { margin:6px 0 0; padding-left:1.1em; font-size:24px; }
+  .acc-result { margin-top:18px; padding:12px 18px; border-left:7px solid #a13d22; background:#fff1eb; font-size:25px; line-height:1.6; }
+  .acc-head { font-weight:700; color:#741b47; }
+  .acc-note { font-size:19px; color:#59616b; line-height:1.3; }
+  .trade-fig { text-align:center; margin-top:2px; }
+  img.trade-plot { width:1100px; }
+  .trade-row { display:grid; grid-template-columns:1.15fr 0.85fr; gap:20px; align-items:start; margin-top:6px; }
+  .trade-row ul { margin:0; padding-left:1.1em; font-size:22px; }
+  .trade-row li { margin:3px 0; }
+  .trade-row .acc-result { margin-top:0; font-size:23px; line-height:1.5; padding:8px 16px; }
+  .trade-row .acc-note { margin-top:6px; font-size:18px; }
+  .bg-step { font-size:30px; line-height:1.45; margin:6px 0; }
+  .bg-sub { font-size:20px; color:#59616b; margin:0 0 2px; }
+  .axis-grid { display:grid; grid-template-columns:auto auto; column-gap:28px; row-gap:2px; font-size:22px; margin-bottom:6px; justify-content:start; }
+  img.cmp-map { height:235px; display:block; }
+  .fvm-row { display:grid; grid-template-columns:270px 270px 1fr; gap:16px; align-items:start; }
+  .fvm-col { text-align:center; }
+  .fvm-col .map-title { font-size:21px; margin-bottom:2px; }
+  img.fvm-img { width:270px; display:block; margin:0 auto 4px; }
+  .fvm-desc { font-size:19px; line-height:1.4; color:#25272b; margin-bottom:10px; }
+  .rom-fvm { margin-top:10px; border-left-color:#741b47; background:#f6edf2; font-size:22px; }
+  .compress { text-align:center; font-size:23px; margin-top:10px; padding:8px 14px; background:#f6edf2; border-radius:8px; }
+  .rom-pod { font-size:22px; color:#59616b; }
+  .rom-coef { margin-top:18px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
+  .rom-legend { font-size:23px; line-height:1.6; }
+  .rom-legend mjx-container { font-size:23px; }
+  .rom-def { font-size:22px; line-height:1.5; margin-top:8px; }
+  .rom-def div + div { margin-top:4px; }
+  .step-flow { align-items:stretch; margin-top:20px; }
+  .step-flow .arrow { align-self:center; }
+  .step-flow .node { font-size:22px; }
+  .search-flow { margin:22px 0 0; }
+  .search-flow .node { width:230px; box-sizing:border-box; min-width:0; }
+  .loop-line { position:relative; margin:0 0 0 574px; width:285px; height:28px; border:2px solid #741b47; border-top:none; }
+  .loop-line::before { content:"▲"; position:absolute; left:-10px; top:-12px; color:#741b47; font-size:16px; line-height:1; }
+  .loop-back { color:#741b47; font-size:22px; margin:4px 0 0 516px; width:400px; text-align:center; }
+  .search-note { font-size:21px; color:#59616b; text-align:center; margin-top:18px; }
+  .search-multi { margin-top:20px; padding:10px 16px; border-left:6px solid #741b47; background:#f6edf2; font-size:25px; }
+  .sum-row { margin-top:10px; }
+  .sum-row ul { margin:0; padding-left:1.1em; font-size:23px; }
+  .sum-row li { margin:6px 0; }
+  .sum-boxes { display:flex; gap:16px; margin-top:14px; }
+  .sum-boxes .summary { min-height:0; padding:12px 8px; }
+  .sum-boxes .summary strong { font-size:30px; }
+  .sum-boxes .summary .small { display:block; min-height:58px; line-height:1.4; }
+  .sum-scope { margin-top:18px; font-size:20px; color:#59616b; }
+  .down { color:#741b47; font-size:30px; line-height:1; margin:0 0 0 1.2em; }
+  .plot-caption { text-align:center; font-size:20px; color:#59616b; margin-top:0; }
+  .steps { position:relative; margin:40px 0 0 30px; }
+  .steps::before { content:""; position:absolute; left:31px; top:50px; bottom:50px; border-left:4px solid #741b47; }
+  .step { position:relative; display:grid; grid-template-columns:66px 250px 1fr; column-gap:26px; align-items:center; padding:19px 0; border-bottom:1px solid #e3e5e8; }
+  .step:last-child { border-bottom:none; }
+  .step .num { position:relative; z-index:1; width:66px; height:66px; border-radius:50%; background:#741b47; color:#fff; font-size:34px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step .label { font-size:33px; font-weight:700; color:#741b47; }
+  .step .desc { font-size:30px; color:#25272b; }
+---
+
+<!-- _class: lead -->
+
+# TSV密度マップを用いた縮約モデルによる<br>3DIC の熱設計最適化の研究
+
+### 大屋 蒼真・小野 謙二（九州大学）
+
+<div style="margin-top:210px;font-size:25px;">熱工学コンファレンス2026　B11</div>
+
+<!--
+目安 0:20。
+3D-ICの熱設計において、多数のTSV配置を高速に比較するための仕組みを検討しました。
+本日は、その考え方と、ROMによる予測およびFVMでの確認結果を報告します。
+-->
+
+---
+
+# 3D-ICの熱問題とTSV配置
+
+![bg right:36% vertical contain](intro_3dic_thermal_v4.png)
+![bg contain](../figures/3d_ic.jpg)
+
+<div class="bg-step">ICの立体集積による<strong>熱問題</strong>が課題</div>
+<div class="down">↓</div>
+<div class="bg-step">チップ内の熱輸送に影響する<strong>TSV</strong>の<br><strong>配置の最適化</strong>が必要</div>
+<div class="bg-sub">TSV（through-silicon via）：層を貫通する配線</div>
+<div class="down">　</div>
+
+> **TSV配置を高速に評価し、低温な配置を探す**
+
+<small>右上：3D-ICイメージ図<br>右下：NIST, “3D stacked integrated circuit”, nist.gov/image/3dicjpg</small>
+
+<!--
+目安 0:45。
+ICを立体的に積層すると高密度化・高性能化を図れますが、高温部が生じて動作不良の原因となる、熱の問題が課題です。
+層を貫通するTSVは信号経路であると同時に、チップ内の熱輸送にも影響します。
+そのため、TSVの配置を最適化して最高温度を下げることが必要です。
+ただし配置の組合せは膨大なので、本研究ではTSV配置を高速に評価し、低温な配置を探します。
+-->
+
+---
+
+# 本研究の流れ
+
+<div class="steps">
+  <div class="step"><div class="num">1</div><div class="label">入力を減らす</div><div class="desc">膨大な配置パラメータを圧縮</div></div>
+  <div class="step"><div class="num">2</div><div class="label">近似モデル</div><div class="desc">事前の計算によって温度場を高速に予測</div></div>
+  <div class="step"><div class="num">3</div><div class="label">探索</div><div class="desc">多数の配置を評価し、低温な候補を選ぶ</div></div>
+  <div class="step"><div class="num">4</div><div class="label">確認</div><div class="desc">選んだ候補をFVM（有限体積法）で再計算</div></div>
+</div>
+
+<!--
+目安 0:40。
+本研究は4つの段階で進めました。
+まず、膨大な配置パラメータを、密度マップという16個の値に圧縮し、入力を減らします。
+次に、事前に詳細な熱解析で計算した300配置の結果から近似モデル、縮約モデルを作り、温度場を高速に予測します。
+そのモデルで多数の配置を評価して低温な候補を選び、最後に選んだ候補を、有限体積法、FVMで再計算して確認しました。
+まず、解析に用いたモデルを示します。
+-->
+
+---
+
+# 解析モデル
+
+<div class="model-row">
+<div class="model-figs">
+  <img class="model-xy" src="model_xy_uniform_N48_v9.png">
+  <img class="model-yz" src="model_yz_uniform_N48_v9.png">
+  <div class="plot-caption">上：XY断面　下：YZ断面（一様配置 N=48）</div>
+</div>
+<div>
+
+- 1.2 mm角・厚さ0.6 mmの**3層積層モデル**
+- 各Si層に**発熱ブロック4個**<br>総発熱量**0.384 W**
+- 上面：周囲**300 K**への対流<br>側面・下面：断熱
+- 中央1 mm角がTSV実装領域<br>（TSV配置は3層共通）
+- FVM：240×240×30セル
+
+<div class="method-note">黄：Cu TSV　灰：Si　赤：発熱ブロック<br>紫：バンプ　緑：樹脂　青：Alスプレッダ　橙：PCB</div>
+
+</div>
+</div>
+
+<!--
+目安 0:40。
+解析対象は1.2ミリ角、厚さ0.6ミリの3層積層モデルです。
+各シリコン層に赤で示す発熱ブロックを4個置き、総発熱量は0.384ワットです。
+上面は周囲温度300ケルビンへの対流、側面と下面は断熱としました。
+中央1ミリ角がTSVの実装領域で、TSV配置は3層で共通です。
+このTSV配置を、次のように少ない数で表します。
+-->
+
+---
+
+# TSV密度マップ
+
+TSV座標をそのまま入力とすると、本数 *N* に応じて入力数が増加<br>→ TSV実装領域を4×4に分割し、**各セルのTSV本数**を入力とする
+
+<div class="panel-row dens-row">
+  <img class="dens-map" src="density_map_random_N48_v6.png">
+  <div class="arrow dens-arrow">→<br><span class="small">展開</span></div>
+  <img class="dens-xy" src="material_xy_random_N48_v6.png">
+</div>
+
+<div class="compress">入力：TSV座標 2<em>N</em> 個 → 密度マップ <strong>16 個</strong>に圧縮（<em>N</em> によらず一定）</div>
+
+
+<!--
+目安 0:45。
+個々のTSV座標をそのまま設計変数にすると、TSV本数とともに入力が増え、学習と探索が難しくなります。
+そこでTSV実装領域を4掛ける4に分け、各セルのTSV本数を固定長16成分の密度マップとして表しました。
+本数が36から60本なら、座標は72から120個ですが、これを本数によらず16個に圧縮します。
+左が48本のランダム配置の密度マップ、右がそこから展開した実際のTSV配置です。セルの数字と、その中のTSVの本数が対応しています。
+この16個を入力として温度場を予測するモデルを、次に説明します。
+-->
+
+---
+
+# 縮約モデル（ROM）
+
+FVM（有限体積法）で**300配置**の温度場を計算し、**主要な空間パターン24個**をPODで抽出<br><span class="rom-pod">POD：多数の温度場から、変化への寄与が大きい順に空間パターンを取り出す手法</span>
+
+<div class="eq-row">
+<div class="eq-main">
+
+$$
+T(\mathbf{x};\boldsymbol{\mu}) \approx \overline{T}(\mathbf{x}) + \sum_{j=1}^{r} a_j(\boldsymbol{\mu})\,\phi_j(\mathbf{x})
+$$
+
+</div>
+<div class="eq-legend rom-legend">
+
+$\phi_j$：空間パターン
+$a_j$：係数
+$r$：パターン数
+
+</div>
+</div>
+
+<div class="rom-coef">重ね合わせの係数 <em>a<sub>j</sub></em> は、密度マップ <strong>μ</strong>（16個）から<strong>RBF補間</strong>によって予測</div>
+
+
+<!--
+目安 1:20。
+TSV本数36、48、60の各100配置、合計300配置のFVM温度場から、温度分布の変化を表す主要な空間パターンをPODで抽出します。
+温度場は、平均温度場に各パターンを係数付きで重ね合わせて近似します。パターン数は24です。
+予測では、前のスライドの16個の密度マップを入力とし、RBF補間で24個の係数を求め、パターンを重ね合わせて三次元温度場を出力します。
+これにより、約173万個の温度値を24個の係数で表します。これをPOD–RBF ROMと呼びます。
+（質疑用メモ：パターン数とRBFの条件は、構築用とは別の42配置で選定した。）
+次に、構築に使っていない配置で精度を確認します。
+-->
+
+---
+
+# ROMの精度検証結果
+
+<div class="acc-row">
+<div>
+  <img class="acc-plot" src="rom_accuracy_independent_v7.png">
+</div>
+<div>
+
+**横軸**：FVMの最高温度<br>**縦軸**：ROMの最高温度
+
+- ROMの構築に使っていない**42配置**で評価
+- 破線（y = x）からの距離＝FVMとROMの最高温度の誤差
+
+<div class="acc-result">
+<div class="acc-head">結果</div>
+<div>最高温度の平均誤差：<strong>0.0950 K</strong></div>
+<div>温度場の2乗平均誤差：<strong>0.493 %</strong></div>
+<div class="acc-note">（300 Kからの温度上昇に対する比）</div>
+</div>
+
+</div>
+</div>
+
+<!--
+目安 1:00。
+ROMの構築に使っていない42配置で、FVMとROMの最高温度を比較しました。
+横軸がFVM、縦軸がROMの最高温度で、破線からの距離が両者の誤差を表します。
+最高温度の誤差は平均0.0950ケルビンでした。
+温度場全体でも、2乗平均の誤差は300ケルビンからの温度上昇の0.493パーセントでした。
+このROMを配置探索へ使用します。
+-->
+---
+
+# 最適配置の探索
+
+各TSV本数（*N* = 36〜60）を固定し、ROMが予測する最高温度を最小化
+
+<div class="search-cycle">
+<div class="flow compact-flow search-flow">
+  <div class="node">初期配置</div><div class="arrow">→</div>
+  <div class="node accent">近傍の配置を<br>最大240個<br>ROMで評価</div><div class="arrow">→</div>
+  <div class="node">最良の配置を<br>新たな出発点に更新</div>
+</div>
+<div class="loop-line"></div>
+<div class="loop-back">改善がなくなるまで繰り返す</div>
+</div>
+
+<div class="search-multi">このサイクルを<strong>400個の初期配置</strong>で行い、最も低温な配置を採用</div>
+
+<!--
+目安 0:55。
+目的関数はROMが予測する最高温度です。
+TSV本数は一回の探索中では固定し、36本から60本までの25水準を別々に探索しました。
+初期配置から、TSVを1本別のセルへ移した近傍の配置を最大240個、ROMで評価し、最も温度が下がる配置を新たな出発点にします。
+これを改善がなくなるまで繰り返し、各本数について400個の初期配置から得た中で最も低温な候補を選びました。
+-->
+
+---
+
+# TSV本数ごとの探索結果
+
+<div class="trade-fig">
+  <img class="trade-plot" src="tmax_vs_count_v10.png">
+</div>
+
+<div class="trade-row">
+<div>
+
+<div class="axis-grid">
+<div><strong>横軸</strong>：TSV本数 <em>N</em></div><div><strong>灰</strong>：一様配置</div>
+<div><strong>縦軸</strong>：ROMが予測した最高温度</div><div><strong>青</strong>：探索で得た低温候補</div>
+</div>
+
+- *N* = 36〜60の**25水準**（ROM予測値）
+- 同じ本数で、配置による最高温度の違いを見る
+
+</div>
+<div>
+
+<div class="acc-result">
+<div class="acc-head">結果</div>
+<div>全25水準で探索候補が一様配置より低温</div>
+<div>差：<strong>1.09〜1.57 K</strong></div>
+</div>
+<div class="acc-note">本数ごとの局所探索の結果（大域最適解ではない）</div>
+
+</div>
+</div>
+
+<!--
+目安 0:55。
+横軸がTSV本数、縦軸がROMが予測した最高温度です。
+灰色が一様配置、青が各本数で探索して得た低温候補で、36本から60本までの25水準を示しています。
+同じ本数で配置を変えると、最高温度がどれだけ下がるかを見る図です。
+全25水準で探索候補が一様配置より低温で、その差は1.09から1.57ケルビンでした。
+これは本数ごとの局所探索の結果で、大域最適解ではありません。
+次に、選んだ候補をFVMで確認した結果を示します。
+-->
+---
+
+# 探索候補のFVM再検証
+
+<div class="fvm-row">
+<div class="fvm-col">
+  <div class="map-title">探索で得た低温候補</div>
+  <img class="fvm-img" src="density_map_best_N48_v11.png">
+  <img class="fvm-img" src="temperature_best_N48_v11.png">
+</div>
+<div class="fvm-col">
+  <div class="map-title">一様配置</div>
+  <img class="fvm-img" src="density_map_uniform_N48_v11.png">
+  <img class="fvm-img" src="temperature_uniform_N48_v11.png">
+</div>
+<div>
+
+<div class="fvm-desc">
+<div><strong>上</strong>：密度マップ（<em>N</em> = 48）</div>
+<div><strong>下</strong>：FVM温度場（最下層Si層の発熱層）</div>
+</div>
+
+<div class="acc-result">
+<div class="acc-head">FVM最高温度</div>
+<div>探索候補：<strong>315.618 K</strong></div>
+<div>一様配置：316.994 K</div>
+<div>差：<strong>1.376 K</strong>（温度上昇の<strong>8.1 %</strong>）</div>
+</div>
+
+<div class="acc-result rom-fvm">
+<div class="acc-head">ROMの予測との差</div>
+<div>探索候補：0.035 K　一様配置：0.002 K</div>
+</div>
+
+<div class="acc-note">温度上昇：一様配置の最高温度 − 300 K<br>固定した発熱分布・解析条件での低温候補</div>
+
+</div>
+</div>
+
+<!--
+目安 1:10。
+48本の場合について、左が探索で得た低温候補、中央が一様配置です。
+上が密度マップ、下がFVMで計算した、最も温度の高い最下層の発熱層の温度分布です。
+一様配置では左下の発熱ブロックが最も高温です。探索候補では、TSVがこのブロックの周りに集まっています。
+両者をFVMで再計算すると、低温候補は315.618ケルビン、一様配置は316.994ケルビンでした。
+差は1.376ケルビンで、一様配置の温度上昇、つまり最高温度と周囲温度300ケルビンの差の8.1パーセントにあたります。
+36本と60本では、それぞれ1.355ケルビン、1.119ケルビンで、7.1パーセントと7.3パーセントでした。
+ROMの予測とFVMの差は、48本では探索候補で0.035ケルビン、一様配置で0.002ケルビンでした。
+（質疑用メモ：36本ではROMが予測した差1.567ケルビンに対しFVMは1.355ケルビンで、ROMが約0.21ケルビン大きく見積もっていた。60本はROM 1.104ケルビン、FVM 1.119ケルビン。）
+したがってROM上だけでなく、FVMでも候補選別の効果を確認できました。
+ただし、得られたのは低温候補であり、大域最適性を保証するものではありません。
+-->
+
+---
+
+
+# まとめ
+
+> **密度マップを入力とするROMで、FVMで再計算すべき低温配置の候補を選別できた**
+
+<div class="sum-row">
+<div>
+
+- TSV配置を密度マップ（16個の値）に圧縮
+- FVM 300配置の温度場からROMを構築
+- *N* = 36〜60の25水準を、各400初期配置から探索
+- 選んだ候補をFVMで再計算
+
+</div>
+<div class="sum-boxes">
+  <div class="summary"><span class="small">ROMの最高温度の平均誤差</span><strong>0.095 K</strong></div>
+  <div class="summary"><span class="small">FVMで確認した最高温度の低減<br>（温度上昇比）</span><strong>7.1〜8.1 %</strong></div>
+  <div class="summary"><span class="small">ROMとFVMの差<br>（<em>N</em> = 48）</span><strong>0.035 K</strong></div>
+</div>
+</div>
+
+<!--
+目安 0:40。累積約9:40。
+まとめです。
+TSV配置を16個の密度マップに圧縮し、FVMで計算した300配置の温度場からROMを構築しました。
+ROMは、構築に使っていない配置の最高温度を平均0.095ケルビンの誤差で予測しました。
+このROMで36本から60本までの25水準を、それぞれ400個の初期配置から探索しました。
+選んだ候補をFVMで再計算すると、一様配置より最高温度が温度上昇の7.1から8.1パーセント低く、48本の探索候補ではROMとFVMの差は0.035ケルビンでした。
+以上から、固定条件の範囲で、ROMをFVMで再計算すべき低温候補の選別に利用できました。
+-->
